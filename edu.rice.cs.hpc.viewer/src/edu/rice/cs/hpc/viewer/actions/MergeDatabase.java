@@ -115,7 +115,6 @@ public abstract class MergeDatabase extends AbstractHandler
 					} catch (Exception e) {
 						MessageDialog.openError(window.getShell(), "Error merging database",
 								e.getMessage());
-						e.printStackTrace();
 					}
 				}				
 			});
