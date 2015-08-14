@@ -422,35 +422,22 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		{
 			if (ancestor == child) {
 				// cyclic
-				System.err.println("cycle-dependency: " + child.getFlatIndex() + " vs. " + ancestor.getFlatIndex());
 				return true;
 			}
 			ancestor = ancestor.getParentScope();
 		}
 		return false;
 	}
-
-	/***********************************************************
-	 * check if two scopes have the same "content"
-	 * @param s1
-	 * @param s2
-	 * @return
-	 ***********************************************************/
+	
 	private boolean isTheSameScope(Scope s1, Scope s2) {
-		
+				
 		// are s1 and s2 the same class ?
 		if ( s1.getClass() != s2.getClass() )
 			return false;
-		
-		return (s1.hashCode() == s2.hashCode());
+						
+		return (s1.hashCode() == s2.hashCode());					
 	}
 	
-	
-	/***********************************************************
-	 * add a child to the parent
-	 * @param parent
-	 * @param child
-	 ***********************************************************/
 	private void addChild(Scope parent, Scope child) {
 		parent.addSubscope(child);
 		child.setParentScope(parent);

@@ -53,11 +53,3 @@ Import-Package:
 Bundle-ClassPath: hpcviewer.jar,
  external-jars/org.swtchart_0.9.0.v20140219.jar,
  external-jars/org.swtchart.ext_0.9.0.v20140219.jar
-Export-Package: edu.rice.cs.hpc.viewer.editor,
- edu.rice.cs.hpc.viewer.experiment,
- edu.rice.cs.hpc.viewer.framework,
- edu.rice.cs.hpc.viewer.help,
- edu.rice.cs.hpc.viewer.metric,
- edu.rice.cs.hpc.viewer.scope,
- edu.rice.cs.hpc.viewer.util,
- edu.rice.cs.hpc.viewer.window
