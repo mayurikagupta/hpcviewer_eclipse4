@@ -83,7 +83,7 @@ public class CallerScopeBuilder {
 					if (numKids<MAX_DESC) {
 						CallSiteScopeCallerView callerScope =
 							new CallSiteScopeCallerView( lineScope, mycaller,
-									CallSiteScopeType.CALL_FROM_PROCEDURE, lineScope.hashCode(), next, scope_cost);
+									CallSiteScopeType.CALL_FROM_PROCEDURE, next.getCCTIndex(), next, scope_cost);
 
 						callerScope.setRootScope(root_caller_tree);
 						// set the value of the new scope
@@ -129,7 +129,7 @@ public class CallerScopeBuilder {
 			// we check if the scope is identical with the existing scope in the path
 			// if it is the case, we should merge them
 			//------------------------------------------------------------------------
-			if (first.getCCTIndex() == existingCaller.getCCTIndex()) {
+			if (first.getProcedureScope().getFlatIndex() == existingCaller.getProcedureScope().getFlatIndex()) {
 
 				//------------------------------------------------------------------------
 				// combine metric values for first to those of existingCaller.
