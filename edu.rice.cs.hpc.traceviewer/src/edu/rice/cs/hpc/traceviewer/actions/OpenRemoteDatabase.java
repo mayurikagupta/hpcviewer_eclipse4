@@ -19,7 +19,7 @@ public class OpenRemoteDatabase extends AbstractHandler {
 		final IViewSite vSite = ( IViewSite ) HandlerUtil.getActiveSite(event);
 		final IStatusLineManager status = vSite.getActionBars().getStatusLineManager();
 
-		TraceDatabase.openDatabase(window, status);		
+		TraceDatabase.openRemoteDatabase(window, status);		
 		
 		return null;
 	}
