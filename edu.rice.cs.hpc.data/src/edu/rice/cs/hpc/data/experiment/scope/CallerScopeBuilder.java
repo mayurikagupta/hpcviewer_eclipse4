@@ -81,6 +81,12 @@ public class CallerScopeBuilder {
 					// creating a new child scope if the path is not too long (< MAX_DESC)
 					//--------------------------------------------------------------
 					if (numKids<MAX_DESC) {
+						// we will reuse CCT ID of the CCT scope as the unique identifier of this
+						// call site.
+						// the CallSiteScopeCallerView class will also use the flat ID of the
+						// CCT scope for its flat ID.
+						// While the metric of this new scope is the same as the original 
+						//	CCT call site scope (scope_cost)
 						CallSiteScopeCallerView callerScope =
 							new CallSiteScopeCallerView( lineScope, mycaller,
 									CallSiteScopeType.CALL_FROM_PROCEDURE, next.getCCTIndex(), next, scope_cost);
