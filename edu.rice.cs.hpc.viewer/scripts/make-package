@@ -54,17 +54,25 @@ for i in *; do echo $i
   done
 done
 
-# windows only: create zip instead of tgz
+##########################################
+# creating the zip version of the release
+# argument 1: distribution type to zip
+##########################################
+zipper ()
+{
+  mkdir tmp
+  cd tmp
+  for f in ../*."$1".*.tgz; do echo $f
+    tar xzf $f
+    z=`echo $f | sed -e "s/tgz/zip/g" `
+    echo "new file: $z"
+    zip -r $z $viewer/*
+    ls -l $z
+    rm -rf $viewer $f
+  done
+  cd ..
+  rmdir tmp
+}
 
-mkdir tmp
-cd tmp
-for f in ../*.win32.*.tgz; do echo $f 
-  tar xzf $f 
-  z=`echo $f | sed -e "s/tgz/zip/g" `
-  echo "new file: $z"
-  zip -r $z $viewer/*
-  ls -l $z
-  rm -rf $viewer $f; 
-done
-cd ..
-rmdir tmp
+zipper win32
+zipper cocoa
