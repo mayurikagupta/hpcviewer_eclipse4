@@ -651,7 +651,7 @@ public class BaseExperimentBuilder extends Builder {
 			if ( (this.scopeStack.size()>1) && ( this.scopeStack.peek() instanceof LineScope)  ) {
 
 				LineScope ls = (LineScope)this.scopeStack.pop();
-				int	callsiteID = cct_id;
+				int	callsiteID = ls.getFlatIndex();
 				
 				if (KEEP_OLD_DATABASE_COMPATIBILITY)
 				{
