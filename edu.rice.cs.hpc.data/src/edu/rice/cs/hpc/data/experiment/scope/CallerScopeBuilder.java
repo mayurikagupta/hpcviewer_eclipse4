@@ -81,9 +81,15 @@ public class CallerScopeBuilder {
 					// creating a new child scope if the path is not too long (< MAX_DESC)
 					//--------------------------------------------------------------
 					if (numKids<MAX_DESC) {
+						// we will reuse CCT ID of the CCT scope as the unique identifier of this
+						// call site.
+						// the CallSiteScopeCallerView class will also use the flat ID of the
+						// CCT scope for its flat ID.
+						// While the metric of this new scope is the same as the original 
+						//	CCT call site scope (scope_cost)
 						CallSiteScopeCallerView callerScope =
 							new CallSiteScopeCallerView( lineScope, mycaller,
-									CallSiteScopeType.CALL_FROM_PROCEDURE, lineScope.hashCode(), next, scope_cost);
+									CallSiteScopeType.CALL_FROM_PROCEDURE, next.getCCTIndex(), next, scope_cost);
 
 						callerScope.setRootScope(root_caller_tree);
 						// set the value of the new scope
@@ -129,7 +135,7 @@ public class CallerScopeBuilder {
 			// we check if the scope is identical with the existing scope in the path
 			// if it is the case, we should merge them
 			//------------------------------------------------------------------------
-			if (first.getCCTIndex() == existingCaller.getCCTIndex()) {
+			if (first.getProcedureScope().getFlatIndex() == existingCaller.getProcedureScope().getFlatIndex()) {
 
 				//------------------------------------------------------------------------
 				// combine metric values for first to those of existingCaller.

@@ -98,22 +98,6 @@ public class TraceDatabase
 		return opener;
 	}
 	
-	/******
-	 * Opening a local database
-	 * 
-	 * @param window
-	 * @param database : path to the local database
-	 * @param statusMgr
-	 * @return
-	 */
-	static public boolean openDatabase(IWorkbenchWindow window,
-			final String database, IStatusLineManager statusMgr) 
-	{
-		DatabaseAccessInfo info = new DatabaseAccessInfo(database);
-		
-		return openDatabase(window, statusMgr, info);
-	}
-	
 	
 	/***
 	 * general static function to load a database by showing open dialog box
@@ -124,14 +108,14 @@ public class TraceDatabase
 	 * 
 	 * @return true if the opening is successful. False otherwise
 	 */
-	static public boolean openDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr) 
+	static public boolean openRemoteDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr) 
 	{	
-		OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, null);
+		OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, null, false);
 		if (dlg.open() == Window.CANCEL)
 			return false;
 		
 		DatabaseAccessInfo info = dlg.getDatabaseAccessInfo();
-		return openDatabase(window, statusMgr, info);
+		return openDatabase(window, statusMgr, info, false);
 	}
 
 	/************
@@ -141,10 +125,16 @@ public class TraceDatabase
 	 * @param statusMgr : current status line manager
 	 * @return true if the opening is successful. False otherwise
 	 */
-	static public boolean openLocalDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr)
+	static public boolean openLocalDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr,
+			final String database)
 	{
+		String directory = database;
 		DirectoryDialog dlg = new DirectoryDialog(window.getShell());
-		String directory = dlg.open();
+
+		if (directory == null)
+		{
+			directory = dlg.open();
+		}
 		
 		while (directory != null)
 		{
@@ -155,16 +145,16 @@ public class TraceDatabase
 				
 				if (processDatabase(window, statusMgr, stdc)) {
 					return true;
-				} else {
-					MessageDialog.openError(window.getShell(), "Error", "Fail to process the database:"
-							+ directory);
 				}
+				MessageDialog.openError(window.getShell(), "Error", "Fail to process the database:\n"
+						+ directory);
+
 			} catch (Exception e) 
 			{
 				MessageDialog.openError(window.getShell(), "Error opening database", 
 						e.getMessage());
-				directory = dlg.open();
 			}
+			directory = dlg.open();
 		}
 		return false;
 	}
@@ -179,7 +169,7 @@ public class TraceDatabase
 	 * @return
 	 */
 	static private boolean openDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr, 
-			DatabaseAccessInfo info)
+			DatabaseAccessInfo info, boolean useLocalDatbaase)
 	{
 		SpaceTimeDataController stdc = null;
 		String message = null;
@@ -195,7 +185,8 @@ public class TraceDatabase
 				stdc    = null;
 				message = e.getMessage();
 				
-				OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, message);
+				OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, 
+						message, useLocalDatbaase);
 				if (dlg.open() == Window.CANCEL)
 					return false;
 				

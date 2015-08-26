@@ -126,23 +126,14 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			Scope flat_info[] = this.htFlatCostAdded.get( id );
 			if (flat_info != null)
 				for (int i=0; i<flat_info.length; i++) {
-					this.decrementCounter(flat_info[i]);
+					if (flat_info[i] != null) {
+						flat_info[i].decrementCounter();
+					}
 				}
 		}
 	}
 	
 	
-	/****************************************************************************
-	 * decrement scope's counter
-	 * @param flat_s
-	 ****************************************************************************/
-	private void decrementCounter(Scope flat_s) {
-		if (flat_s != null) {
-			flat_s.decrementCounter();
-		}
-	}
-	
-
 	/****************************************************************************
 	 * Get the flat counterpart of the scope cct:
 	 * - check if the flat counter part already exist
@@ -378,18 +369,24 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 	
 	/***********************************************************
 	 * Retrieve the ID given a scope
-	 * a flat ID is the name of the class class concatenated by its hashcode
-	 * This is to force to have different ID for different classes
+	 * a flat ID is the name of the class class concatenated by the flat ID
+	 * 	(This is to force to have different ID for different classes
+	 *   since hpcprof may generate the same ID for different type of scopes)
+	 * for call site, we need to add the flat ID of the called procedure
+	 *  (this is to ensure a flat's call site has different ID.
+	 *   however, it doesn't solve if the called procedures have the same ID)
 	 * @param scope
 	 * @return
 	 ***********************************************************/
 	private String getID( Scope scope ) {
-		int id = scope.getFlatIndex();
-		String hash_id = scope.getClass().getSimpleName();
-		if (hash_id != null) {
-			hash_id = hash_id.substring(0, 2) + id;
-		} else {
-			hash_id = String.valueOf(id);
+		final String id = String.valueOf(scope.getFlatIndex());
+		final String class_type = scope.getClass().getSimpleName();
+		String hash_id = (class_type == null ? id : class_type.substring(0, 2) + id);
+		if (scope instanceof CallSiteScope)
+		{
+			// forcing to include procedure ID to ensure uniqueness of call site
+			final int proc_id = ((CallSiteScope)scope).getProcedureScope().getFlatIndex();
+			hash_id += ":" + proc_id;
 		}
 		return hash_id;
 	}

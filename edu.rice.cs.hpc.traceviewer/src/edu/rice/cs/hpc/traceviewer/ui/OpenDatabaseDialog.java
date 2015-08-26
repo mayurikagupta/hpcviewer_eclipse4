@@ -8,6 +8,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -92,10 +93,12 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param parentShell
 	 * @param inStatus
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus) { 
+	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus,
+			boolean useLocalDatabase) { 
 		super(parentShell);
 		status=inStatus;
 		errorMessage="";
+		this.useLocalDatabase = useLocalDatabase;
 	}
 
 	/*****
@@ -105,10 +108,12 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param inStatus
 	 * @param error message
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus, String _errorMessage){
+	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus, 
+			String _errorMessage, boolean useLocalDatabase){
 		super(parentShell);
 		status=inStatus;
 		setErrorMessage(_errorMessage);
+		this.useLocalDatabase = useLocalDatabase;
 	}
 	
 	public void setErrorMessage(String errorMessage)
@@ -206,21 +211,7 @@ public class OpenDatabaseDialog extends Dialog
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				DirectoryDialog dialog;
-
-				dialog = new DirectoryDialog(getShell());
-				dialog.setMessage("Please select a directory containing execution traces.");
-				dialog.setText("Select Data Directory");
-
-				final String database = dialog.open();
-
-				if (database == null)
-					// user click cancel
-					return;
-				comboBoxes[FieldDatabasePath].setText(database);
-
-				// automatically close the dialog box
-				OpenDatabaseDialog.this.okPressed();
+				showLocalBrowser();
 			}
 
 			@Override
@@ -358,19 +349,55 @@ public class OpenDatabaseDialog extends Dialog
 
 		outerComposite.pack();
 
-		// default selection ?
-/*		Activator activator = Activator.getDefault();
-		if (activator != null) {
-			ScopedPreferenceStore objPref = (ScopedPreferenceStore) activator.getPreferenceStore();
-			int select = objPref.getInt(HISTORY_SELECTION);
-			tabFolder.setSelection(select);
-		}*/
-		// default is remote database
-		tabFolder.setSelection(1);
+		int folderSelection = (useLocalDatabase? 0 : 1);
+		tabFolder.setSelection(folderSelection);
 
 		return outerComposite;
 	}
 
+	@Override
+	public int open()
+	{
+		if (useLocalDatabase) {
+			// do not block if we use local database
+			super.setBlockOnOpen(false);
+			super.open();
+			
+			showLocalBrowser();
+			if (dbInfo != null && dbInfo.getDatabasePath() != null) {
+				return Window.OK;
+			}
+			else {
+				return Window.CANCEL;
+			}
+		}
+		else {
+			return super.open();
+		}
+	}
+	
+	/****
+	 * Display a directory dialog box and update the variable
+	 */
+	private void showLocalBrowser()
+	{
+		DirectoryDialog dialog;
+
+		dialog = new DirectoryDialog(getShell());
+		dialog.setMessage("Please select a directory containing execution traces.");
+		dialog.setText("Select Data Directory");
+
+		final String database = dialog.open();
+
+		if (database == null)
+			// user click cancel
+			return;
+		comboBoxes[FieldDatabasePath].setText(database);
+
+		// automatically close the dialog box
+		okPressed();
+	}
+	
 	/*********
 	 * return the username for SSH tunneling
 	 * 
@@ -548,10 +575,12 @@ public class OpenDatabaseDialog extends Dialog
 		shell.setLayout(new FillLayout());
 
 		shell.open();
-		OpenDatabaseDialog dialog = new OpenDatabaseDialog(shell, null);
+		OpenDatabaseDialog dialog = new OpenDatabaseDialog(shell, null, true);
 
 		if (dialog.open() == Dialog.OK) {
 			System.out.println("ok: " + dialog.getDatabaseAccessInfo());
+		} else {
+			System.out.println("canceled !");
 		}
 	}
 }

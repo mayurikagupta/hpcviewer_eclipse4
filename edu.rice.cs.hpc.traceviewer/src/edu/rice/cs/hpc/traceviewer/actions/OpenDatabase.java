@@ -19,7 +19,7 @@ public class OpenDatabase extends AbstractHandler
 		final IViewSite vSite = ( IViewSite ) HandlerUtil.getActiveSite(event);
 		final IStatusLineManager status = vSite.getActionBars().getStatusLineManager();
 
-		TraceDatabase.openLocalDatabase(window, status);		
+		TraceDatabase.openLocalDatabase(window, status, null);	
 		
 		return null;
 	}

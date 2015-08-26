@@ -32,7 +32,7 @@ variable environment HPCRUN_TRACE has to be set.
 The viewers contain seven plug-in projects:
 
  edu.rice.cs.hpc.common (common plugin for hpcviewer and hpctraceviewer)
- edu.rice.cs.hpc.data (hpcdata)
+ edu.rice.cs.hpc.data   (hpcdata)
  edu.rice.cs.hpc.filter (hpcfilter plugin for hpcviewer and hpctraceviewer)
  edu.rice.cs.hpc.remote (hpcremote, used currently by hpctraceviewer)
  edu.rice.cs.hpc.viewer (hpcviewer)
@@ -59,9 +59,7 @@ Download required software:
 
     * Eclipse 3.7 (Indigo) version
           o RCP package is necessary  
-    * Either subclipse or subversive (the latter is recommended):
-          o Subclipse (ver. 1.6 or above) depending the subversion client version
-          o Subversive 
+	  o Eclipse Git (egit) plugin
     * Java JDK (ver 1.6 or above). SUN or IBM (IceTea) JDK is recommended
 
 
@@ -74,14 +72,14 @@ Install Eclipse subversion plugin (or subversive):
 
 Check out the source code
 
-    * select File - New - Project menu
-    * Select "Project from SVN"
-    * Check out from: 
+    * select File - Import menu
+    * Select "Project from Git"
+    * Clone from: 
 
-	https://hpcviewer.googlecode.com/svn/trunk 
+        https://github.com/HPCToolkit/hpcviewer.git
 
     * When the window "Check out as" appears, check the option "Find projects in the children of the selected resource"
-    * Make sure all six projects are selected: 
+    * Make sure all these projects are selected: 
 
     edu.rice.cs.hpc.common
     edu.rice.cs.hpc.data 
