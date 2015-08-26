@@ -2,7 +2,7 @@ package edu.rice.cs.hpc.data.experiment.merge;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+//import java.util.HashMap;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
@@ -284,7 +284,7 @@ public class TreeSimilarity {
 	 * data to store the sorted children of a scope (so we don't need to recreate again)
 	 *  every time we invoke the scope
 	 */
-	final private HashMap<String, Scope[]> mapScopeChildren = new HashMap<String, Scope[]>();
+	//final private HashMap<String, Scope[]> mapScopeChildren = new HashMap<String, Scope[]>();
 	
 	
 	/****
@@ -296,7 +296,7 @@ public class TreeSimilarity {
 	 */
 	private Scope[] getSortedChildren(Scope scope)
 	{
-		String key = ((Experiment)scope.getExperiment()).getXMLExperimentFile().getAbsolutePath() +
+/*		String key = ((Experiment)scope.getExperiment()).getXMLExperimentFile().getAbsolutePath() +
 				": " + scope.getCCTIndex();
 		Scope []sortedChildren = mapScopeChildren.get(key);
 		if (sortedChildren != null)
@@ -307,7 +307,12 @@ public class TreeSimilarity {
 			return null;
 		
 		sortedChildren = sortArrayOfNodes(children);
-		mapScopeChildren.put(key, sortedChildren);
+		mapScopeChildren.put(key, sortedChildren);*/
+		
+		Object []children = scope.getChildren();
+		if (children == null)
+			return null;
+		Scope []sortedChildren = sortArrayOfNodes(children);
 		
 		return sortedChildren;
 	}
