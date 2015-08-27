@@ -17,6 +17,7 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.LineScope;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
+import edu.rice.cs.hpc.data.util.OSValidator;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 //======================================================
 // ................ SORTING ............................
@@ -40,6 +41,7 @@ public class ColumnViewerSorter extends ViewerComparator {
 	public void setMetric(BaseMetric newMetric) {
 		this.metric = newMetric;
 	}
+	
 	/**
 	 * Class to sort a column
 	 * @param viewer: the table tree
@@ -47,7 +49,7 @@ public class ColumnViewerSorter extends ViewerComparator {
 	 * @param newMetric: the metric
 	 * @param colNum: the position
 	 */
-	public ColumnViewerSorter(TreeViewer viewer, TreeColumn column, BaseMetric newMetric, int colNum) {
+	public ColumnViewerSorter(final TreeViewer viewer, TreeColumn column, BaseMetric newMetric, int colNum) {
 		this.column = column;
 		this.iColNumber = colNum;
 		this.viewer = viewer;
@@ -56,6 +58,13 @@ public class ColumnViewerSorter extends ViewerComparator {
 		// catch event when the user sort the column on the column header
 		this.column.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
+				
+				if (OSValidator.isMac()) {
+					//Eclipse Indigo bug on Mac OS: expanding a long call path will cause
+					// SWT to slowly sort tree items. Somehow Eclipse also expands other
+					// collapsed tree items as well.
+					viewer.collapseAll();
+				}
 				// before sorting, we need to check if the first row is an element header 
 				// something like "aggregate metrics" or zoom-in item
 				TreeItem item = ColumnViewerSorter.this.viewer.getTree().getItem(0);
