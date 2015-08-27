@@ -58,11 +58,17 @@ public class ColumnViewerSorter extends ViewerComparator {
 		// catch event when the user sort the column on the column header
 		this.column.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				
+				Object []elements = null;
 				if (OSValidator.isMac()) {
+					// --------------------------------------------------------------------
 					//Eclipse Indigo bug on Mac OS: expanding a long call path will cause
 					// SWT to slowly sort tree items. Somehow Eclipse also expands other
 					// collapsed tree items as well.
+					// --------------------------------------------------------------------
+					// save the current expaded elements to be restored after the sort
+					elements = viewer.getExpandedElements();
+					
+					// collapse all the items
 					viewer.collapseAll();
 				}
 				// before sorting, we need to check if the first row is an element header 
@@ -88,6 +94,9 @@ public class ColumnViewerSorter extends ViewerComparator {
 				// post-sorting 
 				if(sText != null) {
 					Utilities.insertTopRow(ColumnViewerSorter.this.viewer, imgItem, sText);
+				}
+				if (elements != null) {
+					viewer.setExpandedElements(elements);
 				}
 			}
 
