@@ -78,7 +78,7 @@ public class BaseExperimentBuilder extends Builder {
 	protected Token2.TokenXML elemInfoState = TokenXML.T_INVALID_ELEMENT_NAME;
 
 	//--------------------------------------------------------------------------------------
-	private HashMap<Integer, String> hashProcedureTable;
+	private HashMap<Integer, ProcedureAttribute> hashProcedureTable;
 	private HashMap<Integer, LoadModuleScope> hashLoadModuleTable;
 	private HashMap <Integer, SourceFile> hashSourceFileTable;
 	private HashMap<Integer, Scope> hashCallSiteTable;
@@ -110,7 +110,7 @@ public class BaseExperimentBuilder extends Builder {
 		this.csviewer = false;
 		//viewRootScope = new RootScope[3];
 		
-		hashProcedureTable = new HashMap<Integer, String>();
+		hashProcedureTable = new HashMap<Integer, ProcedureAttribute>();
 		hashLoadModuleTable = new HashMap<Integer, LoadModuleScope>();
 		new HashMap<Integer, Scope>();
 		hashSourceFileTable = new HashMap<Integer, SourceFile>();
@@ -538,13 +538,13 @@ public class BaseExperimentBuilder extends Builder {
 			int firstLn = 0, lastLn = 0;
 			SourceFile srcFile = null; // file location of this procedure
 			
-			LoadModuleScope objLoadModule = null;
-			String sProcName = PROCEDURE_UNKNOWN;
+			LoadModuleScope objLoadModule    = null;
+			ProcedureAttribute procAttribute = null;
 
 			for(int i=0; i<attributes.length; i++) {
 				if (attributes[i].equals("s")) { 
 					// new database format: s is the flat ID of the procedure
-					sProcName = this.getProcedureName(values[i]);
+					procAttribute = this.getProcedureName(values[i]);
 					flat_id = Integer.parseInt(values[i]);
 					if (!new_cct_format)
 						// old format: cct ID = flat ID
@@ -590,11 +590,11 @@ public class BaseExperimentBuilder extends Builder {
 					}
 				} else if (attributes[i].equals("p") ) {
 					// obsolete format: p is the name of the procedure
-					sProcName = values[i];
+					procAttribute = new ProcedureAttribute(values[i], false);
 					
 				} else if(attributes[i].equals(NAME_ATTRIBUTE)) {
 					// new database format: n is the flat ID of the procedure
-					sProcName = this.getProcedureName(values[i]);
+					procAttribute = this.getProcedureName(values[i]);
 					
 				} else if(attributes[i].equals(LINE_ATTRIBUTE)) {
 					// line number (or range)
@@ -617,7 +617,7 @@ public class BaseExperimentBuilder extends Builder {
 					flat_id = Integer.MAX_VALUE ^ flat_id;
 				}
 
-				if (sProcName.isEmpty()) {
+				if (procAttribute.name.isEmpty()) {
 					// this is a line scope
 					Scope scope;
 					if (firstLn == lastLn)
@@ -646,7 +646,7 @@ public class BaseExperimentBuilder extends Builder {
 
 			ProcedureScope procScope  = new ProcedureScope(this.viewRootScope, objLoadModule, srcFile, 
 					firstLn-1, lastLn-1, 
-					sProcName, isalien, cct_id, flat_id, userData);
+					procAttribute.name, isalien, cct_id, flat_id, userData, procAttribute.falseProcedure);
 
 			if ( (this.scopeStack.size()>1) && ( this.scopeStack.peek() instanceof LineScope)  ) {
 
@@ -787,12 +787,27 @@ public class BaseExperimentBuilder extends Builder {
 	private void do_Procedure(String[] attributes, String[] values) {
 		if(values.length < 2)
 			return;
-		String sID = values[0];
-		String sData = values[1];
+		
+		String sID = null;
+		String sData = null;
+		boolean isFalseProc = false;
 
+		for (int i=0; i<attributes.length; i++)
+		{
+			if (attributes[i].equals("i")) {
+				sID = values[i];
+			} else if (attributes[i].equals("n")) {
+				sData = values[i];
+			} else if (attributes[i].equals("f")) {
+				int val     = Integer.valueOf(values[i]);
+				if (val == 1)
+					isFalseProc = true;
+			}
+			
+		}
 		try {
 			Integer objID = Integer.parseInt(sID);
-			this.hashProcedureTable.put(objID, sData);
+			this.hashProcedureTable.put(objID, new ProcedureAttribute(sData, isFalseProc));
 		} catch (java.lang.NumberFormatException e) {
 			e.printStackTrace();
 		}
@@ -1234,16 +1249,17 @@ public class BaseExperimentBuilder extends Builder {
 	//--------------------------------------------------------------------------------
 
 	
-	private String getProcedureName(String sProcIndex) {
+	private ProcedureAttribute getProcedureName(String sProcIndex) {
 		String sProcName = PROCEDURE_UNKNOWN;
+		ProcedureAttribute attribute = null;
 		boolean hashtableExist = (this.hashProcedureTable.size()>0);
 		if(hashtableExist) {
 			try {
 				Integer objProcID = Integer.parseInt(sProcIndex); 
 				// get the real name of the procedure from the dictionary
-				String sProc = this.hashProcedureTable.get(objProcID);
-				if(sProc != null) {
-					sProcName = sProc;
+				attribute = this.hashProcedureTable.get(objProcID);
+				if(attribute != null) {
+					return attribute;
 				}
 			} catch (java.lang.NumberFormatException e) {
 				System.err.println("Warning: Procedure index doesn't exist: " + sProcIndex);
@@ -1252,7 +1268,8 @@ public class BaseExperimentBuilder extends Builder {
 			// the database of procedure doesn't exist. This can be a flat view.
 			sProcName = sProcIndex;
 		}
-		return sProcName;
+		attribute = new ProcedureAttribute(sProcName, false);
+		return attribute;
 	}
 	
 	
@@ -1284,4 +1301,15 @@ public class BaseExperimentBuilder extends Builder {
 		public int getLastLine( ) { return this.lastLn; }
 	}
 
+	private class ProcedureAttribute
+	{
+		final public String name;
+		final public boolean falseProcedure;
+		
+		public ProcedureAttribute(String name, boolean falseProcedure)
+		{
+			this.name = name;
+			this.falseProcedure = falseProcedure;
+		}
+	}
 }

@@ -38,7 +38,7 @@ import edu.rice.cs.hpc.data.util.IUserData;
 public class ProcedureScope extends Scope  implements IMergedScope 
 {
 
-
+final private boolean isFalseProcedure;
 /** The name of the procedure. */
 protected String procedureName;
 protected boolean isalien;
@@ -64,7 +64,8 @@ final static public String INLINE_NOTATION = "[I] ";
  ************************************************************************/
 	
 public ProcedureScope(RootScope root, SourceFile file, int first, int last, 
-		String proc, boolean _isalien, int cct_id, int flat_id, IUserData<String,String> userData)
+		String proc, boolean _isalien, int cct_id, int flat_id, 
+		IUserData<String,String> userData, boolean isFalseProcedure)
 {
 	super(root, file, first, last, cct_id, flat_id);
 	this.isalien = _isalien;
@@ -75,7 +76,8 @@ public ProcedureScope(RootScope root, SourceFile file, int first, int last,
 		if (newName != null) 
 			procedureName = newName;
 	}
-	this.objLoadModule = null;
+	this.objLoadModule 	  = null;
+	this.isFalseProcedure = isFalseProcedure;
 }
 
 
@@ -90,9 +92,10 @@ public ProcedureScope(RootScope root, SourceFile file, int first, int last,
  * @param _isalien
  */
 public ProcedureScope(RootScope root, LoadModuleScope loadModule, SourceFile file, 
-		int first, int last, String proc, boolean _isalien, int cct_id, int flat_id, IUserData<String,String> userData)
+		int first, int last, String proc, boolean _isalien, int cct_id, int flat_id, 
+		IUserData<String,String> userData, boolean isFalseProcedure)
 {
-	this(root, file, first, last,proc,_isalien, cct_id, flat_id, userData);
+	this(root, file, first, last,proc,_isalien, cct_id, flat_id, userData, isFalseProcedure);
 	//this.iScopeID = sid;
 	this.objLoadModule = loadModule;
 }
@@ -143,7 +146,8 @@ public Scope duplicate() {
 			this.isalien,
 			getCCTIndex(), // Laks 2008.08.26: add the sequence ID
 			this.flat_node_index,
-			null);
+			null,
+			this.isFalseProcedure);
 
 }
 
@@ -178,6 +182,10 @@ public Object[] getAllChildren(AbstractFinalizeMetricVisitor finalizeVisitor, Pe
 	return this.getChildren();
 }
 
+public boolean isFalseProcedure()
+{
+	return isFalseProcedure;
+}
 
 }
 

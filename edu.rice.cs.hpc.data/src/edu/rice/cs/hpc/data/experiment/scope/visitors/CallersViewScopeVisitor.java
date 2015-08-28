@@ -26,9 +26,6 @@ public class CallersViewScopeVisitor extends CallerScopeBuilder implements IScop
 	//----------------------------------------------------
 	// Constants
 	//----------------------------------------------------
-	/** hack: list of procedures to be hidden from the view 
-	 *  at the moment, we only have one. **/
-	static private final String HiddenProcedures = "Partial Call Paths";
 
 	//----------------------------------------------------
 	// private data
@@ -101,7 +98,8 @@ public class CallersViewScopeVisitor extends CallerScopeBuilder implements IScop
 		//--------------------------------------------------------------------------------
 		// if there are no exclusive costs to attribute from this context, we are done here
 		//--------------------------------------------------------------------------------
-		if ( !scope.hasNonzeroMetrics() || scope.getName().equals(HiddenProcedures) ) {
+		if ( !scope.hasNonzeroMetrics() || 
+			  scope.isFalseProcedure() ) {
 			return; 
 		}
 		
@@ -117,7 +115,6 @@ public class CallersViewScopeVisitor extends CallerScopeBuilder implements IScop
 			
 			this.decrementCounter();
 		}
-	
 	}
 	
 	public void visit(AlienScope scope, ScopeVisitType vt) { }
