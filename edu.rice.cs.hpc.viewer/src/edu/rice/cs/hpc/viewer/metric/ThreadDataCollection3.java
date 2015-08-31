@@ -90,4 +90,11 @@ public class ThreadDataCollection3 implements IThreadDataCollection
 			e.printStackTrace();
 		}
 	}
+
+	@Override
+	public double[] getScopeMetrics(int thread_id, int MetricIndex,
+			int numMetrics) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

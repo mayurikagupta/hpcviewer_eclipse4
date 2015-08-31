@@ -11,7 +11,7 @@ public class GraphEditorPlotSort extends GraphEditor {
 
 
 	@Override
-	protected double[] getValuesX(Scope scope, MetricRaw metric) {
+	protected double[] getValuesX(Scope scope, MetricRaw metric) throws NumberFormatException, IOException {
 
 		double x_values[] = threadData.getProcessIDsDouble(metric.getID());
 		double sequence_x[] = new double[x_values.length];

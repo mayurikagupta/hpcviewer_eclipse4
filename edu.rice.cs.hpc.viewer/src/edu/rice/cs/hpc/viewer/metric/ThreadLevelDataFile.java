@@ -115,6 +115,31 @@ public class ThreadLevelDataFile extends FileDB2
 	}
 
 
+	public double[] getScopeMetrics(int thread_index, int metricIndex, int num_metrics) throws IOException
+	{
+		long offset = getOffsets()[thread_index];
+		int num_cct = getNumberOfCCT(thread_index, num_metrics);
+		double []values = new double[num_cct];
+		for (int i=0; i<num_cct; i++)
+		{
+			long position = getFilePosition(i+1, metricIndex, num_metrics);
+			values[i] = getDouble(offset + position);
+		}
+		return values;
+	}
+	
+	private int getNumberOfCCT(int thread_id, int num_metrics)
+	{
+		long []offsets = getOffsets();
+		long offset1 = offsets[thread_id];
+		long offset2 = thread_id == offsets.length-1 ? offsets[thread_id-1] : offsets[thread_id + 1];
+		
+		long distance = Math.abs(offset2-offset1);
+		int num_cct = (int) (distance / (num_metrics * Constants.SIZEOF_LONG));
+		
+		return num_cct;
+	}
+	
 	/**
 	 * get a position for a specific node index and metric index
 	 * @param nodeIndex

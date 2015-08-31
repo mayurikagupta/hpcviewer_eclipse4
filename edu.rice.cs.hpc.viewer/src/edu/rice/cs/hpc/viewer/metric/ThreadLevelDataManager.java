@@ -84,8 +84,9 @@ public class ThreadLevelDataManager {
 	 * @param metric_raw_id
 	 * @return
 	 * @throws NumberFormatException (in case the processor ID is not a number)
+	 * @throws IOException 
 	 */
-	public double[] getProcessIDsDouble(int metric_raw_id) throws NumberFormatException {
+	public double[] getProcessIDsDouble(int metric_raw_id) throws NumberFormatException, IOException {
 		
 		return data_file.getRankLabels();
 	}
@@ -107,12 +108,12 @@ public class ThreadLevelDataManager {
 	}
 
 	
-	public int getParallelismLevel()
+	public int getParallelismLevel() throws IOException
 	{
 		return data_file.getParallelismLevel();
 	}
 	
-	public String getRankTitle()
+	public String getRankTitle() throws IOException
 	{
 		return data_file.getRankTitle();
 	}

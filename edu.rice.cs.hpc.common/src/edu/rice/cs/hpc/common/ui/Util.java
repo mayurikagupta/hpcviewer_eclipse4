@@ -59,6 +59,9 @@ public class Util {
 	 * @return IStatusLineManager the status line manager
 	 */
 	public static IStatusLineManager getActiveStatusLineManager() {
+		if (!PlatformUI.isWorkbenchRunning())
+			return null;
+		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {
 			return null;

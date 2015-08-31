@@ -28,8 +28,9 @@ public interface IThreadDataCollection
 	/*****
 	 * Get a list of the labels for ranks (x-axis)
 	 * @return
+	 * @throws IOException 
 	 */
-	public double[]	getRankLabels();	
+	public double[]	getRankLabels() throws IOException;	
 	
 	/****
 	 * Get the level of parallelism. If it's a thread only or process only
@@ -37,14 +38,16 @@ public interface IThreadDataCollection
 	 * (more than 2 is not supported at the moment).
 	 * 
 	 * @return
+	 * @throws IOException 
 	 */
-	public int 		getParallelismLevel();
+	public int 		getParallelismLevel() throws IOException;
 	
 	/****
 	 * Get the title of the rank (process, threads, ...)
 	 * @return
+	 * @throws IOException 
 	 */
-	public String   getRankTitle();
+	public String   getRankTitle() throws IOException;
 	
 	/*****
 	 * Get an array of metrics of a specified node and metrics
@@ -58,6 +61,18 @@ public interface IThreadDataCollection
 	public double[] getMetrics(long nodeIndex, int metricIndex, int numMetrics) 
 			throws IOException;
 
+	/****
+	 * get the array of metric values for all CCT of a specified metric and
+	 * thread ID
+	 * 
+	 * @param thread_id : thread ID
+	 * @param MetricIndex : metric index
+	 * @param numMetrics : num metrics
+	 * @return array of metric values for each CCT 
+	 */
+	public double[] getScopeMetrics(int thread_id, int MetricIndex, int numMetrics)
+			 throws IOException;
+	
 	/****
 	 * Method to be called at the end of the execution, needed to dispose
 	 * the allocated resources.

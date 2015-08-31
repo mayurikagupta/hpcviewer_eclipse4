@@ -148,8 +148,10 @@ public abstract class GraphEditor extends GraphEditorBase {
 	 * @param scope
 	 * @param metric
 	 * @return
+	 * @throws IOException 
+	 * @throws NumberFormatException 
 	 */
-	protected abstract double[] getValuesX(Scope scope, MetricRaw metric);
+	protected abstract double[] getValuesX(Scope scope, MetricRaw metric) throws NumberFormatException, IOException;
 	
 	/*****
 	 * retrieve the value of Y

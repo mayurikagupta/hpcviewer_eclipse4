@@ -15,7 +15,7 @@ public class GraphEditorPlot extends GraphEditor {
     
 	@Override
 	protected double[] getValuesX(Scope scope, MetricRaw metric) 
-	throws NumberFormatException {
+	throws NumberFormatException, IOException {
 
 		double []x_values = threadData.getProcessIDsDouble( metric.getID() );				
 		return x_values;
@@ -37,12 +37,16 @@ public class GraphEditorPlot extends GraphEditor {
 
 		xTick.setFormat(new DecimalFormat("##########"));
 
-		if (threadData.getParallelismLevel()>1) 
-		{
-			xTick.setFormat(new DecimalFormat("######00.00##"));
+		try {
+			if (threadData.getParallelismLevel()>1) 
+			{
+				xTick.setFormat(new DecimalFormat("######00.00##"));
+				return threadData.getRankTitle();
+			}
+		} catch (IOException e) {			
+			e.printStackTrace();
 		}
-
-		return threadData.getRankTitle();
+		return null;
 	}
 
 }

@@ -50,23 +50,18 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	public double[] getMetrics(long nodeIndex, int metricIndex, int numMetrics) 
 			throws IOException {
 		// check if the data already exists or not
-		if (data_file != null) 
-		{
-			if (data_file[metricIndex] != null)
-			{
-				return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
-			}
-		}
-		// data hasn't been created. Try to merge and open the file
-		String file = thread_data.getMergedFile(directory, metricIndex);
-		if (file != null)
-		{
-			data_file[metricIndex] = new ThreadLevelDataFile(Util.getActiveStatusLineManager());
-			data_file[metricIndex].open(file);
-			return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
-		}
-		return null;
+		ensureDataFile(metricIndex);
+		return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
 	}
+	
+	@Override
+	public double[] getScopeMetrics(int thread_id, int metricIndex, int numMetrics) throws IOException
+	{
+		// check if the data already exists or not
+		ensureDataFile(metricIndex);
+		return data_file[metricIndex].getScopeMetrics(thread_id, metricIndex, numMetrics);
+	}
+
 
 	@Override
 	public boolean isAvailable() {
@@ -75,7 +70,8 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 
 	
 	@Override
-	public double[] getRankLabels() {
+	public double[] getRankLabels() throws IOException {
+		ensureDataFile(0);
 		final int numLevels = data_file[0].getParallelismLevel();
 		final String []labels = data_file[0].getRankLabels();
 		
@@ -119,12 +115,13 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	}
 
 	@Override
-	public int getParallelismLevel() {
+	public int getParallelismLevel() throws IOException {
+		ensureDataFile(0);
 		return data_file[0].getParallelismLevel();
 	}
 
 	@Override
-	public String getRankTitle() {
+	public String getRankTitle() throws IOException {
 		String title;
 		if (getParallelismLevel() > 1)
 		{
@@ -150,6 +147,25 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		}
 	}
 
+	
+	private void ensureDataFile(int metricIndex) throws IOException
+	{
+		if (data_file != null) 
+		{
+			if (data_file[metricIndex] != null)
+			{
+				return;
+			}
+		}
+		// data hasn't been created. Try to merge and open the file
+		String file = thread_data.getMergedFile(directory, metricIndex);
+		if (file != null)
+		{
+			data_file[metricIndex] = new ThreadLevelDataFile(Util.getActiveStatusLineManager());
+			data_file[metricIndex].open(file);
+		}
+	}
+	
 	/**
 	 * class to cache the name of merged thread-level data files. 
 	 * We will ask A LOT the name of merged files, thus keeping in cache will avoid us to check to often
