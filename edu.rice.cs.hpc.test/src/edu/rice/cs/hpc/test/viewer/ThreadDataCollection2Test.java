@@ -12,12 +12,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
-import edu.rice.cs.hpc.viewer.metric.ThreadDataCollection2;
+import edu.rice.cs.hpc.viewer.metric.IThreadDataCollection;
+import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 
-public class ThreadDataCollection2Test {
-
-	private ThreadDataCollection2 data;
-	private Experiment experiment ;
+/*************************************
+ * 
+ * Unit test for ThreadDataCollection2 class
+ *
+ *************************************/
+public class ThreadDataCollection2Test 
+{
+	protected IThreadDataCollection data;
+	protected Experiment experiment ;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -29,14 +35,9 @@ public class ThreadDataCollection2Test {
 
 	@Before
 	public void setUp() throws Exception {
-		experiment = new Experiment();
-		final String filename = System.getProperty("HPCDATA_FILE");
+		String filename = System.getProperty("HPCDATA_DB");
 		assertNotNull(filename);
-		final File file = new File(filename);
-		assertTrue(file.canRead());
-		experiment.open(file, null, false);
-		data = new ThreadDataCollection2(experiment);
-		data.open(experiment.getDefaultDirectory().getAbsolutePath());
+		init(filename);
 	}
 
 	@After
@@ -59,13 +60,15 @@ public class ThreadDataCollection2Test {
 	@Test
 	public void testGetScopeMetrics() {
 		int numMetrics = experiment.getMetricRaw().length;
-		try {
-			double []values = data.getScopeMetrics(0, 0, numMetrics);
-			assertNotNull(values);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail("error occurs");
+		for (int i=0; i<numMetrics; i++)
+		{
+			try {
+				double []values = data.getScopeMetrics(0, i, numMetrics);
+				assertNotNull(values);
+			} catch (IOException e) {
+				e.printStackTrace();
+				fail("error occurs");
+			}
 		}
 	}
 
@@ -94,4 +97,14 @@ public class ThreadDataCollection2Test {
 		assertNotNull(title);
 	}
 
+	protected void init(String database) throws Exception
+	{
+		experiment = new Experiment();
+		final File file = new File(database);
+		assertTrue(file.canRead());
+		experiment.open(file, null, false);
+		ThreadLevelDataManager manager = new ThreadLevelDataManager(experiment);
+		data = manager.getThreadDataCollection();
+		data.open(experiment.getDefaultDirectory().getAbsolutePath());
+	}
 }

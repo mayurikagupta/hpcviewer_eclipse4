@@ -124,7 +124,18 @@ public class ThreadLevelDataManager {
 		}
 	}
 	
-	
+	/******
+	 * Return the current thread data collection<br/>
+	 * Warning:
+	 * It is not recommended to use IThreadDataCollection API directly
+	 * since it support lower level functionalities.
+	 * 
+	 * @return IThreadDataCollection
+	 */
+	public IThreadDataCollection getThreadDataCollection()
+	{
+		return data_file;
+	}
 	
 	//==============================================================================================
 	// PRIVATE METHODS
