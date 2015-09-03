@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.viewer.window;
 import java.io.IOException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 
@@ -63,6 +64,14 @@ public class Database {
 	public void setExperiment (Experiment exper) throws IOException {
 		experiment = exper;
 		dataManager = new ThreadLevelDataManager(exper);
+		
+		// TODO hack: since we just created the manager, we need to inform
+		// MetricRaw to set the new manager
+		MetricRaw []metrics = experiment.getMetricRaw();
+		for (MetricRaw metric: metrics)
+		{
+			metric.setThreadData(dataManager.getThreadDataCollection());
+		}
 		return;
 	}
 

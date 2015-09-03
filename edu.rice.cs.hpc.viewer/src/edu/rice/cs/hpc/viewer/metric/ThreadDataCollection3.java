@@ -6,6 +6,7 @@ import java.io.IOException;
 import edu.rice.cs.hpc.data.db.DataThread;
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.BaseExperiment.Db_File_Type;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 
 /*******************************************************************
  * 

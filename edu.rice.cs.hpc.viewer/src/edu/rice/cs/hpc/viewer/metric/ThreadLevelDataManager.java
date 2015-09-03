@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.viewer.metric;
 import java.io.IOException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 
 /***

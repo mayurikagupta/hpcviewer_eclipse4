@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
-import edu.rice.cs.hpc.viewer.metric.IThreadDataCollection;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 
 public class ThreadLevelDataManagerTest {

@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.viewer.metric;
+package edu.rice.cs.hpc.data.experiment.extdata;
 
 import java.io.IOException;
 
