@@ -10,7 +10,7 @@ import org.eclipse.swt.graphics.Font;
 
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
-import edu.rice.cs.hpc.viewer.metric.IMetricLabelProvider;
+
 
 /**
  * This class adds support for the MetricLabelProvider extension point in the viewer.

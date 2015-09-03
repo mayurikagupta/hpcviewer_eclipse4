@@ -224,9 +224,12 @@ public abstract class BaseMetric {
 	 * Return the text to display based on the metric value
 	 * @param mv: the value of a metric
 	 *************************************************************************/
-	public String getMetricTextValue(MetricValue mv_) {
+	public String getMetricTextValue(MetricValue mv) {
+		
+		if (mv == null)
+			return null;
+		
 		String sText;
-		MetricValue mv = mv_;
 		
 		// enforce bounds for presentation
 		if (mv.value > 9.99e99) mv.value = Float.POSITIVE_INFINITY;

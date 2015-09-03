@@ -28,12 +28,6 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 		super();
 	}
 	
-	@Override
-    public void dispose() 
-    {
-    	//serviceProvider.removeSourceProviderListener(listener);
-    	super.dispose();
-    }
     /// ---------------------------------------------
     /// filter feature
     /// ---------------------------------------------

@@ -6,6 +6,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.graphics.Image;
@@ -73,6 +74,10 @@ public class ColumnViewerSorter extends ViewerComparator {
 				}
 				// before sorting, we need to check if the first row is an element header 
 				// something like "aggregate metrics" or zoom-in item
+				Tree tree = ColumnViewerSorter.this.viewer.getTree();
+				if (tree.getItemCount()==0)
+					return; // no items: no need to sort
+				
 				TreeItem item = ColumnViewerSorter.this.viewer.getTree().getItem(0);
 				Image imgItem = item.getImage(0);
 				String []sText = Utilities.getTopRowItems(ColumnViewerSorter.this.viewer);

@@ -55,7 +55,7 @@
       <view
             allowMultiple="true"
             class="edu.rice.cs.hpc.viewer.scope.thread.ThreadView"
-            id="edu.rice.cs.hpc.viewer.scope.ThreadView"
+            id="edu.rice.cs.hpc.viewer.scope.thread.ThreadView"
             name="Thread view"
             restorable="true">
       </view>
@@ -139,6 +139,13 @@
           icon="icons/hpcviewer-icon-editor-histo.png"
           id="edu.rice.cs.hpc.viewer.graph.GraphEditorHisto"
           name="Histogram editor">
+    </editor>
+    <editor
+          class="edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor"
+          default="false"
+          extensions="*"
+          id="edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor"
+          name="Thread metrics">
     </editor>
    </extension>
    <extension
@@ -313,6 +320,36 @@
                   tooltip="Show views">
             </command>
             <command
+                  commandId="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
+                  label="Show thread view"
+                  mnemonic="T"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="edu.rice.cs.hpc.filter.enable">
+                     <equals
+                           value="ACTIVE">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
+                  label="Show thread metrics"
+                  style="push"
+                  tooltip="Show the summary of metrics of each thread">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="edu.rice.cs.hpc.filter.enable">
+                     <equals
+                           value="ACTIVE">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
                   commandId="edu.rice.cs.hpc.viewer.actions.ShowMetricProperties"
                   label="Show metric properties"
                   mnemonic="M"
@@ -451,6 +488,16 @@
             defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowView"
             id="edu.rice.cs.hpc.viewer.actions.ShowView"
             name="Show view">
+      </command>
+      <command
+            defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
+            id="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
+            name="Show thread editor">
+      </command>
+      <command
+            defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
+            id="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
+            name="Show thread view">
       </command>
       <command
             defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowMetricProperties"
