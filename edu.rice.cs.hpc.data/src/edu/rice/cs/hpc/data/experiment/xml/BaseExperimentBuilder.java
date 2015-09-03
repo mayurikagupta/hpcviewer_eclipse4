@@ -846,7 +846,7 @@ public class BaseExperimentBuilder extends Builder {
 				lastLn = objRange.getLastLine();
 			} else if (attributes[i].equals(FILENAME_ATTRIBUTE)) {
 				String fileIdString = values[i];
-				getSourceFile(fileIdString);
+				sourceFile = getSourceFile(fileIdString);
 			} else if(attributes[i].equals(ID_ATTRIBUTE)) {
 				cct_id = Integer.parseInt(values[i]);
 			} 
