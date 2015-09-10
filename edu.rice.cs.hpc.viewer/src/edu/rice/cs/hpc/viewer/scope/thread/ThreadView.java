@@ -1,16 +1,24 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
@@ -19,12 +27,30 @@ import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 import edu.rice.cs.hpc.viewer.window.Database;
+import edu.rice.cs.hpc.viewer.window.ViewerWindow;
+import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
-public class ThreadView extends AbstractBaseScopeView {
+/******************************************************************************************
+ * 
+ * View part for showing metric database of a certain thread
+ *
+ ******************************************************************************************/
+public class ThreadView extends AbstractBaseScopeView 
+{
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
+	private List<Integer> threads = new ArrayList<>();
 	
-	public ThreadView() {
-		// TODO Auto-generated constructor stub
+	/**********
+	 * Show the menu to open this view
+	 * 
+	 * @param mgr : parent menu manager
+	 * @param window : current active window
+	 * @param experiment : active experiment (should have metric database)
+	 */
+	static public void showMenu(IMenuManager mgr, IWorkbenchWindow window, 
+			Experiment experiment)
+	{
+		mgr.add(new ThreadViewAction(window, experiment));
 	}
 
 	@Override
@@ -35,7 +61,8 @@ public class ThreadView extends AbstractBaseScopeView {
 
 		// reassign root scope
         final Experiment experiment = getExperiment();
-		myRootScope = experiment.getRootScope(RootScopeType.CallingContextTree);
+		RootScope rootCCT = experiment.getRootScope(RootScopeType.CallingContextTree);
+		myRootScope = createRoot(rootCCT);
 
 		if (myRootScope.getChildCount()>0) {
         	treeViewer.setInput(myRootScope);
@@ -53,10 +80,13 @@ public class ThreadView extends AbstractBaseScopeView {
 		Database db 	= getDatabase();
 		Experiment exp 	= db.getExperiment();
 		MetricRaw []mr  = exp.getMetricRaw();
-		
-		for(MetricRaw m : mr)
-		{
-			treeViewer.addTreeColumn(m, false);
+		if (mr != null) {
+			for(MetricRaw m : mr)
+			{
+				MetricRaw mdup = (MetricRaw) m.duplicate();
+				mdup.setThread(threads);
+				treeViewer.addTreeColumn(m, false);
+			}
 		}
 	}
 
@@ -68,33 +98,114 @@ public class ThreadView extends AbstractBaseScopeView {
 
 	@Override
 	protected void mouseDownEvent(Event event) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	protected AbstractContentProvider getScopeContentProvider() {
-		// TODO Auto-generated method stub
-		return new AbstractContentProvider() {
-		};
+		return new AbstractContentProvider() {};
 	}
 
 	@Override
 	protected void enableFilter(boolean isEnabled) {
-		// TODO Auto-generated method stub
-
+    	if (treeViewer.getTree().isDisposed())
+    		return;
+    	
+    	Experiment experiment = getExperiment();
+		
+		// reassign root scope
+		myRootScope = experiment.getRootScope(RootScopeType.CallingContextTree);
+		// update the content of the view
+		updateDisplay();
 	}
 
 	@Override
 	protected CellLabelProvider getLabelProvider() {
-		// TODO Auto-generated method stub
 		return new StyledScopeLabelProvider( this.getSite().getWorkbenchWindow() ); 
 	}
 
+	/***
+	 * copy CCT root and duplicate its children to create a new 
+	 * root scope for this thread view.
+	 * 
+	 * @param rootCCT : root CCT
+	 * 
+	 * @return RootScope
+	 */
+	private RootScope createRoot(RootScope rootCCT)
+	{
+		// create and duplicate the configuration
+		RootScope rootThread = (RootScope) rootCCT.duplicate();
+		
+		// rename the root
+		int threads_size = threads.size();
+		if (threads_size == 0) {
+			threads.add(0);
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append("Thread ");
+		sb.append(threads.get(0));
+		if (threads.size() > 1) {
+			sb.append(" - ");
+			sb.append(threads.get(threads.size()-1));
+		}
+		rootThread.setName(sb.toString());
+		
+		// duplicate the children
+		for(int i=0; i<rootCCT.getChildCount(); i++)
+		{
+			Scope scope = (Scope) rootCCT.getChildAt(i);
+			rootThread.addSubscope(scope);
+		}
+		return rootThread;
+	}
+	
+	/*******************************
+	 * 
+	 * Action class to show the menu to open this view
+	 *
+	 *******************************/
+	static private class ThreadViewAction extends Action
+	{
+		final private IWorkbenchWindow window;
+		final private Experiment experiment;
+		
+		public ThreadViewAction(IWorkbenchWindow window, Experiment experiment)
+		{
+			super("Show thread view");
+			this.window = window;
+			this.experiment = experiment;
+		}
+		
+		@Override
+		public void run()
+		{
+			showMenu(window, experiment);
+		}
+		
+		static private void showMenu(IWorkbenchWindow window, Experiment experiment)
+		{
+			IWorkbenchPage page = window.getActivePage();
+			if (page != null) {
+				try {
+					IViewPart view = page.showView(ID, experiment.getDefaultDirectory().getAbsolutePath(), 
+							IWorkbenchPage.VIEW_ACTIVATE);
+					if (view != null && (view  instanceof ThreadView)) 
+					{
+						ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
+						final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
+						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
+						((ThreadView)view).setInput(db, scope, false);
+					}
+				} catch (PartInitException e) {
+					e.printStackTrace();
+					MessageDialog.openError(window.getShell(), "Error", e.getMessage());
+				}
+			}
+		}
+
+	}
 }

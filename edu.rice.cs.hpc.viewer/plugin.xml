@@ -183,12 +183,11 @@
                   style="push"
                   tooltip="Open a database">
             </command>
-            <command
-                  commandId="edu.rice.cs.hpc.viewer.command.mergeDatabaseTopDown"
-                  label="Merge top-down databases"
+            <menu
+                  id="edu.rice.cs.hpc.viewer.menu.merge"
+                  label="Merge databases"
                   mnemonic="M"
-                  style="push"
-                  tooltip="Merging two or more databases">
+                  tooltip="Merge two databases">
                <visibleWhen
                      checkEnabled="false">
                   <with
@@ -198,23 +197,21 @@
                      </equals>
                   </with>
                </visibleWhen>
-            </command>
-            <command
-                  commandId="edu.rice.cs.hpc.viewer.command.mergeDatabaseFlat"
-                  label="Merge flat databases"
-                  mnemonic="M"
-                  style="push"
-                  tooltip="Merging two or more databases">
-               <visibleWhen
-                     checkEnabled="false">
-                  <with
-                        variable="edu.rice.cs.hpc.viewer.provider.data.merge">
-                     <equals
-                           value="ENABLED">
-                     </equals>
-                  </with>
-               </visibleWhen>
-            </command>
+               <command
+                     commandId="edu.rice.cs.hpc.viewer.command.mergeDatabaseTopDown"
+                     label="Merge top-down databases"
+                     mnemonic="M"
+                     style="push"
+                     tooltip="Merging two or more top-down (calling context) databases">
+               </command>
+               <command
+                     commandId="edu.rice.cs.hpc.viewer.command.mergeDatabaseFlat"
+                     label="Merge flat databases"
+                     mnemonic="F"
+                     style="push"
+                     tooltip="Merge two or more flat databases">
+               </command>
+            </menu>
             <command
                   commandId="edu.rice.cs.hpc.viewer.command.closeDatabase"
                   label="Close database"
@@ -318,36 +315,6 @@
                   mnemonic="v"
                   style="push"
                   tooltip="Show views">
-            </command>
-            <command
-                  commandId="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
-                  label="Show thread view"
-                  mnemonic="T"
-                  style="push">
-               <visibleWhen
-                     checkEnabled="false">
-                  <with
-                        variable="edu.rice.cs.hpc.filter.enable">
-                     <equals
-                           value="ACTIVE">
-                     </equals>
-                  </with>
-               </visibleWhen>
-            </command>
-            <command
-                  commandId="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
-                  label="Show thread metrics"
-                  style="push"
-                  tooltip="Show the summary of metrics of each thread">
-               <visibleWhen
-                     checkEnabled="false">
-                  <with
-                        variable="edu.rice.cs.hpc.filter.enable">
-                     <equals
-                           value="ACTIVE">
-                     </equals>
-                  </with>
-               </visibleWhen>
             </command>
             <command
                   commandId="edu.rice.cs.hpc.viewer.actions.ShowMetricProperties"
@@ -493,11 +460,6 @@
             defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
             id="edu.rice.cs.hpc.viewer.actions.ShowThreadEditor"
             name="Show thread editor">
-      </command>
-      <command
-            defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
-            id="edu.rice.cs.hpc.viewer.actions.ShowThreadView"
-            name="Show thread view">
       </command>
       <command
             defaultHandler="edu.rice.cs.hpc.viewer.actions.ShowMetricProperties"

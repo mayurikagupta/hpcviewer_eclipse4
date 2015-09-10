@@ -1,9 +1,11 @@
-package edu.rice.cs.hpc.viewer.scope;
+package edu.rice.cs.hpc.viewer.scope.topdown;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+
+import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 
 
 public class CallingContextViewActions extends BaseScopeViewActions {

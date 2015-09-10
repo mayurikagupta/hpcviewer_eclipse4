@@ -68,11 +68,11 @@ public class Database {
 		// TODO hack: since we just created the manager, we need to inform
 		// MetricRaw to set the new manager
 		MetricRaw []metrics = experiment.getMetricRaw();
-		for (MetricRaw metric: metrics)
-		{
-			metric.setThreadData(dataManager.getThreadDataCollection());
-		}
-		return;
+		if (metrics != null)
+			for (MetricRaw metric: metrics)
+			{
+				metric.setThreadData(dataManager.getThreadDataCollection());
+			}
 	}
 
 	/**

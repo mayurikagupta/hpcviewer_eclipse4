@@ -99,11 +99,14 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		
 		final Experiment experiment = database.getExperiment();
 		final MetricRaw []metrics   = experiment.getMetricRaw();
-		for(MetricRaw m : metrics)
+		if (metrics != null)
 		{
-			cbMetrics.add(m.getDisplayName());
+			for(MetricRaw m : metrics)
+			{
+				cbMetrics.add(m.getDisplayName());
+			}
+			cbMetrics.select(metricIndex);
 		}
-		cbMetrics.select(metricIndex);
 		
 		canvas = new Canvas(cArea, SWT.NONE);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(canvas);
@@ -136,6 +139,9 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		final ThreadLevelDataManager manager = database.getThreadLevelDataManager();
 		final Experiment experiment = database.getExperiment();
 		MetricRaw []metrics = experiment.getMetricRaw();
+		if (metrics == null)
+			return;
+		
 		final Rectangle r = canvas.getClientArea();
 		
 		final RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
@@ -182,43 +188,43 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		}
 	}
 
-/**
- * Make 256 rainbow color palette - Jean-Luc Pon's algorithm.
- */
-public static PaletteData makeRainbow1Palette(int nb){
-  RGB rainbow[]=new RGB[256];
-  RGB colorVal[]=new RGB[5];
-  colorVal[0]=new RGB(200,0,250);
-  colorVal[1]=new RGB(40,40,255);
-  colorVal[2]=new RGB(40,255,40);
-  colorVal[3]=new RGB(250,250,0);
-  colorVal[4]=new RGB(255,0,0);
-  double colorPos[]=new double[5];
-  colorPos[0]=0.0;
-  colorPos[1]=0.25;
-  colorPos[2]=0.50;
-  colorPos[3]=0.75;
-  colorPos[4]=1.0;
-  int colId;
-  colId=0;
-  for (int i=0; i < nb; i++) {
-    double r1, g1, b1;
-    double r2, g2, b2;
-    double r=(double)i / (double)nb;
-    if (colId < (colorPos.length - 2) && r >= colorPos[colId + 1])     colId++;
-    r1=(double)colorVal[colId].red;
-    g1=(double)colorVal[colId].green;
-    b1=(double)colorVal[colId].blue;
-    r2=(double)colorVal[colId + 1].red;
-    g2=(double)colorVal[colId + 1].green;
-    b2=(double)colorVal[colId + 1].blue;
-    double rr=(r - colorPos[colId]) / (colorPos[colId + 1] - colorPos[colId]);
-    if (rr < 0.0)     rr=0.0;
-    if (rr > 1.0)     rr=1.0;
-    rainbow[i]=new RGB((int)(r1 + (r2 - r1) * rr),(int)(g1 + (g2 - g1) * rr),(int)(b1 + (b2 - b1) * rr));
-  }
-  return new PaletteData(rainbow);
-}
+	/**
+	 * Make 256 rainbow color palette - Jean-Luc Pon's algorithm.
+	 */
+	public static PaletteData makeRainbow1Palette(int nb){
+		RGB rainbow[]=new RGB[256];
+		RGB colorVal[]=new RGB[5];
+		colorVal[0]=new RGB(200,0,250);
+		colorVal[1]=new RGB(40,40,255);
+		colorVal[2]=new RGB(40,255,40);
+		colorVal[3]=new RGB(250,250,0);
+		colorVal[4]=new RGB(255,0,0);
+		double colorPos[]=new double[5];
+		colorPos[0]=0.0;
+		colorPos[1]=0.25;
+		colorPos[2]=0.50;
+		colorPos[3]=0.75;
+		colorPos[4]=1.0;
+		int colId;
+		colId=0;
+		for (int i=0; i < nb; i++) {
+			double r1, g1, b1;
+			double r2, g2, b2;
+			double r=(double)i / (double)nb;
+			if (colId < (colorPos.length - 2) && r >= colorPos[colId + 1])     colId++;
+			r1=(double)colorVal[colId].red;
+			g1=(double)colorVal[colId].green;
+			b1=(double)colorVal[colId].blue;
+			r2=(double)colorVal[colId + 1].red;
+			g2=(double)colorVal[colId + 1].green;
+			b2=(double)colorVal[colId + 1].blue;
+			double rr=(r - colorPos[colId]) / (colorPos[colId + 1] - colorPos[colId]);
+			if (rr < 0.0)     rr=0.0;
+			if (rr > 1.0)     rr=1.0;
+			rainbow[i]=new RGB((int)(r1 + (r2 - r1) * rr),(int)(g1 + (g2 - g1) * rr),(int)(b1 + (b2 - b1) * rr));
+		}
+		return new PaletteData(rainbow);
+	}
 
 
 }

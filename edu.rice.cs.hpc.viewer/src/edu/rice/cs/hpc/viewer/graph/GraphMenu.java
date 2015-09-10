@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.viewer.graph;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
@@ -15,6 +16,7 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.BaseEditorManager;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 /****
@@ -47,13 +49,14 @@ public class GraphMenu
 			if (metrics == null)
 				return;
 			
+			ThreadView.showMenu(mgr, window, database.getExperiment());
+			mgr.add( new Separator() );
+			
 			final int num_metrics = metrics.length;
-
 			for (int i=0; i<num_metrics; i++) {
 				MenuManager subMenu = new MenuManager("Graph "+ metrics[i].getDisplayName() );
 				this.createGraphMenus(subMenu, scope, metrics[i]);
 				mgr.add(subMenu);
-
 			}
 		}		
 	} 

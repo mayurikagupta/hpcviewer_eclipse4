@@ -8,7 +8,6 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
 /****************************************
  * Raw metric class
- * @author laksonoadhianto
  *
  ****************************************/
 public class MetricRaw  extends BaseMetric {
@@ -19,7 +18,8 @@ public class MetricRaw  extends BaseMetric {
 	private int num_metrics;
 	
 	private IThreadDataCollection threadData;
-	private List<Integer> threads;
+	private List<Integer> threads = null;
+	private double []values = null;
 	
 	public MetricRaw(String sID, String sDisplayName, boolean displayed, String format, AnnotationType annotationType, int index) {
 		super(sID, sDisplayName, displayed, format, annotationType, index, index,  MetricType.EXCLUSIVE);
@@ -89,20 +89,17 @@ public class MetricRaw  extends BaseMetric {
 		if (threadData != null)
 		{
 			try {
-				double []values = threadData.getMetrics(s.getCCTIndex(), ID, num_metrics);
-				double val_mean = 0.0;
 				if (threads != null)
 				{
-					double divider  = 1 / threads.size();
-					for(Integer thread : threads)
+					if (threads.size()>0)
 					{
-						val_mean += (values[thread] * divider);
-					}
-				} else {
-					val_mean = values[0];
+						return getAverageValue(s);
+					} else if (threads.size()==1)
+					{
+						return getSpecificValue(s, threads.get(0));
+					}			
 				}
-				return new MetricValue(val_mean);
-				
+				return getSpecificValue(s, 0);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -112,9 +109,37 @@ public class MetricRaw  extends BaseMetric {
 	}
 
 
-	//@Override
+	@Override
 	public BaseMetric duplicate() {
 		return new MetricRaw(ID, this.displayName, this.db_glob, this.db_id, this.num_metrics);
 	}
 	
+	private MetricValue getAverageValue(Scope s) throws IOException
+	{
+		double []thread_values = threadData.getMetrics(s.getCCTIndex(), ID, num_metrics);
+		double val_mean = 0.0;
+		if (threads != null)
+		{
+			double divider  = 1 / threads.size();
+			for(Integer thread : threads)
+			{
+				val_mean += (thread_values[thread] * divider);
+			}
+		} else {
+			val_mean = thread_values[0];
+		}
+		return new MetricValue(val_mean);
+	}
+	
+	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
+	{
+		checkValues(thread_id);
+		return new MetricValue( values[s.getCCTIndex()-1] );
+	}
+	
+	private void checkValues(int thread_id) throws IOException
+	{
+		if (values == null)
+			values = threadData.getScopeMetrics(thread_id, ID, num_metrics);
+	}
 }

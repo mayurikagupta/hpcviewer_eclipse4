@@ -70,7 +70,6 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	//------------------------------------DATA
 	protected Scope nodeTopParent; // the current node which is on the top of the table (used as the aggregate node)
 	protected Database 	database;		// experiment data	
-	protected RootScope 		myRootScope;		// the root scope of this view
 
     // ----------------------------------- CONSTANTS
 	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
@@ -125,17 +124,13 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 			return;
 		}
 		database = vWin.getDb(sFilename);
-
-		this.myRootScope = scope;
-
-		//this.setLevelText(scope.getTreeNode().iLevel);	// @TODO: initialized with root level
 		
 		// actions needed when a new experiment is loaded
 		this.resizeTableColumns();	// we assume the data has been populated
         this.enableActions();
         // since we have a new content of experiment, we need to display 
         // the aggregate metrics
-        this.displayRootExperiment();
+    	insertParentNode(scope);
 	}
 	
     //======================================================
@@ -186,10 +181,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	/**
 	 * Add the aggregate metrics item on the top of the tree
 	 */
-    protected void displayRootExperiment() {
-    	Scope  node = (Scope) this.myRootScope;
-    	this.insertParentNode(node);
-    }
+    /*protected void displayRootExperiment() {
+    	insertParentNode(myRootScope);
+    }*/
 	
 	/**
 	 * Resize the columns automatically

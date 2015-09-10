@@ -299,7 +299,7 @@ public class Utilities {
 	 * activate a listener to reset Row Height for Windows only
 	 * @param tree
 	 */
-	static public void listenerToResetRowHeight ( TreeViewer tree ) {
+	static public Listener listenerToResetRowHeight ( TreeViewer tree ) {
 		if (OSValidator.isWindows()) { 
 			Tree treeItem = tree.getTree();
 			// resize the table row height using a MeasureItem listener
@@ -315,7 +315,9 @@ public class Utilities {
 				} // end handleEvent
 			}; // end measurementListener
 			treeItem.addListener(SWT.MeasureItem, measurementListener);
+			return measurementListener;
 		}
+		return null;
 	}
 	
 	/**

@@ -65,12 +65,11 @@ import edu.rice.cs.hpc.viewer.window.Database;
  */
 abstract public class AbstractBaseScopeView  extends ViewPart 
 {	
-	protected ScopeTreeViewer 	treeViewer;		  	// tree for the caller and callees
-    
-	protected Database 	database;		// experiment data	
-	protected RootScope 		myRootScope;		// the root scope of this view
+	protected ScopeTreeViewer 	 treeViewer;		// tree for the caller and callees
+	protected Database 			 database;			// experiment data	
+	protected RootScope 		 myRootScope;		// the root scope of this view
 	protected ColumnViewerSorter sorterTreeColumn;	// sorter for the tree
-    protected ScopeViewActions objViewActions;	// actions for this scope view
+    protected ScopeViewActions 	 objViewActions;	// actions for this scope view
 	
     private EditorManager editorSourceCode;	// manager to display the source code
 	private Clipboard cb = null;
@@ -331,8 +330,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		// Laks 2009.06.22: add multi-selection for enabling copying into clipboard 
     	treeViewer = new ScopeTreeViewer(aParent,SWT.BORDER|SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.MULTI);
     	// set the attributes
-    	AbstractContentProvider treeContentProvider = getScopeContentProvider(); 
-    	treeViewer.setContentProvider(treeContentProvider);
+    	treeViewer.setContentProvider(getScopeContentProvider());
         treeViewer.getTree().setHeaderVisible(true);
         treeViewer.getTree().setLinesVisible(true);
         
@@ -488,17 +486,6 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * Update the data input for Scope View, depending also on the scope
      */
     public void setInput(Database db, RootScope scope, boolean keepColumnStatus) {
-    	initDatabase(db, scope, keepColumnStatus);
-    	updateDisplay();
-    }
-    
-    /***
-     * initialize view without creating the tree and the metric columns
-     * 
-     * @param db
-     * @param scope
-     */
-    public void initDatabase(Database db, RootScope scope, boolean keepColumnStatus) {
     	database = db;
     	myRootScope = scope;// try to get the aggregate value
 
@@ -506,8 +493,12 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         this.objViewActions.setTreeViewer(treeViewer);
         
         initTableColumns(keepColumnStatus);
+        
+        // notify the children class to update the display
+    	updateDisplay();
     }
     
+   
     
     //======================================================
     // ................ MISC ............................

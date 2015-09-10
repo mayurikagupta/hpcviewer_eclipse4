@@ -83,6 +83,8 @@ public class BaseExperimentBuilder extends Builder {
 	private HashMap <Integer, SourceFile> hashSourceFileTable;
 	private HashMap<Integer, Scope> hashCallSiteTable;
 
+	private int min_cctid = Integer.MAX_VALUE;
+	private int max_cctid = Integer.MIN_VALUE;
 
 	private int current_cs_id = Integer.MAX_VALUE - 1;
 
@@ -1134,6 +1136,9 @@ public class BaseExperimentBuilder extends Builder {
 		
 		// push the new scope to the stack
 		scopeStack.push(scope);
+		
+		min_cctid = Math.min(min_cctid, scope.getCCTIndex());
+		max_cctid = Math.max(max_cctid, scope.getCCTIndex());
 	}
 
 	
@@ -1222,9 +1227,9 @@ public class BaseExperimentBuilder extends Builder {
 		}
 
 		// copy parse results into configuration
-		this.experiment.setConfiguration(this.configuration);
-
-		this.experiment.setRootScope(this.rootScope);
+		experiment.setConfiguration(this.configuration);
+		experiment.setRootScope(this.rootScope);
+		experiment.setMinMaxCCTID(min_cctid, max_cctid);
 		
 		// supply defaults for missing info
 		if( this.configuration.getName(ExperimentConfiguration.NAME_EXPERIMENT) == null )

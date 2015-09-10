@@ -40,6 +40,8 @@ public abstract class BaseExperiment implements IExperiment
 	
 	private EnumMap<Db_File_Type, String> db_filenames;
 	
+	private int min_cctid, max_cctid;
+	
 	/***
 	 * the root scope of the experiment
 	 * 
@@ -277,6 +279,23 @@ public abstract class BaseExperiment implements IExperiment
 		}
 	}
 
+	
+	public void setMinMaxCCTID(int min, int max)
+	{
+		this.min_cctid = min;
+		this.max_cctid = max;
+	}
+	
+	public int getMinCCTID()
+	{
+		return min_cctid;
+	}
+	
+	public int getMaxCCTID()
+	{
+		return max_cctid;
+	}
+	
 	/************************************************************************
 	 * In case the experiment has a CCT, continue to create callers tree and
 	 * flat tree for the finalization.

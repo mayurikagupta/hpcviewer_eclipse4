@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.viewer.scope;
+package edu.rice.cs.hpc.viewer.scope.topdown;
 
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
@@ -14,10 +14,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.services.ISourceProviderService;
+
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.provider.DatabaseState;
 import edu.rice.cs.hpc.viewer.resources.Icons;
+import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
 
 /*****************************************************
  * 
@@ -108,14 +112,20 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	 * @see edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI#enableActions()
 	 */
 	public void enableActions() {
+		ISourceProviderService service = (ISourceProviderService) objWindow.getService(ISourceProviderService.class);
+		DatabaseState dbState 		   = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_THREAD_STATE);
+		
 		if (database != null) {
 			ThreadLevelDataManager tld_mgr = database.getThreadLevelDataManager();
 			if (tld_mgr != null) {
 				boolean available = tld_mgr.isDataAvailable();
 				tiGraph.setEnabled(available);
+				String value = available ? DatabaseState.ENABLED : DatabaseState.DISABLED;
+				dbState.setState(DatabaseState.DATABASE_THREAD_STATE, value);
 				return;
 			}
 		}
+		dbState.setState(DatabaseState.DATABASE_THREAD_STATE, DatabaseState.DISABLED);
 		tiGraph.setEnabled(false);
 	}
 	

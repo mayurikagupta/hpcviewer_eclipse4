@@ -13,17 +13,15 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
-import edu.rice.cs.hpc.viewer.scope.CallingContextViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 
 /**
  * Basic class for scope views: calling context and caller view
- * @author laksonoadhianto
  *
  */
-public class ScopeView extends BaseScopeView {
-	
+public class ScopeView extends BaseScopeView 
+{
     public static final String ID = "edu.rice.cs.hpc.viewer.scope.ScopeView";
 	
     private GraphMenu graphMenu;
@@ -39,7 +37,7 @@ public class ScopeView extends BaseScopeView {
     	return lastClickColumn;
     }
     
-	//@Override
+	@Override
     protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
     	ScopeViewActions action = new CallingContextViewActions(this.getViewSite().getShell(), window, parent, coolbar);
@@ -49,17 +47,32 @@ public class ScopeView extends BaseScopeView {
     	return action;
     }
 
-	//@Override
+	@Override
 	protected CellLabelProvider getLabelProvider() {
 		return new StyledScopeLabelProvider( this.getSite().getWorkbenchWindow() ); 
-				//ScopeLabelProvider(this.getSite().getWorkbenchWindow());
 	}
 
-	//@Override
+	@Override
 	protected void mouseDownEvent(Event event) {
-		lastClickColumn = getColumnMouseDown(event);
-		
+		lastClickColumn = getColumnMouseDown(event);	
 	}
+
+	@Override
+	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
+		graphMenu.createAdditionalContextMenu(mgr, database, scope);
+	} 
+
+
+	@Override
+	protected AbstractContentProvider getScopeContentProvider() {
+		return new ScopeTreeContentProvider();
+	}
+
+    
+	@Override
+	protected void updateDatabase(Experiment newDatabase) {
+	}
+
 
     /**
      * Find which column the user has clicked. Return the index of the column if exist,
@@ -76,23 +89,4 @@ public class ScopeView extends BaseScopeView {
     	int iPos = cell.getColumnIndex();
     	return iPos;
     }
-
-	//@Override
-	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
-		graphMenu.createAdditionalContextMenu(mgr, database, scope);
-	} 
-
-
-	//@Override
-	protected AbstractContentProvider getScopeContentProvider() {
-		return new ScopeTreeContentProvider();
-	}
-
-	
-	
-    
-	//@Override
-	protected void updateDatabase(Experiment newDatabase) {
-	}
-    
 }

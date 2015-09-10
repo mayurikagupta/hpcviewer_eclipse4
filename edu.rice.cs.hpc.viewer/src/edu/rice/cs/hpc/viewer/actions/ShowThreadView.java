@@ -18,8 +18,10 @@ import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
-public class ShowThreadView extends AbstractHandler {
-
+public class ShowThreadView extends AbstractHandler 
+{
+	static final public String ID="edu.rice.cs.hpc.viewer.actions.ShowThreadView";
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException 
 	{
