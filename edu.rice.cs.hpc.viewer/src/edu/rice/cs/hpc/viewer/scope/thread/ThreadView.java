@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -77,15 +78,22 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected void initTableColumns(boolean keepColumnStatus) {
+		ensureThreads();
+		
 		Database db 	= getDatabase();
 		Experiment exp 	= db.getExperiment();
 		MetricRaw []mr  = exp.getMetricRaw();
 		if (mr != null) {
+			boolean sort = true;
 			for(MetricRaw m : mr)
 			{
 				MetricRaw mdup = (MetricRaw) m.duplicate();
 				mdup.setThread(threads);
-				treeViewer.addTreeColumn(m, false);
+				treeViewer.addTreeColumn(m, sort);
+				
+				// sort initially the first column metric
+				if (sort)
+					sort = false;
 			}
 		}
 	}
@@ -137,14 +145,12 @@ public class ThreadView extends AbstractBaseScopeView
 	 */
 	private RootScope createRoot(RootScope rootCCT)
 	{
+		ensureThreads();
+		
 		// create and duplicate the configuration
 		RootScope rootThread = (RootScope) rootCCT.duplicate();
 		
 		// rename the root
-		int threads_size = threads.size();
-		if (threads_size == 0) {
-			threads.add(0);
-		}
 		StringBuffer sb = new StringBuffer();
 		sb.append("Thread ");
 		sb.append(threads.get(0));
@@ -163,6 +169,13 @@ public class ThreadView extends AbstractBaseScopeView
 		return rootThread;
 	}
 	
+	private void ensureThreads()
+	{
+		int threads_size = threads.size();
+		if (threads_size == 0) {
+			threads.add(0);
+		}
+	}
 	/*******************************
 	 * 
 	 * Action class to show the menu to open this view
@@ -183,22 +196,28 @@ public class ThreadView extends AbstractBaseScopeView
 		@Override
 		public void run()
 		{
-			showMenu(window, experiment);
-		}
-		
-		static private void showMenu(IWorkbenchWindow window, Experiment experiment)
-		{
 			IWorkbenchPage page = window.getActivePage();
 			if (page != null) {
 				try {
-					IViewPart view = page.showView(ID, experiment.getDefaultDirectory().getAbsolutePath(), 
-							IWorkbenchPage.VIEW_ACTIVATE);
-					if (view != null && (view  instanceof ThreadView)) 
-					{
-						ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
-						final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
-						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
-						((ThreadView)view).setInput(db, scope, false);
+					final String path = experiment.getDefaultDirectory().getAbsolutePath();
+					
+					// check if the view already exists
+					final IViewReference vref = page.findViewReference(ID, path);
+					if (vref != null) {
+						// it's there. we need to activate it
+						IViewPart view = vref.getView(true);
+						page.activate(view);
+					} else {
+						// it doesn't exist. need to create it.
+						IViewPart view = page.showView(ID, path, 
+								IWorkbenchPage.VIEW_ACTIVATE);
+						if (view != null && (view  instanceof ThreadView)) 
+						{
+							ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
+							final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
+							RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
+							((ThreadView)view).setInput(db, scope, false);
+						}
 					}
 				} catch (PartInitException e) {
 					e.printStackTrace();
