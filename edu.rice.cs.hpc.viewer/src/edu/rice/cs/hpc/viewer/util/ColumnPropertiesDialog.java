@@ -57,6 +57,8 @@ public class ColumnPropertiesDialog extends TitleAreaDialog {
 	protected Text objSearchText;
 
 	protected ArrayList<PropertiesModel> arrElements;
+	
+	private boolean applyToAllViewOption = true;
 
 	//--------------------------------------------------
 	// CONSTRUCTOR
@@ -82,6 +84,11 @@ public class ColumnPropertiesDialog extends TitleAreaDialog {
 		this.objColumns = columns;
 	}
 	
+	public ColumnPropertiesDialog(Shell shell, TreeColumn []columns, boolean applyToAllViewOption) {
+		this(shell, columns);
+		this.applyToAllViewOption = applyToAllViewOption;
+	}
+	
 	//--------------------------------------------------
 	//	GUI
 	//--------------------------------------------------
@@ -99,7 +106,8 @@ public class ColumnPropertiesDialog extends TitleAreaDialog {
 		setTitle("Column Selection");
 
 		// Set the message
-		setMessage("Check columns to be shown and uncheck columns to be hidden", IMessageProvider.INFORMATION);
+		setMessage("Check columns to be shown and uncheck columns to be hidden", 
+				IMessageProvider.INFORMATION);
 
 		return contents;
 	}
@@ -146,10 +154,13 @@ public class ColumnPropertiesDialog extends TitleAreaDialog {
 
 		btnApplyToAllViews = new Button(groupButtons, SWT.CHECK);
 		btnApplyToAllViews.setText("Apply to all views");
-		// Laks 2009.01.26: by default, we apply for all views
-		btnApplyToAllViews.setSelection( this.getHistory() );
 		btnApplyToAllViews.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-
+		btnApplyToAllViews.setEnabled(applyToAllViewOption);
+		if (applyToAllViewOption) {
+			// Laks 2009.01.26: by default, we apply for all views
+			btnApplyToAllViews.setSelection( this.getHistory() );
+		}
+		
 		// set the layout for group filter
 		Composite groupFilter = new Composite(composite, SWT.BORDER);
 		groupFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));

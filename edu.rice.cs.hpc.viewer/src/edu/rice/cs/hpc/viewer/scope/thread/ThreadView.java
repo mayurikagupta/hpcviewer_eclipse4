@@ -26,6 +26,7 @@ import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
+import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
@@ -101,7 +102,12 @@ public class ThreadView extends AbstractBaseScopeView
 	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
-        return new BaseScopeViewActions(this.getViewSite().getShell(), window, parent, coolbar); 
+        return new BaseScopeViewActions(this.getViewSite().getShell(), window, parent, coolbar) {
+        	protected  Composite createGUI(Composite parent, CoolBar coolbar) {
+            	this.objActionsGUI = new ScopeViewActionsGUI(this.objShell, this.objWindow, parent, this, false);
+            	return objActionsGUI.buildGUI(parent, coolbar);
+        	}
+        }; 
 	}
 
 	@Override
@@ -225,6 +231,5 @@ public class ThreadView extends AbstractBaseScopeView
 				}
 			}
 		}
-
 	}
 }

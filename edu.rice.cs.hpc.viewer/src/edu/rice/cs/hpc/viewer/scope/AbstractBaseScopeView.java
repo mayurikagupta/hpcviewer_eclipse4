@@ -209,7 +209,6 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         // ---- additional feature
         mgr.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 
-
         // Laks 2009.06.22: add new feature to copy selected line to the clipboard
         mgr.add(acCopy);
 

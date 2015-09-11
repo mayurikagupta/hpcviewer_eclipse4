@@ -50,7 +50,10 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
  */
 public class ScopeViewActionsGUI implements IScopeActionsGUI {
 
+    // ----------------------------------- CONSTANTS
+	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
 	final static private String COLUMN_DATA_WIDTH = "w"; 
+	
     //======================================================
 	// ------ DATA ----------------------------------------
     //======================================================
@@ -72,8 +75,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	protected Scope nodeTopParent; // the current node which is on the top of the table (used as the aggregate node)
 	protected Database 	database;		// experiment data	
 
-    // ----------------------------------- CONSTANTS
-	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
+	final private boolean affectOtherViews;
     
     /**
      * Constructor initializing the data
@@ -84,7 +86,14 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      */
 	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
 			ScopeViewActions objActions) {
+		this(objShell, window, parent, objActions, true);
+	}
+	
+	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
+			ScopeViewActions objActions, boolean affectOtherViews) {
 
+		this.affectOtherViews = affectOtherViews;
+		
 		this.objViewActions = objActions;
 		this.shell = objShell;
 		this.objWindow = window;
@@ -282,7 +291,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     protected void showColumnsProperties() {
     	
     	ColumnPropertiesDialog objProp = new ColumnPropertiesDialog(objWindow.getShell(), 
-    			treeViewer.getTree().getColumns());
+    			treeViewer.getTree().getColumns(), affectOtherViews);
     	objProp.open();
     	if(objProp.getReturnCode() == org.eclipse.jface.dialogs.IDialogConstants.OK_ID) {
         	boolean result[] = objProp.getResult();
@@ -527,11 +536,10 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     	
     	// set the coolitem
     	this.createCoolItem(coolbar, toolbar);
-    	
-
-    	return toolbar;
+     	return toolbar;
     }
 
+    
     /**
      * Constant comma separator
      */
