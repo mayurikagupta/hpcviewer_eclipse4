@@ -148,21 +148,22 @@ public class ExperimentView {
 		return experiment;
 	}
 	
-	/**
-	 * Retrieve the list of all used views
-	 * @return list of views
-	 */
-	public BaseScopeView[] getViews() {
-		return this.arrScopeViews;
+	public void setView(int index, BaseScopeView view)
+	{
+		if (index>=0 && index<arrScopeViews.length)
+		{
+			arrScopeViews[index] = view;
+		}
 	}
 	
-	/***
-	 * set the list of views of this experiment
-	 * 
-	 * @param views
-	 */
-	public void setViews(BaseScopeView[] views) {
-		arrScopeViews = views;
+	public int getViewCount()
+	{
+		return arrScopeViews.length;
+	}
+	
+	public BaseScopeView getView(int index)
+	{
+		return arrScopeViews[index];
 	}
 	
 	/**

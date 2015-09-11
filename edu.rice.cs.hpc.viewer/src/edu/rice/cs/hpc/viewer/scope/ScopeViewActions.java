@@ -18,6 +18,7 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.metric.*;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.metric.*;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -380,9 +381,9 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 				System.out.printf("ScopeViewActions.addExtNewMetric: Database class not found\n");
 				return;
 			}
-			
-			for(BaseScopeView view: db.getExperimentView().getViews()) {
-				
+			ExperimentView ev = db.getExperimentView();
+			for(int i=0; i<ev.getViewCount(); i++) {
+				BaseScopeView view = ev.getView(i);
 				ScopeTreeViewer objTreeViewer = view.getTreeViewer();
 				
 				objTreeViewer.getTree().setRedraw(false);

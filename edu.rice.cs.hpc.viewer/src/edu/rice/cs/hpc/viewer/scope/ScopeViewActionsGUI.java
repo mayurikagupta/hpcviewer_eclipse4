@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.resources.Icons;
 import edu.rice.cs.hpc.viewer.util.ColumnPropertiesDialog;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
@@ -304,9 +305,10 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     private void showHideColumnsAllViews(boolean []status) {
 		// get our database file and the and the class that contains its information
 		// get the views created for our database
-		BaseScopeView arrScopeViews[] = database.getExperimentView().getViews();
-		for(int i=0; i<arrScopeViews.length; i++) {
-			arrScopeViews[i].getViewActions().setColumnStatus(status);
+    	ExperimentView ev = database.getExperimentView();
+		for(int i=0; i<ev.getViewCount(); i++) {
+			BaseScopeView view = ev.getView(i);
+			view.getViewActions().setColumnStatus(status);
 		}
     }
     

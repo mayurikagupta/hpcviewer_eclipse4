@@ -37,6 +37,7 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
 import edu.rice.cs.hpc.viewer.editor.SourceCodeEditor;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.resources.Icons;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
@@ -231,7 +232,8 @@ public class Utilities {
 				continue;		// not open just skip it
 			}
 
-			final BaseScopeView arrViews[] = db.getExperimentView().getViews();
+			final ExperimentView ev  = db.getExperimentView(); 
+			final int numViews = ev.getViewCount();
 			
 			// next, using helper thread to refresh other views
 			window.getShell().getDisplay().asyncExec( new Runnable() {
@@ -239,9 +241,9 @@ public class Utilities {
 					
 					// refresh all the views except the visible one 
 					// we will prioritize the visible view to be refreshed first
-					for(int i=0;i<arrViews.length;i++) {
-						if (!visible_view.contains(arrViews[i])) {
-							ScopeTreeViewer tree = (ScopeTreeViewer) arrViews[i].getTreeViewer();
+					for(int i=0;i<numViews;i++) {
+						if (!visible_view.contains( ev.getView(i))) {
+							ScopeTreeViewer tree = (ScopeTreeViewer) ev.getView(i).getTreeViewer();
 							
 							// reset the view
 							Utilities.resetView(objItemManager, tree);

@@ -60,13 +60,13 @@ public class ShowView extends AbstractHandler {
 					exp.getXMLExperimentFile().getParent() + ") ");
 			
 			final ExperimentView ev = db.getExperimentView();
-			BaseScopeView []views = ev.getViews();
+			int numViews = ev.getViewCount();
 			
-			TreeNode []viewNode = new TreeNode[views.length];
+			TreeNode []viewNode = new TreeNode[numViews];
 			
 			// gather all the views of this database
-			for(int j=0; j<views.length; j++) {
-				TreeItemNode item = new TreeItemNode(ev, j, views[j]);
+			for(int j=0; j<numViews; j++) {
+				TreeItemNode item = new TreeItemNode(ev, j, ev.getView(j));
 				viewNode[j] = new TreeNode(item);
 				viewNode[j].setParent(dbNode[i]);
 			}
@@ -103,9 +103,7 @@ public class ShowView extends AbstractHandler {
 									view.getRootScope(), site.getSecondaryId(), 
 									view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
 							
-							BaseScopeView []views = itemNode.ev.getViews();
-							views[itemNode.index] = newView;
-							itemNode.ev.setViews(views);
+							itemNode.ev.setView(itemNode.index, newView);
 							
 							// when a view is closed, we lose the information of hide/show columns
 							// at the moment, the only thing to fix this, is to reset the column status
