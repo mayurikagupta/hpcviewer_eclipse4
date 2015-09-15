@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 
@@ -53,22 +54,22 @@ public class ThreadLevelDataManagerTest {
 
 	@Test
 	public void testGetProcessIDsDouble() throws NumberFormatException, IOException {
-		MetricRaw []metrics = experiment.getMetricRaw();
+		BaseMetric []metrics = experiment.getMetricRaw();
 		assertNotNull(metrics);
 
-		for (MetricRaw m : metrics) {
-			double []ids = manager.getProcessIDsDouble(m.getID());
+		for (BaseMetric m : metrics) {
+			double []ids = manager.getProcessIDsDouble(((MetricRaw)m).getID());
 			assertNotNull(ids);
 		}
 	}
 
 	@Test
 	public void testGetMetrics() throws IOException {
-		MetricRaw []metrics = experiment.getMetricRaw();
+		BaseMetric []metrics = experiment.getMetricRaw();
 		assertNotNull(metrics);
 		
-		for(MetricRaw metric : metrics) {
-			double []values = manager.getMetrics(metric, 0);
+		for(BaseMetric metric : metrics) {
+			double []values = manager.getMetrics(((MetricRaw)metric), 0);
 			assertNotNull(values);
 		}
 	}
