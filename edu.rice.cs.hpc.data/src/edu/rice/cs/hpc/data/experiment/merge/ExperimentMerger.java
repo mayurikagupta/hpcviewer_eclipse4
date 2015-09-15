@@ -207,7 +207,7 @@ public class ExperimentMerger
 	 * @param raws2
 	 * @return
 	 */
-	private static MetricRaw[] buildMetricRaws( MetricRaw raws1[], MetricRaw raws2[]) 
+	private static MetricRaw[] buildMetricRaws( BaseMetric raws1[], BaseMetric raws2[]) 
 	{
 		MetricRaw rawList[] = new MetricRaw[ raws1.length + raws2.length ];
 		

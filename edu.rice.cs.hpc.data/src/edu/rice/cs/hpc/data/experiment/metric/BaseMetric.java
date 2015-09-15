@@ -56,12 +56,14 @@ public abstract class BaseMetric {
 
 	/*************************************************************************
 	 * 
-	 * @param sID: Unique ID of the metric
-	 * @param sDisplayName: the name of the title
-	 * @param displayed: will metric be displayed ?
-	 * @param format: format of the display
-	 * @param annotationType: show the percent or process number ?
-	 * @param index: index in the table
+	 * @param sID : Unique ID of the metric
+	 * @param sDisplayName : the name of the title
+	 * @param displayed : will metric be displayed ?
+	 * @param format : format of the display
+	 * @param annotationType : show the percent or process number ?
+	 * @param index : index in the table
+	 * @param partner_index : index of the partner metric
+	 * @param type : type of the metric
 	 *************************************************************************/
 	public BaseMetric(String sID, String sDisplayName, boolean displayed, String format, 
 			AnnotationType annotationType, int index, int partner_index, MetricType type) 

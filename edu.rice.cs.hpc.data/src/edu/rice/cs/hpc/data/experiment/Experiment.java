@@ -361,28 +361,13 @@ public class Experiment extends BaseExperimentWithMetrics
 
 	/**
 	 * Create a derived metric based on formula expression
-	 * @param scopeRoot
-	 * @param expFormula
-	 * @return
+	 * @param objMetric : a new derived metric
+	 * @return 
 	 */
-	public DerivedMetric addDerivedMetric(DerivedMetric objMetric) {
+	@Override
+	public void addDerivedMetric(DerivedMetric objMetric) {
 
 		this.metrics.add(objMetric);
-/*
-		int iInclusive = this.getMetricCount() - 1;
-		int iExclusive = -1;		// at the moment we do not support exclusive/inclusive derived metric
-
-		InclusiveOnlyMetricPropagationFilter rootInclProp = new InclusiveOnlyMetricPropagationFilter(this);
-
-		for (int i=0; i<this.rootScope.getSubscopeCount(); i++) {
-			RootScope rootScope = (RootScope) this.rootScope.getSubscope(i);
-
-			DerivedMetricVisitor csv = new DerivedMetricVisitor(this, rootInclProp, iInclusive, iExclusive );
-			rootScope.dfsVisitScopeTree(csv);
-
-		}*/
-
-		return objMetric;
 	}
 
 
@@ -406,7 +391,7 @@ public class Experiment extends BaseExperimentWithMetrics
 	}
 
 
-	public MetricRaw[] getMetricRaw() {
+	public BaseMetric[] getMetricRaw() {
 		return this.metrics_raw;
 	}
 

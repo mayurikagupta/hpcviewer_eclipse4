@@ -79,8 +79,8 @@ public class AggregateMetric extends BaseMetric {
 	 * @param exp
 	 *******/
 	public void init(BaseExperimentWithMetrics exp) {
-		this.finalizeVarMap.setExperiment((Experiment)exp);
-		this.combineVarMap.setExperiment((Experiment)exp);
+		this.finalizeVarMap.setMetricManager((Experiment)exp);
+		this.combineVarMap.setMetricManager((Experiment)exp);
 	}
 	
 	

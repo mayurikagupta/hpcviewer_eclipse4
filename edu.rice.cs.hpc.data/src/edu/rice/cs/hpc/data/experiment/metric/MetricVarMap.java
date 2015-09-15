@@ -9,7 +9,6 @@ import com.graphbuilder.math.FuncMap;
 import com.graphbuilder.math.VarMap;
 import com.graphbuilder.math.func.Function;
 
-import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
@@ -19,9 +18,10 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  */
 public class MetricVarMap extends VarMap {
 
-	private Experiment experiment;
+	private IMetricManager metricManager;
 	private Scope scope;
-
+	private RootScope root;
+	
 	/**
 	 * 
 	 */
@@ -30,15 +30,14 @@ public class MetricVarMap extends VarMap {
 	}
 
 	
-	public MetricVarMap(Experiment exp) {
-		super(false);
-		this.experiment = exp;
+	public MetricVarMap(RootScope root, IMetricManager metricManager) {
+		this(root, null, metricManager);
 	}
 	
-	public MetricVarMap(Scope s, Experiment exp) {
+	public MetricVarMap(RootScope root, Scope s, IMetricManager metricManager) {
 		super(false);
 		this.scope = s;
-		this.experiment = exp;
+		this.metricManager = metricManager;
 	}
 	
 	/**
@@ -51,8 +50,8 @@ public class MetricVarMap extends VarMap {
 	//===========================
 	
 
-	public void setExperiment(Experiment exp) {
-		this.experiment = exp;
+	public void setMetricManager(IMetricManager metricManager) {
+		this.metricManager = metricManager;
 	}
 	
 	/**
@@ -63,17 +62,22 @@ public class MetricVarMap extends VarMap {
 		this.scope = s;
 	}
 	
+	public void setRootScope(RootScope root)
+	{
+		this.root = root;
+	}
+	
 	/**
 	 * Overloaded method: a callback to retrieve the value of a variable (or a metric)
 	 * If the variable is a normal variable, it will call the parent method.		
 	 */
 	public double getValue(String varName) {
-		assert(experiment != null);
+		assert(metricManager != null);
 		
 		if(varName.startsWith("$")) {
 			// Metric variable
 			String sIndex = varName.substring(1);
-			BaseMetric metric = this.experiment.getMetric(sIndex);
+			BaseMetric metric = metricManager.getMetric(sIndex);
 			if (metric == null) 
 				throw new RuntimeException("metric doesn't exist: " + sIndex);
 			if (scope != null) {
@@ -91,11 +95,10 @@ public class MetricVarMap extends VarMap {
 			String sIndex = varName.substring(1);
 
 			try{
-				BaseMetric metric = this.experiment.getMetric(sIndex);
+				BaseMetric metric = metricManager.getMetric(sIndex);
 				if (metric == null)
 					throw new RuntimeException("Unrecognize metric ID: " + varName);
 
-				RootScope root = (RootScope) this.experiment.getRootScopeChildren()[0];
 				return MetricValue.getValue(metric.getValue(root));
 
 			} catch (java.lang.Exception e) {

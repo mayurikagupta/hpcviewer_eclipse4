@@ -27,7 +27,9 @@ public class DerivedMetric extends BaseMetric {
 	// map variable 
 	private MetricVarMap varMap;
 
-	private Experiment experiment;
+	private IMetricManager experiment;
+	
+	final private RootScope root;
 	
 	//===================================================================================
 	// CONSTRUCTORS
@@ -47,7 +49,9 @@ public class DerivedMetric extends BaseMetric {
 	 * @param annotationType
 	 * @param objType
 	 */
-	public DerivedMetric(Experiment experiment, Expression e, String sName, String sID, int index, AnnotationType annotationType, MetricType objType) {
+	public DerivedMetric(RootScope root, IMetricManager experiment, Expression e, 
+			String sName, String sID, 
+			int index, AnnotationType annotationType, MetricType objType) {
 		
 		// no root scope information is provided, we'll associate this metric to CCT root scope 
 		// the partner of this metric is itself (derived metric has no partner)
@@ -58,14 +62,12 @@ public class DerivedMetric extends BaseMetric {
 		
 		// set up the functions
 		this.fctMap = new ExtFuncMap();
-		
-		RootScope root = (RootScope) experiment.getRootScope().getSubscope(0);
-		
+		this.root 	= root;		
 		BaseMetric []metrics = experiment.getMetrics(); 
 		this.fctMap.init(metrics);
 
 		// set up the variables
-		this.varMap = new MetricVarMap(experiment);
+		this.varMap = new MetricVarMap(root, experiment);
 
 		// Bug fix: always compute the aggregate value 
 		this.dRootValue = getDoubleValue(root);
@@ -82,7 +84,6 @@ public class DerivedMetric extends BaseMetric {
 		this.expression = expr;
 		
 		// new formula has been set, refresh the root value used for computing percent
-		RootScope root = (RootScope) experiment.getRootScope().getSubscope(0);
 		dRootValue = getDoubleValue(root);
 	}
 
@@ -137,7 +138,8 @@ public class DerivedMetric extends BaseMetric {
 
 	@Override
 	public BaseMetric duplicate() {
-		return new DerivedMetric(experiment, expression, displayName, shortName, index, annotationType, metricType);
+		return new DerivedMetric(root, experiment, expression, displayName, 
+				shortName, index, annotationType, metricType);
 	}
 	
 	/****
@@ -149,6 +151,6 @@ public class DerivedMetric extends BaseMetric {
 	{
 		this.experiment = experiment;
 		// updating as well the variable mapping to metrics
-		varMap.setExperiment(experiment);
+		varMap.setMetricManager(experiment);
 	}
 }

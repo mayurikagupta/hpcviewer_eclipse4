@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 
 
 /****************************************************************************
@@ -13,6 +14,7 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
  *
  ****************************************************************************/
 public abstract class BaseExperimentWithMetrics extends BaseExperiment 
+implements IMetricManager
 {
 	/***** A list of metric descriptor   */
 	protected List<BaseMetric> metrics;
