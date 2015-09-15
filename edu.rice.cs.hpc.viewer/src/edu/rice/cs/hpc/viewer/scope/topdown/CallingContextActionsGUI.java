@@ -129,6 +129,25 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		tiGraph.setEnabled(false);
 	}
 	
+	@Override
+	/*
+	 * (non-Javadoc)
+	 * @see edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI#disableNodeButtons()
+	 */
+	public void disableNodeButtons() 
+	{
+		super.disableNodeButtons();
+		tiGraph.setEnabled(false);
+	}
+	
+	/***
+	 * enable all buttons in this view
+	 */
+	public void enableNodeButtons()
+	{
+		tiGraph.setEnabled(true);
+	}
+	
 	private Scope getSelectedScope()
 	{
 		return objViewActions.getSelectedNode();

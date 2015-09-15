@@ -5,6 +5,7 @@ import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 
 
@@ -15,10 +16,23 @@ public class CallingContextViewActions extends BaseScopeViewActions {
 	{
 		super(shell, window, parent, coolbar);
 	}
+	
+	public void checkStates(Scope nodeSelected)
+	{
+		super.checkStates(nodeSelected);
+		if (nodeSelected != null) {
+			((CallingContextActionsGUI)objActionsGUI).enableNodeButtons();
+		}
+	}
 
     /**
      * Each class has its own typical GUI creation
      */
+	/*
+	 * (non-Javadoc)
+	 * @see edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions#createGUI(org.eclipse.swt.widgets.Composite, org.eclipse.swt.widgets.CoolBar)
+	 */
+	@Override
 	protected  Composite createGUI(Composite parent, CoolBar coolbar) 
 	{
     	this.objActionsGUI = new CallingContextActionsGUI(this.objShell, 
