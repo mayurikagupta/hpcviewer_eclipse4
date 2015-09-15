@@ -16,6 +16,7 @@ import org.swtchart.Range;
 import org.swtchart.ext.InteractiveChart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
@@ -137,9 +138,9 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		// plot data
 		//----------------------------------------------
 		Scope scope = editor_input.getScope();
-		MetricRaw metric = editor_input.getMetric();
+		BaseMetric metric = editor_input.getMetric();
 		
-		this.plotData(scope, metric);
+		this.plotData(scope, (MetricRaw) metric);
 	}
 
 

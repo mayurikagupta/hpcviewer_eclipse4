@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 
 /***
@@ -19,7 +20,7 @@ public class ThreadLevelDataManager {
 
 	public ThreadLevelDataManager(Experiment exp) throws IOException 
 	{
-		final MetricRaw []metrics = exp.getMetricRaw();
+		final BaseMetric []metrics = exp.getMetricRaw();
 		if (metrics!=null) {
 			int version = exp.getMajorVersion();
 			String directory = exp.getDefaultDirectory().getAbsolutePath();
@@ -64,7 +65,7 @@ public class ThreadLevelDataManager {
 	 * @return
 	 */
 	public String[] getSeriesName() {
-		MetricRaw []metrics_raw = experiment.getMetricRaw();
+		BaseMetric []metrics_raw = experiment.getMetricRaw();
 
 		if (metrics_raw == null)
 			return null;

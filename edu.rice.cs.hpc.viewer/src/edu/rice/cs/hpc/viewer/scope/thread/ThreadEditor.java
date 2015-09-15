@@ -8,7 +8,7 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
+//import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.PaletteData;
@@ -17,13 +17,14 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
+//import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
@@ -41,7 +42,7 @@ public class ThreadEditor extends EditorPart implements PaintListener
 	private Database database;
 	private int metricIndex = 0;
 	private Image image;
-	private Display display;
+	//private Display display;
 	
 	public ThreadEditor() {
 		// TODO Auto-generated constructor stub
@@ -98,10 +99,10 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		cbMetrics = new Combo(cArea, SWT.READ_ONLY | SWT.DROP_DOWN);
 		
 		final Experiment experiment = database.getExperiment();
-		final MetricRaw []metrics   = experiment.getMetricRaw();
+		final BaseMetric []metrics   = experiment.getMetricRaw();
 		if (metrics != null)
 		{
-			for(MetricRaw m : metrics)
+			for(BaseMetric m : metrics)
 			{
 				cbMetrics.add(m.getDisplayName());
 			}
@@ -116,7 +117,7 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(cArea);
 		
 		canvas.addPaintListener(this);
-		display = getSite().getShell().getDisplay();
+		//display = getSite().getShell().getDisplay();
 	}
 
 	@Override
@@ -138,7 +139,7 @@ public class ThreadEditor extends EditorPart implements PaintListener
 	{
 		final ThreadLevelDataManager manager = database.getThreadLevelDataManager();
 		final Experiment experiment = database.getExperiment();
-		MetricRaw []metrics = experiment.getMetricRaw();
+		BaseMetric []metrics = experiment.getMetricRaw();
 		if (metrics == null)
 			return;
 		
@@ -171,12 +172,12 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		gcImage.dispose();
 	}
 	
-	private void print(ThreadLevelDataManager manager, MetricRaw metric, int cct_id)
+	private void print(ThreadLevelDataManager manager, BaseMetric metric, int cct_id)
 	{
 		double[] values;
 		System.out.format("[%d] ", cct_id);
 		try {
-			values = manager.getMetrics(metric, cct_id);
+			values = manager.getMetrics((MetricRaw) metric, cct_id);
 			for(double v : values)
 			{
 				System.out.print(v + " ");

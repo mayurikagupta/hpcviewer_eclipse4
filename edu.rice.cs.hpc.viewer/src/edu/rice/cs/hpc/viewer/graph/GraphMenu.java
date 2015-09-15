@@ -12,7 +12,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
-import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.BaseEditorManager;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
@@ -45,7 +45,7 @@ public class GraphMenu
 			if (!objDataManager.isDataAvailable())
 				return;
 
-			final MetricRaw []metrics = database.getExperiment().getMetricRaw();
+			final BaseMetric []metrics = database.getExperiment().getMetricRaw();
 			if (metrics == null)
 				return;
 			
@@ -68,7 +68,7 @@ public class GraphMenu
 	 * @param m
 	 * @param index
 	 */
-	private void createGraphMenus(IMenuManager menu, Scope scope, MetricRaw m) {
+	private void createGraphMenus(IMenuManager menu, Scope scope, BaseMetric m) {
 		menu.add( createGraphMenu(scope, m, GraphType.PlotType.PLOT) );
 		menu.add( createGraphMenu(scope, m, GraphType.PlotType.SORTED) );
 		menu.add( createGraphMenu(scope, m, GraphType.PlotType.HISTO) );
@@ -82,7 +82,7 @@ public class GraphMenu
 	 * @param t
 	 * @return
 	 */
-	private ScopeGraphAction createGraphMenu( Scope scope, MetricRaw m, GraphType.PlotType t) {
+	private ScopeGraphAction createGraphMenu( Scope scope, BaseMetric m, GraphType.PlotType t) {
 		final String sTitle = GraphType.toString(t);
 		return new ScopeGraphAction( sTitle, scope, m, t);
 	}
@@ -93,10 +93,10 @@ public class GraphMenu
      ********************************************************************************/
     private class ScopeGraphAction extends Action {
     	final private GraphType.PlotType graph_type;
-    	final private MetricRaw metric;	
+    	final private BaseMetric metric;	
     	final private Scope scope;
     	
-		public ScopeGraphAction(String sTitle, Scope scopeCurrent, MetricRaw m, GraphType.PlotType type) {
+		public ScopeGraphAction(String sTitle, Scope scopeCurrent, BaseMetric m, GraphType.PlotType type) {
 			
 			super(sTitle);
 			this.metric = m;

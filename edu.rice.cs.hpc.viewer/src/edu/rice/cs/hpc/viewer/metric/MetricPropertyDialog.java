@@ -41,6 +41,8 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.Metric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricType;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
@@ -369,9 +371,9 @@ public class MetricPropertyDialog extends TitleAreaDialog
 			return;
 		
 		if (metric instanceof DerivedMetric) {
-
-			ExtDerivedMetricDlg dialog = new ExtDerivedMetricDlg( getShell(), experiment, 
-					experiment.getRootScope().getSubscope(0) );
+			RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
+			ExtDerivedMetricDlg dialog = new ExtDerivedMetricDlg( getShell(), 
+					experiment,	root );
 			
 			DerivedMetric dm = (DerivedMetric) metric;
 			dialog.setMetric(dm);

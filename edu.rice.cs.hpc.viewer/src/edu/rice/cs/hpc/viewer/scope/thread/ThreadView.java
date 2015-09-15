@@ -18,7 +18,11 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
+import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
+import edu.rice.cs.hpc.data.experiment.metric.MetriRawManager;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
@@ -41,6 +45,7 @@ public class ThreadView extends AbstractBaseScopeView
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
 	private List<Integer> threads = new ArrayList<>();
+	private IMetricManager metricManager;
 	
 	/**********
 	 * Show the menu to open this view
@@ -65,6 +70,7 @@ public class ThreadView extends AbstractBaseScopeView
         final Experiment experiment = getExperiment();
 		RootScope rootCCT = experiment.getRootScope(RootScopeType.CallingContextTree);
 		myRootScope = createRoot(rootCCT);
+		metricManager = new MetriRawManager(experiment);
 
 		if (myRootScope.getChildCount()>0) {
         	treeViewer.setInput(myRootScope);
@@ -83,10 +89,10 @@ public class ThreadView extends AbstractBaseScopeView
 		
 		Database db 	= getDatabase();
 		Experiment exp 	= db.getExperiment();
-		MetricRaw []mr  = exp.getMetricRaw();
+		BaseMetric []mr  = exp.getMetricRaw();
 		if (mr != null) {
 			boolean sort = true;
-			for(MetricRaw m : mr)
+			for(BaseMetric m : mr)
 			{
 				MetricRaw mdup = (MetricRaw) m.duplicate();
 				mdup.setThread(threads);
@@ -102,10 +108,23 @@ public class ThreadView extends AbstractBaseScopeView
 	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
+    	
         return new BaseScopeViewActions(this.getViewSite().getShell(), window, parent, coolbar) {
+        	
+        	@Override
         	protected  Composite createGUI(Composite parent, CoolBar coolbar) {
             	this.objActionsGUI = new ScopeViewActionsGUI(this.objShell, this.objWindow, parent, this, false);
             	return objActionsGUI.buildGUI(parent, coolbar);
+        	}
+        	
+        	@Override
+        	protected IMetricManager getMetricManager() {
+        		return metricManager;
+        	}
+        	
+        	@Override
+        	protected void addMetricColumn(DerivedMetric objMetric) {
+        		addMetricColumn(ThreadView.this, objMetric);
         	}
         }; 
 	}
@@ -182,6 +201,9 @@ public class ThreadView extends AbstractBaseScopeView
 			threads.add(0);
 		}
 	}
+	
+	
+	
 	/*******************************
 	 * 
 	 * Action class to show the menu to open this view

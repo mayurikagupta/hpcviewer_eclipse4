@@ -33,9 +33,9 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.SelectionEvent;
 // hpcviewer
 import edu.rice.cs.hpc.common.util.UserInputHistory;
-import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.*;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric.AnnotationType;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 // math expression
 import com.graphbuilder.math.*;
@@ -67,14 +67,18 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	// ------------ Metric and math variables
 	private String []arrStrMetrics;
 	private Expression expFormula;
+	
 	private final ExtFuncMap fctMap;
 	private final MetricVarMap varMap;
+	private final RootScope root;
+	
 	private DerivedMetric metric;
 	
 	// ------------- Others
 	static private final String HISTORY_FORMULA = "formula";			//$NON-NLS-1$
 	static private final String HISTORY_METRIC_NAME = "metric_name";	//$NON-NLS-1$
-	private Experiment experiment;
+	
+	private IMetricManager experiment;
 	private Point expression_position;
 	
 	// ------------- object for storing history of formula and metric names
@@ -89,16 +93,17 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	 * @param parentShell
 	 * @param listOfMetrics
 	 */
-	public ExtDerivedMetricDlg(Shell parentShell, Experiment exp) {
-		this(parentShell, exp, null);
+	public ExtDerivedMetricDlg(Shell parentShell, IMetricManager exp, RootScope root) {
+		this(parentShell, exp, root, null);
 	}
 	
-	public ExtDerivedMetricDlg(Shell parent, Experiment exp, Scope s) {
+	public ExtDerivedMetricDlg(Shell parent, IMetricManager exp, RootScope root, Scope s) {
 		super(parent);
 		experiment = exp;
+		this.root  = root;
 		this.setMetrics(exp.getMetrics());
 		this.fctMap = new ExtFuncMap(exp.getMetrics());
-		this.varMap = new MetricVarMap ( s, exp );
+		this.varMap = new MetricVarMap ( root, s, exp );
 	}
 	
 	  //==========================================================
@@ -533,7 +538,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			  metricLastIndex = Integer.valueOf(metricLastID) + 1;
 			  metricLastID = String.valueOf(metricLastIndex);
 
-			  metric = new DerivedMetric(experiment, expFormula, 
+			  metric = new DerivedMetric(root, experiment, expFormula, 
 					  cbName.getText(), metricLastID, experiment.getMetricCount(), 
 					  annType, MetricType.INCLUSIVE);
 			  
@@ -574,7 +579,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	   * 
 	   * @param listOfMetrics
 	   */
-	  public void setMetrics(BaseMetric []listOfMetrics) {
+	  private void setMetrics(BaseMetric []listOfMetrics) {
 		  int nbMetrics = listOfMetrics.length;
 		  this.arrStrMetrics = new String[nbMetrics];
 		  for(int i=0;i<nbMetrics;i++) {

@@ -196,7 +196,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		 */
 		public String getMergedFile(File directory, int metric_raw_id) throws IOException {
 			
-			final MetricRaw metric = experiment.getMetricRaw()[metric_raw_id];
+			final MetricRaw metric = (MetricRaw) experiment.getMetricRaw()[metric_raw_id];
 			final String globInputFile = metric.getGlob();
 			
 			// assuming the number of merged experiments is less than 10

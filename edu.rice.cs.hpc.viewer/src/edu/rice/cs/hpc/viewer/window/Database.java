@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.viewer.window;
 import java.io.IOException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
@@ -67,11 +68,12 @@ public class Database {
 		
 		// TODO hack: since we just created the manager, we need to inform
 		// MetricRaw to set the new manager
-		MetricRaw []metrics = experiment.getMetricRaw();
+		BaseMetric[]metrics = experiment.getMetricRaw();
 		if (metrics != null)
-			for (MetricRaw metric: metrics)
+			for (BaseMetric metric: metrics)
 			{
-				metric.setThreadData(dataManager.getThreadDataCollection());
+				if (metric instanceof MetricRaw)
+					((MetricRaw)metric).setThreadData(dataManager.getThreadDataCollection());
 			}
 	}
 

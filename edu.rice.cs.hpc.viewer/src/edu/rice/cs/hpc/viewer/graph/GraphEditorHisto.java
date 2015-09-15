@@ -25,7 +25,7 @@ public class GraphEditorHisto extends GraphEditorBase {
 		
 		double y_values[], x_values[];
 		try {
-			y_values = this.threadData.getMetrics(metric, scope.getCCTIndex());
+			y_values = this.threadData.getMetrics((MetricRaw) metric, scope.getCCTIndex());
 
 		} catch (IOException e) {
 			MessageDialog.openError(this.getSite().getShell(), "Error reading file !", e.getMessage());
