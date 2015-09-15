@@ -22,7 +22,7 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
-import edu.rice.cs.hpc.data.experiment.metric.MetriRawManager;
+import edu.rice.cs.hpc.data.experiment.metric.MetricRawManager;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
@@ -70,7 +70,6 @@ public class ThreadView extends AbstractBaseScopeView
         final Experiment experiment = getExperiment();
 		RootScope rootCCT = experiment.getRootScope(RootScopeType.CallingContextTree);
 		myRootScope = createRoot(rootCCT);
-		metricManager = new MetriRawManager(experiment);
 
 		if (myRootScope.getChildCount()>0) {
         	treeViewer.setInput(myRootScope);
@@ -87,10 +86,14 @@ public class ThreadView extends AbstractBaseScopeView
 	protected void initTableColumns(boolean keepColumnStatus) {
 		ensureThreads();
 		
-		Database db 	= getDatabase();
-		Experiment exp 	= db.getExperiment();
-		BaseMetric []mr  = exp.getMetricRaw();
-		if (mr != null) {
+		IMetricManager mm = getMetricManager();
+		BaseMetric []mr   = mm.getMetrics();
+		if (mr == null)
+		{
+			objViewActions.showErrorMessage("The database has no thread-level metrics.");
+			objViewActions.disableButtons();
+		}
+		else {
 			boolean sort = true;
 			for(BaseMetric m : mr)
 			{
@@ -119,7 +122,7 @@ public class ThreadView extends AbstractBaseScopeView
         	
         	@Override
         	protected IMetricManager getMetricManager() {
-        		return metricManager;
+        		return ThreadView.this.getMetricManager();
         	}
         	
         	@Override
@@ -202,7 +205,22 @@ public class ThreadView extends AbstractBaseScopeView
 		}
 	}
 	
-	
+	private IMetricManager getMetricManager() 
+	{
+		if (metricManager != null)
+			return metricManager;
+		
+		// create a new metric manager for this view
+		Database db 	= getDatabase();
+		if (db != null ){
+			Experiment exp 	= db.getExperiment();
+			if (exp != null) {
+				metricManager = new MetricRawManager(exp);
+				return metricManager;
+			}
+		}
+		return null;
+	}
 	
 	/*******************************
 	 * 

@@ -134,7 +134,9 @@ public class MetricRaw  extends BaseMetric {
 	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
 	{
 		checkValues(thread_id);
-		return new MetricValue( values[s.getCCTIndex()-1] );
+		if (values != null)
+			return new MetricValue( values[s.getCCTIndex()-1] );
+		return MetricValue.NONE;
 	}
 	
 	private void checkValues(int thread_id) throws IOException

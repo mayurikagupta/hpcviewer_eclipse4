@@ -78,7 +78,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	static private final String HISTORY_FORMULA = "formula";			//$NON-NLS-1$
 	static private final String HISTORY_METRIC_NAME = "metric_name";	//$NON-NLS-1$
 	
-	private IMetricManager experiment;
+	private IMetricManager metricManager;
 	private Point expression_position;
 	
 	// ------------- object for storing history of formula and metric names
@@ -93,17 +93,17 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	 * @param parentShell
 	 * @param listOfMetrics
 	 */
-	public ExtDerivedMetricDlg(Shell parentShell, IMetricManager exp, RootScope root) {
-		this(parentShell, exp, root, null);
+	public ExtDerivedMetricDlg(Shell parentShell, IMetricManager mm, RootScope root) {
+		this(parentShell, mm, root, root);
 	}
 	
-	public ExtDerivedMetricDlg(Shell parent, IMetricManager exp, RootScope root, Scope s) {
+	public ExtDerivedMetricDlg(Shell parent, IMetricManager mm, RootScope root, Scope s) {
 		super(parent);
-		experiment = exp;
+		metricManager = mm;
 		this.root  = root;
-		this.setMetrics(exp.getMetrics());
-		this.fctMap = new ExtFuncMap(exp.getMetrics());
-		this.varMap = new MetricVarMap ( root, s, exp );
+		this.setMetrics(mm.getMetrics());
+		this.fctMap = new ExtFuncMap(mm.getMetrics());
+		this.varMap = new MetricVarMap ( root, s, mm );
 	}
 	
 	  //==========================================================
@@ -421,7 +421,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 		  StringBuffer sBuff = new StringBuffer(sText);
 
 		  // insert the metric variable ( i.e.: $ + metric index)
-		  final String sMetricIndex = signToPrepend + experiment.getMetric(selection_index).getShortName() ; 
+		  final String sMetricIndex = signToPrepend + metricManager.getMetric(selection_index).getShortName() ; 
 		  sBuff.insert(iSelIndex, sMetricIndex );
 		  cbExpression.setText(sBuff.toString());
 
@@ -531,15 +531,15 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			  
 			  // create a new metric
 			  
-			  int metricLastIndex   = experiment.getMetricCount() -1;
-			  BaseMetric metricLast = experiment.getMetric(metricLastIndex);
+			  int metricLastIndex   = metricManager.getMetricCount() -1;
+			  BaseMetric metricLast = metricManager.getMetric(metricLastIndex);
 			  
 			  String metricLastID = metricLast.getShortName();
 			  metricLastIndex = Integer.valueOf(metricLastID) + 1;
 			  metricLastID = String.valueOf(metricLastIndex);
 
-			  metric = new DerivedMetric(root, experiment, expFormula, 
-					  cbName.getText(), metricLastID, experiment.getMetricCount(), 
+			  metric = new DerivedMetric(root, metricManager, expFormula, 
+					  cbName.getText(), metricLastID, metricManager.getMetricCount(), 
 					  annType, MetricType.INCLUSIVE);
 			  
 		  } else {

@@ -8,15 +8,15 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
  * including adding it with derived metrics
  *
  ********************************************************/
-public class MetriRawManager implements IMetricManager 
+public class MetricRawManager implements IMetricManager 
 {
 	private BaseMetric[] metrics;
 	
-	public MetriRawManager(BaseMetric []metrics) {
+	public MetricRawManager(BaseMetric []metrics) {
 		this.metrics = metrics;
 	}
 	
-	public MetriRawManager(Experiment experiment) {
+	public MetricRawManager(Experiment experiment) {
 		this(experiment.getMetricRaw());
 	}
 
