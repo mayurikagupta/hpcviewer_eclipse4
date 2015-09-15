@@ -171,7 +171,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     		Object o = columns[i].getData();
     		if(o instanceof BaseMetric) {
     			BaseMetric metric = (BaseMetric) o;
-    			sText[i] = metric.getMetricTextValue(scope.getMetricValue(metric));
+    			// ask the metric for the value of this scope
+    			// if it's a thread-level metric, we will read metric-db file
+    			sText[i] = metric.getMetricTextValue(scope);
     		}
     	}
     	
