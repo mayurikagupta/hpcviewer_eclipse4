@@ -7,19 +7,23 @@ import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
 /****************************************
- * Raw metric class
- *
+ * Raw metric class\n
+ * a.k.a thread-level metric
  ****************************************/
 public class MetricRaw  extends BaseMetric {
 
-	private int ID;
-	private String db_glob;
-	private int db_id;
-	private int num_metrics;
+	private int ID;			 // the index of this metric as specified in XML
+	private String db_glob;  // old format: the glob pattern of the metric-db file
+	private int db_id;		 // sequential index of the metric in the XML. Is has to be between 0 to the number of metrics
+	private int num_metrics; // number of metrics
 	
 	private IThreadDataCollection threadData;
+	
+	/*** list of threads that its metric values have to be computed **/
 	private List<Integer> threads = null;
-	private double []values = null;
+	
+	/*** list of scope metric values of a certain threads. The length of the array is the number of cct nodes*/
+	private double []thread_values = null;
 	
 	public MetricRaw(String sID, String sDisplayName, boolean displayed, String format, AnnotationType annotationType, int index) {
 		super(sID, sDisplayName, displayed, format, annotationType, index, index,  MetricType.EXCLUSIVE);
@@ -30,9 +34,9 @@ public class MetricRaw  extends BaseMetric {
 			int db_num, int metrics) {
 		// raw metric has no partner
 		super( String.valueOf(id), title, true, null, AnnotationType.NONE, db_num, db_num, MetricType.EXCLUSIVE);
-		this.ID = id;
+		this.ID 	 = id;
 		this.db_glob = db_pattern;
-		this.db_id = db_num;
+		this.db_id 	 = db_num;
 		this.num_metrics = metrics;
 	}
 	
@@ -117,19 +121,21 @@ public class MetricRaw  extends BaseMetric {
 		return dup;
 	}
 	
+	/*****
+	 * compute the average value of a scope for certain threads.
+	 * The number of threads cannot be null.
+	 * @param s
+	 * @return
+	 * @throws IOException
+	 */
 	private MetricValue getAverageValue(Scope s) throws IOException
 	{
-		double []thread_values = threadData.getMetrics(s.getCCTIndex(), ID, num_metrics);
 		double val_mean = 0.0;
-		if (threads != null)
+		final double divider  = 1.0d / threads.size();
+		double []values = threadData.getMetrics(s.getCCTIndex(), getIndex(), num_metrics);
+		for(Integer thread : threads)
 		{
-			double divider  = 1 / threads.size();
-			for(Integer thread : threads)
-			{
-				val_mean += (thread_values[thread] * divider);
-			}
-		} else {
-			val_mean = thread_values[0];
+			val_mean += (values[thread] * divider);
 		}
 		return new MetricValue(val_mean);
 	}
@@ -137,14 +143,14 @@ public class MetricRaw  extends BaseMetric {
 	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
 	{
 		checkValues(thread_id);
-		if (values != null)
-			return new MetricValue( values[s.getCCTIndex()-1] );
+		if (thread_values != null)
+			return new MetricValue( thread_values[s.getCCTIndex()-1] );
 		return MetricValue.NONE;
 	}
 	
 	private void checkValues(int thread_id) throws IOException
 	{
-		if (values == null)
-			values = threadData.getScopeMetrics(thread_id, ID, num_metrics);
+		if (thread_values == null)
+			thread_values = threadData.getScopeMetrics(thread_id, ID, num_metrics);
 	}
 }
