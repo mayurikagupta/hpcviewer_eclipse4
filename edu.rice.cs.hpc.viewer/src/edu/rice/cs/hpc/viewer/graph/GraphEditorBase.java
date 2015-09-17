@@ -1,19 +1,26 @@
 package edu.rice.cs.hpc.viewer.graph;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
 import org.swtchart.Chart;
 import org.swtchart.Range;
+import org.swtchart.ext.IChartSelectionListener;
 import org.swtchart.ext.InteractiveChart;
+import org.swtchart.ext.UserSelectionData;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
@@ -21,6 +28,7 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
 import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
 
@@ -31,11 +39,12 @@ import edu.rice.cs.hpc.viewer.window.Database;
  * The class implements IViewerEditor, so it can be renamed, manipulated and changed
  * 	by the viewer manager
  */
-public abstract class GraphEditorBase extends EditorPart implements IViewerEditor {
-	
+public abstract class GraphEditorBase extends EditorPart implements IViewerEditor 
+{
 	// chart is used to plot graph or histogram on canvas. each editor has its own chart
     private Chart chart;
     protected ThreadLevelDataManager threadData;
+    private Experiment experiment;
     
 	@Override
 	public void doSave(IProgressMonitor monitor) {
@@ -59,6 +68,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 			final GraphEditorInput editorInput = (GraphEditorInput) input;
 			final Database database 		   = editorInput.getDatabase();
 			threadData = database.getThreadLevelDataManager();
+			experiment = database.getExperiment();
 		}
 	}
 
@@ -115,14 +125,25 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 
 		// set the window title with a possible db number
 		WindowTitle wt = new WindowTitle();
-		wt.setEditorTitle(this.getEditorSite().getWorkbenchWindow(), this); //, exp, editorName);
+		final IWorkbenchWindow window = getEditorSite().getWorkbenchWindow(); 
+		wt.setEditorTitle(window, this); //, exp, editorName);
 
 		//----------------------------------------------
 		// chart creation
 		//----------------------------------------------
 		chart = new InteractiveChart(parent, SWT.NONE);
 		chart.getTitle().setText( title );
-
+		
+		((InteractiveChart)chart).setChartSelectionListener(new IChartSelectionListener() {
+			
+			@Override
+			public void selection(UserSelectionData data) {
+				System.out.format("%d (%f, %f)\n", data.index, data.valueX, data.valueY);
+				ArrayList<Integer> threads = new ArrayList<>(1);
+				threads.add(data.index);
+				ThreadView.showView(window, getExperiment(), threads);
+			}
+		});
 
 		//----------------------------------------------
 		// formatting axis

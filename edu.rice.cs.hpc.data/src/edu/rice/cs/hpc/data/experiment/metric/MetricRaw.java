@@ -50,6 +50,11 @@ public class MetricRaw  extends BaseMetric {
 		this.threads = threads;
 	}
 	
+	public List<Integer> getThread()
+	{
+		return threads;
+	}
+	
 	/***
 	 * return the glob pattern of files of this raw metric
 	 * @return

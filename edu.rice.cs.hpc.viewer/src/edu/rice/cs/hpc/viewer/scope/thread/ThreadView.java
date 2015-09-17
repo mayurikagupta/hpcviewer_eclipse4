@@ -10,6 +10,7 @@ import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
@@ -41,7 +42,7 @@ import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 public class ThreadView extends AbstractBaseScopeView 
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
-	private List<Integer> threads = new ArrayList<>();
+	//private List<Integer> threads = new ArrayList<>();
 	private IMetricManager metricManager;
 	
 	/**********
@@ -56,7 +57,35 @@ public class ThreadView extends AbstractBaseScopeView
 	{
 		mgr.add(new ThreadViewAction(window, experiment));
 	}
+	
+	static public void showView(IWorkbenchWindow window, 
+			Experiment experiment, List<Integer> threads)
+	{
+		ThreadViewAction action = new ThreadViewAction(window, experiment, threads);
+		action.run();
+	}
 
+	/*****
+	 * Customized setInput from {@link edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView}
+	 * using list of threads as the additional parameter.
+	 * @param db : database
+	 * @param scope : the root (should be cct root)
+	 * @param threads : the list of threads
+	 */
+	public void setInput(Database db, RootScope scope, List<Integer> threads)
+	{
+    	database = db;
+    	myRootScope = scope;// try to get the aggregate value
+
+        // tell the action class that we have built the tree
+        this.objViewActions.setTreeViewer(treeViewer);
+        
+        initTableColumns(threads);
+        
+        // notify the children class to update the display
+    	updateDisplay();
+	}
+	
 	@Override
 	public void updateDisplay() {
 		// return immediately when there's no database or the view is closed (disposed)
@@ -78,10 +107,49 @@ public class ThreadView extends AbstractBaseScopeView
         	objViewActions.checkNodeButtons();
         }
 	}
+	
+	/*****
+	 * add new columns of metrics for a given list of threads<br/>
+	 * If the threads already displayed in the table, we do nothing.
+	 * Otherwise, we'll add new columns for these threads.
+	 * @param threads : list of threads
+	 */
+	void addTableColumns(List<Integer> threads) {
+		// 1. check if the threads already exist in the view
+		TreeColumn []columns = getTreeViewer().getTree().getColumns();
+		boolean col_exist = false;
+		for (TreeColumn col : columns) {
+			Object obj = col.getData();
+			if (obj instanceof MetricRaw) {
+				List<Integer> lt = ((MetricRaw)obj).getThread();
+				if (lt.size() == threads.size()) {
+					for(Integer i : threads) {
+						col_exist = lt.contains(i);
+						if (!col_exist) {
+							break;
+						}
+					}
+				}
+			}
+			if (col_exist) break;
+		}
+		
+		// 2. if the column of this thread exist, exit.
+		if (col_exist)
+			return;
 
-	@Override
-	protected void initTableColumns(boolean keepColumnStatus) {
-		ensureThreads();
+		// 3. add the new metrics into the table
+		initTableColumns(threads);
+		
+		// 4. update the table content, including the aggregate experiment
+		updateDisplay();
+	}
+	
+	/****
+	 * customized table initialization
+	 * @param threads : list of threads
+	 */
+	void initTableColumns(List<Integer> threads) {
 		
 		IMetricManager mm = getMetricManager();
 		BaseMetric []mr   = mm.getMetrics();
@@ -104,6 +172,13 @@ public class ThreadView extends AbstractBaseScopeView
 					sort = false;
 			}
 		}
+	}
+
+	@Override
+	protected void initTableColumns(boolean keepColumnStatus) {	
+		ArrayList<Integer> threads = new ArrayList<>(1);
+		threads.add(0);
+		initTableColumns(threads);
 	}
 
 	@Override
@@ -153,21 +228,9 @@ public class ThreadView extends AbstractBaseScopeView
 	 * @return RootScope
 	 */
 	private RootScope createRoot(RootScope rootCCT)
-	{
-		ensureThreads();
-		
+	{	
 		// create and duplicate the configuration
 		RootScope rootThread = (RootScope) rootCCT.duplicate();
-		
-		// rename the root
-		StringBuffer sb = new StringBuffer();
-		sb.append("Thread: ");
-		sb.append(threads.get(0));
-		if (threads.size() > 1) {
-			sb.append(" - ");
-			sb.append(threads.get(threads.size()-1));
-		}
-		rootThread.setName(sb.toString());
 		
 		// duplicate the children
 		for(int i=0; i<rootCCT.getChildCount(); i++)
@@ -178,13 +241,6 @@ public class ThreadView extends AbstractBaseScopeView
 		return rootThread;
 	}
 	
-	private void ensureThreads()
-	{
-		int threads_size = threads.size();
-		if (threads_size == 0) {
-			threads.add(0);
-		}
-	}
 	
 	private IMetricManager getMetricManager() 
 	{
@@ -212,27 +268,44 @@ public class ThreadView extends AbstractBaseScopeView
 	{
 		final private IWorkbenchWindow window;
 		final private Experiment experiment;
+		private List<Integer> threads;
 		
 		public ThreadViewAction(IWorkbenchWindow window, Experiment experiment)
 		{
-			super("Show thread view");
-			this.window = window;
+			this(window, experiment, null);
+		}
+		
+		public ThreadViewAction(IWorkbenchWindow window, Experiment experiment, List<Integer> threads)
+		{
+			super("Show thread view ");
+			this.window 	= window;
 			this.experiment = experiment;
+			this.threads	= threads;
+		}
+		
+		private void initThreads() 
+		{
+			if (threads == null) {
+				threads = new ArrayList<>(1);
+				threads.add(0);
+			}
 		}
 		
 		@Override
 		public void run()
 		{
-			IWorkbenchPage page = window.getActivePage();
+			final IWorkbenchPage page = window.getActivePage();
 			if (page != null) {
+				initThreads();
 				try {
 					final String path = experiment.getDefaultDirectory().getAbsolutePath();
 					
 					// check if the view already exists
 					final IViewReference vref = page.findViewReference(ID, path);
 					if (vref != null) {
-						// it's there. we need to activate it
+						// it's there. we need to activate it and set the new threads
 						IViewPart view = vref.getView(true);
+						((ThreadView)view).addTableColumns(threads);
 						page.activate(view);
 					} else {
 						// it doesn't exist. need to create it.
@@ -243,7 +316,7 @@ public class ThreadView extends AbstractBaseScopeView
 							ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
 							final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
 							RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
-							((ThreadView)view).setInput(db, scope, false);
+							((ThreadView)view).setInput(db, scope, threads);
 						}
 					}
 				} catch (PartInitException e) {
