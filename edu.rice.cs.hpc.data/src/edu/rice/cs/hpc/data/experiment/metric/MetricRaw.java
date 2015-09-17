@@ -91,7 +91,7 @@ public class MetricRaw  extends BaseMetric {
 			try {
 				if (threads != null)
 				{
-					if (threads.size()>0)
+					if (threads.size()>1)
 					{
 						return getAverageValue(s);
 					} else if (threads.size()==1)
@@ -111,7 +111,10 @@ public class MetricRaw  extends BaseMetric {
 
 	@Override
 	public BaseMetric duplicate() {
-		return new MetricRaw(ID, this.displayName, this.db_glob, this.db_id, this.num_metrics);
+		MetricRaw dup = new MetricRaw(ID, this.displayName, this.db_glob, this.db_id, this.num_metrics);
+		// TODO: hack to duplicate also the thread data
+		dup.threadData = threadData;
+		return dup;
 	}
 	
 	private MetricValue getAverageValue(Scope s) throws IOException

@@ -89,6 +89,15 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		this(objShell, window, parent, objActions, true);
 	}
 	
+	/****
+	 * Constructor to create a GUI part of the actions
+	 * 
+	 * @param objShell : parent shell
+	 * @param window : active window
+	 * @param parent : parent component
+	 * @param objActions : action
+	 * @param affectOtherViews : boolean true if an action should trigger other views
+	 */
 	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
 			ScopeViewActions objActions, boolean affectOtherViews) {
 

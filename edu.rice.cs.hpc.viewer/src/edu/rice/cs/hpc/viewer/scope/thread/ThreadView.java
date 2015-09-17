@@ -19,7 +19,6 @@ import org.eclipse.ui.PartInitException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
-import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRawManager;
@@ -28,9 +27,7 @@ import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
-import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
-import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
@@ -99,7 +96,8 @@ public class ThreadView extends AbstractBaseScopeView
 			{
 				MetricRaw mdup = (MetricRaw) m.duplicate();
 				mdup.setThread(threads);
-				treeViewer.addTreeColumn(m, sort);
+				mdup.setDisplayName(threads + "-" + mdup.getDisplayName());
+				treeViewer.addTreeColumn(mdup, sort);
 				
 				// sort initially the first column metric
 				if (sort)
@@ -112,24 +110,7 @@ public class ThreadView extends AbstractBaseScopeView
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
     	
-        return new BaseScopeViewActions(this.getViewSite().getShell(), window, parent, coolbar) {
-        	
-        	@Override
-        	protected  Composite createGUI(Composite parent, CoolBar coolbar) {
-            	this.objActionsGUI = new ScopeViewActionsGUI(this.objShell, this.objWindow, parent, this, false);
-            	return objActionsGUI.buildGUI(parent, coolbar);
-        	}
-        	
-        	@Override
-        	protected IMetricManager getMetricManager() {
-        		return ThreadView.this.getMetricManager();
-        	}
-        	
-        	@Override
-        	protected void addMetricColumn(DerivedMetric objMetric) {
-        		addMetricColumn(ThreadView.this, objMetric);
-        	}
-        }; 
+        return new ThreadScopeViewAction(this, window, parent, coolbar, getMetricManager()) ;
 	}
 
 	@Override
@@ -160,7 +141,7 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected CellLabelProvider getLabelProvider() {
-		return new StyledScopeLabelProvider( this.getSite().getWorkbenchWindow() ); 
+		return new StyledScopeLabelProvider( getSite().getWorkbenchWindow() ); 
 	}
 
 	/***
@@ -180,7 +161,7 @@ public class ThreadView extends AbstractBaseScopeView
 		
 		// rename the root
 		StringBuffer sb = new StringBuffer();
-		sb.append("Thread ");
+		sb.append("Thread: ");
 		sb.append(threads.get(0));
 		if (threads.size() > 1) {
 			sb.append(" - ");

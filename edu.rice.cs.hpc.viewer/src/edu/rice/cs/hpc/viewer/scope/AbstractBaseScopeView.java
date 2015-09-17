@@ -37,6 +37,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.window.ToolTip;
@@ -60,7 +61,7 @@ import edu.rice.cs.hpc.viewer.window.Database;
  * - calling context view (top down)
  * - callers view (bottom-down)
  * - flat view (static)
- * - thread scope view (not implemented yet, but it will shows metric of a thread)
+ * - thread scope view (not implemented yet, but it will show thread-level metrics)
  *
  */
 abstract public class AbstractBaseScopeView  extends ViewPart 
@@ -120,7 +121,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * Display the source code of the node in the editor area
      * @param node the current OR selected node
      */
-    private void displayFileEditor(Scope scope) {
+    void displayFileEditor(Scope scope) {
     	if(editorSourceCode == null) {
     		this.editorSourceCode = new EditorManager(this.getSite());
     	}
@@ -364,7 +365,8 @@ abstract public class AbstractBaseScopeView  extends ViewPart
          * On MAC it doesn't matter which button, but on Windows, we need to make sure !
          */
         gc = new GC(this.treeViewer.getTree().getDisplay());
-        treeViewer.getTree().addListener(SWT.MouseDown, new ScopeMouseListener(gc, this.getSite().getPage())); 
+        final IWorkbenchPage page = getSite().getPage();
+        treeViewer.getTree().addListener(SWT.MouseDown, new ScopeMouseListener(this, page, gc, treeViewer)); 
         
         // bug #132: https://outreach.scidac.gov/tracker/index.php?func=detail&aid=132&group_id=22&atid=169
         // need to capture event of "collapse" tree then check if the button state should be updated or not.
@@ -585,23 +587,28 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     //======================================================
 
     
-    /***
+    /*********************************************************
      * 
      * class to handle mouse up and down event in scope tree
      *
-     */
-    public class ScopeMouseListener implements Listener {
+     *********************************************************/
+    static private class ScopeMouseListener implements Listener {
 
     	final private GC gc;
+    	final private TreeViewer treeViewer;
     	final private IWorkbenchPage page;
+    	final private AbstractBaseScopeView view;
     	
     	/**
     	 * initialization with the gc of the tree
     	 * @param gc of the tree
     	 */
-    	public ScopeMouseListener(final GC gc, IWorkbenchPage page) {
+    	public ScopeMouseListener(AbstractBaseScopeView view, 
+    			IWorkbenchPage page, GC gc, TreeViewer treeViewer) {
     		this.gc = gc;
+    		this.treeViewer = treeViewer;
     		this.page = page;
+    		this.view = view;
     	}
     	
     	/*
@@ -611,7 +618,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	public void handleEvent(Event event) {
 
     		// tell the children to handle the mouse click
-    		mouseDownEvent(event);
+    		view.mouseDownEvent(event);
 
     		if(event.button != 1) {
     			// yes, we only allow the first button
@@ -680,7 +687,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 			// display the source code if the view is not maximized
     		int state = page.getPartState( page.getActivePartReference() );
     		if (state != IWorkbenchPage.STATE_MAXIMIZED) {
-    			displayFileEditor( scope );
+    			view.displayFileEditor( scope );
     		}
     	}
     }

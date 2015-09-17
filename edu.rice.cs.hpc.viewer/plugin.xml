@@ -55,6 +55,7 @@
       <view
             allowMultiple="true"
             class="edu.rice.cs.hpc.viewer.scope.thread.ThreadView"
+            icon="icons/cct-thread.png"
             id="edu.rice.cs.hpc.viewer.scope.thread.ThreadView"
             name="Thread view"
             restorable="true">
