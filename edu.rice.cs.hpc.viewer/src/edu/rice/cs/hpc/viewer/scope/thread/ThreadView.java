@@ -176,7 +176,7 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected void initTableColumns(boolean keepColumnStatus) {	
-		ArrayList<Integer> threads = new ArrayList<>(1);
+		ArrayList<Integer> threads = new ArrayList<Integer>(1);
 		threads.add(0);
 		initTableColumns(threads);
 	}
@@ -286,7 +286,7 @@ public class ThreadView extends AbstractBaseScopeView
 		private void initThreads() 
 		{
 			if (threads == null) {
-				threads = new ArrayList<>(1);
+				threads = new ArrayList<Integer>(1);
 				threads.add(0);
 			}
 		}

@@ -4,9 +4,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
@@ -44,9 +41,8 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 	// chart is used to plot graph or histogram on canvas. each editor has its own chart
     private Chart chart;
     protected ThreadLevelDataManager threadData;
-    private Experiment experiment;
     
-	@Override
+    @Override
 	public void doSave(IProgressMonitor monitor) {
 		// TODO Auto-generated method stub
 	}
@@ -68,7 +64,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 			final GraphEditorInput editorInput = (GraphEditorInput) input;
 			final Database database 		   = editorInput.getDatabase();
 			threadData = database.getThreadLevelDataManager();
-			experiment = database.getExperiment();
+			database.getExperiment();
 		}
 	}
 
@@ -138,8 +134,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 			
 			@Override
 			public void selection(UserSelectionData data) {
-				System.out.format("%d (%f, %f)\n", data.index, data.valueX, data.valueY);
-				ArrayList<Integer> threads = new ArrayList<>(1);
+				ArrayList<Integer> threads = new ArrayList<Integer>(1);
 				threads.add(data.index);
 				ThreadView.showView(window, getExperiment(), threads);
 			}
