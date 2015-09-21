@@ -1,26 +1,17 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.dialogs.ListSelectionDialog;
-
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
@@ -34,8 +25,6 @@ import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 import edu.rice.cs.hpc.viewer.window.Database;
-import edu.rice.cs.hpc.viewer.window.ViewerWindow;
-import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
 /******************************************************************************************
  * 
@@ -115,6 +104,7 @@ public class ThreadView extends AbstractBaseScopeView
 	 * add new columns of metrics for a given list of threads<br/>
 	 * If the threads already displayed in the table, we do nothing.
 	 * Otherwise, we'll add new columns for these threads.
+	 * 
 	 * @param threads : list of threads
 	 */
 	void addTableColumns(List<Integer> threads) {
@@ -286,76 +276,10 @@ public class ThreadView extends AbstractBaseScopeView
 			this.threads	= threads;
 		}
 		
-		private void initThreads() 
-		{
-			if (threads == null) {
-				threads = new ArrayList<Integer>(1);
-				threads.add(0);
-			}
-		}
-		
-		private List<Integer> getThreads(Database db) throws NumberFormatException, IOException 
-		{
-			double []ids = db.getThreadLevelDataManager().getProcessIDsDouble(0);
-			List<Double> dbList = new ArrayList<Double>(ids.length);
-			for(int i=0; i<ids.length; i++) {
-				dbList.add(ids[i]);
-			}
-			// put up a dialog with the open databases in the current window in a drop down selection box
-			ListSelectionDialog dlg = new ListSelectionDialog(window.getShell(), dbList, 
-				new ArrayContentProvider(), new LabelProvider(), "Select the processes/threads to view:");
-			dlg.setTitle("Select processes/threads");
-			dlg.open();
-			Object[] selectedDatabases = dlg.getResult();
-			if (selectedDatabases != null) 
-			{
-				List<Integer> indexOfThreads = new ArrayList<Integer>(selectedDatabases.length);
-				for(int i=0; i<selectedDatabases.length; i++) 
-				{
-					int index = dbList.indexOf(selectedDatabases[i]);
-					indexOfThreads.add(index);
-				}
-				return indexOfThreads;
-			}
-			return null;
-		}
-		
 		@Override
 		public void run()
 		{
-			final IWorkbenchPage page = window.getActivePage();
-			if (page != null) {
-				initThreads();
-				try {
-					final String path = experiment.getDefaultDirectory().getAbsolutePath();
-					
-					// check if the view already exists
-					final IViewReference vref = page.findViewReference(ID, path);
-					if (vref != null) {
-						// it's there. we need to activate it and set the new threads
-						IViewPart view = vref.getView(true);
-						((ThreadView)view).addTableColumns(threads);
-						page.activate(view);
-					} else {
-						// it doesn't exist. need to create it.
-						IViewPart view = page.showView(ID, path, 
-								IWorkbenchPage.VIEW_ACTIVATE);
-						if (view != null && (view  instanceof ThreadView)) 
-						{
-							ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
-							final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
-							RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
-							List<Integer> lt  = getThreads(db);
-							if (threads != null) {
-								((ThreadView)view).setInput(db, scope, lt);
-							}
-						}
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					MessageDialog.openError(window.getShell(), "Error", e.getMessage());
-				}
-			}
+			ThreadViewFactory.build(window, experiment, threads);
 		}
 	}
 }
