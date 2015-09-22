@@ -56,19 +56,19 @@ public class Database {
 	 * @param path
 	 * @throws IOException 
 	 */
-	public void setExperiment (Experiment exper) throws IOException {
-		experiment = exper;
-		
+	public void setExperiment (Experiment experiment) throws IOException {
+		this.experiment = experiment;
 		// TODO hack: since we just created the manager, we need to inform
 		// MetricRaw to set the new manager
 		BaseMetric[]metrics = experiment.getMetricRaw();
-		dataThread = ThreadDataCollectionFactory.build(experiment);
-		if (metrics != null)
+		if (metrics != null) {
+			dataThread = ThreadDataCollectionFactory.build(experiment);
 			for (BaseMetric metric: metrics)
 			{
 				if (metric instanceof MetricRaw)
 					((MetricRaw)metric).setThreadData(dataThread);
 			}
+		}
 	}
 	
 	public IThreadDataCollection getThreadDataCollection()
@@ -87,6 +87,7 @@ public class Database {
 	
 	public void dispose() {
 		experiment.dispose();
-		dataThread.dispose();
+		if (dataThread != null)
+			dataThread.dispose();
 	}
 }
