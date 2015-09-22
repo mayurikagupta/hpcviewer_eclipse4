@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 
 /*************************************
  * 
@@ -103,8 +103,7 @@ public class ThreadDataCollection2Test
 		final File file = new File(database);
 		assertTrue(file.canRead());
 		experiment.open(file, null, false);
-		ThreadLevelDataManager manager = new ThreadLevelDataManager(experiment);
-		data = manager.getThreadDataCollection();
+		data = ThreadDataCollectionFactory.build(experiment);
 		data.open(experiment.getDefaultDirectory().getAbsolutePath());
 	}
 }

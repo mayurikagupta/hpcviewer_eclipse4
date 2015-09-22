@@ -24,12 +24,13 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 public class ThreadEditor extends EditorPart implements PaintListener 
@@ -137,47 +138,53 @@ public class ThreadEditor extends EditorPart implements PaintListener
 
 	private void paint(GC gc)
 	{
-		final ThreadLevelDataManager manager = database.getThreadLevelDataManager();
 		final Experiment experiment = database.getExperiment();
-		BaseMetric []metrics = experiment.getMetricRaw();
-		if (metrics == null)
-			return;
-		
-		final Rectangle r = canvas.getClientArea();
-		
-		final RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
-		Scope parent = root;
-		int numChildren = root.getChildCount();
-		
-		if (image != null && !image.isDisposed())
-			image.dispose();
-		image = new Image(gc.getDevice(), r.width, r.height);
-		GC gcImage = new GC(image);
-		
-		while(numChildren > 0)
-		{					
-			int cct_id  = parent.getCCTIndex(); 
-			print(manager, metrics[metricIndex], cct_id);
-
-			// display the children
-			for(int i=0; i<numChildren; i++)
-			{
-				Scope scope = (Scope) parent.getChildAt(i);
-				cct_id  = scope.getCCTIndex(); 
+		IThreadDataCollection manager;
+		try {
+			manager = ThreadDataCollectionFactory.build(experiment);
+			BaseMetric []metrics = experiment.getMetricRaw();
+			if (metrics == null)
+				return;
+			
+			final Rectangle r = canvas.getClientArea();
+			
+			final RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
+			Scope parent = root;
+			int numChildren = root.getChildCount();
+			
+			if (image != null && !image.isDisposed())
+				image.dispose();
+			image = new Image(gc.getDevice(), r.width, r.height);
+			GC gcImage = new GC(image);
+			
+			while(numChildren > 0)
+			{					
+				int cct_id  = parent.getCCTIndex(); 
 				print(manager, metrics[metricIndex], cct_id);
+
+				// display the children
+				for(int i=0; i<numChildren; i++)
+				{
+					Scope scope = (Scope) parent.getChildAt(i);
+					cct_id  = scope.getCCTIndex(); 
+					print(manager, metrics[metricIndex], cct_id);
+				}
+				parent = (Scope) parent.getChildAt(0);
+				numChildren = parent.getChildCount();
 			}
-			parent = (Scope) parent.getChildAt(0);
-			numChildren = parent.getChildCount();
+			gcImage.dispose();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		gcImage.dispose();
 	}
 	
-	private void print(ThreadLevelDataManager manager, BaseMetric metric, int cct_id)
+	private void print(IThreadDataCollection data, BaseMetric metric, int cct_id)
 	{
 		double[] values;
 		System.out.format("[%d] ", cct_id);
 		try {
-			values = manager.getMetrics((MetricRaw) metric, cct_id);
+			values = data.getMetrics(cct_id, ((MetricRaw)metric).getRawID(), ((MetricRaw)metric).getSize()); 
 			for(double v : values)
 			{
 				System.out.print(v + " ");

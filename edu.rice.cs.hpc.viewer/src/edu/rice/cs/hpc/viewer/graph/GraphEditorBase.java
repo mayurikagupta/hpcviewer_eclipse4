@@ -20,11 +20,11 @@ import org.swtchart.ext.InteractiveChart;
 import org.swtchart.ext.UserSelectionData;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -40,7 +40,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 {
 	// chart is used to plot graph or histogram on canvas. each editor has its own chart
     private Chart chart;
-    protected ThreadLevelDataManager threadData;
+    protected IThreadDataCollection threadData;
     
     @Override
 	public void doSave(IProgressMonitor monitor) {
@@ -63,8 +63,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		{
 			final GraphEditorInput editorInput = (GraphEditorInput) input;
 			final Database database 		   = editorInput.getDatabase();
-			threadData = database.getThreadLevelDataManager();
-			database.getExperiment();
+			threadData = database.getThreadDataCollection();
 		}
 	}
 

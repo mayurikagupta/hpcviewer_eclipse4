@@ -17,14 +17,14 @@ public class GraphEditorPlot extends GraphEditor {
 	protected double[] getValuesX(Scope scope, MetricRaw metric) 
 	throws NumberFormatException, IOException {
 
-		double []x_values = threadData.getProcessIDsDouble( metric.getID() );				
+		double []x_values = threadData.getRankLabels();				
 		return x_values;
 	}
 
 	@Override
 	protected double[] getValuesY(Scope scope, MetricRaw metric) throws IOException {
 		{
-			double []y_values = threadData.getMetrics( metric, scope.getCCTIndex());
+			double []y_values = threadData.getMetrics(scope.getCCTIndex(), metric.getRawID(), metric.getSize());
 			return y_values;
 		}
 	}

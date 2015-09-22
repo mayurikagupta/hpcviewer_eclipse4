@@ -12,10 +12,10 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.BaseEditorManager;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
 import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.window.Database;
 
@@ -26,25 +26,15 @@ import edu.rice.cs.hpc.viewer.window.Database;
  */
 public class GraphMenu 
 {
-	final private IWorkbenchWindow window;
-	private Database database;
 	
-	public GraphMenu(IWorkbenchWindow window) {
-		this.window = window;
-	}
-	
-	public void createAdditionalContextMenu(IMenuManager mgr, Database database, Scope scope) {
+	static public void createAdditionalContextMenu(IWorkbenchWindow window, IMenuManager mgr, 
+			Database database, Scope scope) {
 		if (scope != null) {
-			this.database = database;
+			IThreadDataCollection threadData = database.getThreadDataCollection();
+			if (threadData == null || !threadData.isAvailable())
+				// no menus if there is no thread-level data
+				return;
 			
-			ThreadLevelDataManager objDataManager = database.getThreadLevelDataManager();
-			if (objDataManager == null)
-				return;
-
-			// return immediately if the experiment doesn't contain thread level data
-			if (!objDataManager.isDataAvailable())
-				return;
-
 			final BaseMetric []metrics = database.getExperiment().getMetricRaw();
 			if (metrics == null)
 				return;
@@ -55,7 +45,7 @@ public class GraphMenu
 			final int num_metrics = metrics.length;
 			for (int i=0; i<num_metrics; i++) {
 				MenuManager subMenu = new MenuManager("Graph "+ metrics[i].getDisplayName() );
-				this.createGraphMenus(subMenu, scope, metrics[i]);
+				createGraphMenus(window, database, subMenu, scope, metrics[i]);
 				mgr.add(subMenu);
 			}
 		}		
@@ -68,10 +58,10 @@ public class GraphMenu
 	 * @param m
 	 * @param index
 	 */
-	private void createGraphMenus(IMenuManager menu, Scope scope, BaseMetric m) {
-		menu.add( createGraphMenu(scope, m, GraphType.PlotType.PLOT) );
-		menu.add( createGraphMenu(scope, m, GraphType.PlotType.SORTED) );
-		menu.add( createGraphMenu(scope, m, GraphType.PlotType.HISTO) );
+	static private void createGraphMenus(IWorkbenchWindow window, Database database, IMenuManager menu, Scope scope, BaseMetric m) {
+		menu.add( createGraphMenu(window, database, scope, m, GraphType.PlotType.PLOT) );
+		menu.add( createGraphMenu(window, database, scope, m, GraphType.PlotType.SORTED) );
+		menu.add( createGraphMenu(window, database, scope, m, GraphType.PlotType.HISTO) );
 	}
 	
 	/***
@@ -82,26 +72,31 @@ public class GraphMenu
 	 * @param t
 	 * @return
 	 */
-	private ScopeGraphAction createGraphMenu( Scope scope, BaseMetric m, GraphType.PlotType t) {
+	static private ScopeGraphAction createGraphMenu(IWorkbenchWindow window, Database database, Scope scope, BaseMetric m, GraphType.PlotType t) {
 		final String sTitle = GraphType.toString(t);
-		return new ScopeGraphAction( sTitle, scope, m, t);
+		return new ScopeGraphAction( window, database, sTitle, scope, m, t);
 	}
 	
 
     /********************************************************************************
      * class to initialize an action for displaying a graph
      ********************************************************************************/
-    private class ScopeGraphAction extends Action {
+    static private class ScopeGraphAction extends Action {
     	final private GraphType.PlotType graph_type;
     	final private BaseMetric metric;	
     	final private Scope scope;
+    	final private IWorkbenchWindow window;
+    	final private Database database;
     	
-		public ScopeGraphAction(String sTitle, Scope scopeCurrent, BaseMetric m, GraphType.PlotType type) {
+		public ScopeGraphAction(IWorkbenchWindow window, Database database, String sTitle, Scope scopeCurrent, 
+				BaseMetric m, GraphType.PlotType type) {
 			
 			super(sTitle);
-			this.metric = m;
+			this.metric 	= m;
 			this.graph_type = type;
-			scope = scopeCurrent;
+			scope 		 	= scopeCurrent;
+			this.window 	= window;
+			this.database 	= database;
 		}
     	
 		public void run() {
@@ -114,7 +109,7 @@ public class GraphMenu
 				boolean needNewPartition = BaseEditorManager.splitBegin(objPage, experiment);
 				
 				String id = GraphEditorInput.getID(scope, metric, graph_type, database);
-	        	GraphEditorInput objInput = getGraphEditorInput(id);
+	        	GraphEditorInput objInput = getGraphEditorInput(window, id);
 	        	
 	        	if (objInput == null) {
 	        		objInput = new GraphEditorInput(database, scope, metric, graph_type, window);
@@ -151,7 +146,7 @@ public class GraphMenu
 	 * @param id
 	 * @return
 	 */
-	private GraphEditorInput getGraphEditorInput(String id) {
+	static private GraphEditorInput getGraphEditorInput(IWorkbenchWindow window, String id) {
 		IEditorReference editors[] = window.getActivePage().getEditorReferences();
 		if (editors == null)
 			return null;

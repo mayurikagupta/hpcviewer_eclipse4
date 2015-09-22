@@ -3,17 +3,18 @@ package edu.rice.cs.hpc.viewer.window;
 import java.io.IOException;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 
 public class Database {
 	private int winIndex;
 	private Experiment experiment;
 	private ExperimentView view;
-	private ThreadLevelDataManager dataManager;
-
+	private IThreadDataCollection dataThread;
+	
 	/**
 	 *  get the index of the viewer window in which this database is displayed.
 	 * @return
@@ -31,13 +32,6 @@ public class Database {
 		return experiment; //this.view.getExperimentData().getExperiment(); // 
 	}
 
-	/***
-	 * get the thread level data manager (used by plot graphs)
-	 * @return
-	 */
-	public ThreadLevelDataManager getThreadLevelDataManager() {
-		return dataManager;
-	}
 	
 	/**
 	 *  get the ExperimentView class used for this database
@@ -64,17 +58,22 @@ public class Database {
 	 */
 	public void setExperiment (Experiment exper) throws IOException {
 		experiment = exper;
-		dataManager = new ThreadLevelDataManager(exper);
 		
 		// TODO hack: since we just created the manager, we need to inform
 		// MetricRaw to set the new manager
 		BaseMetric[]metrics = experiment.getMetricRaw();
+		dataThread = ThreadDataCollectionFactory.build(experiment);
 		if (metrics != null)
 			for (BaseMetric metric: metrics)
 			{
 				if (metric instanceof MetricRaw)
-					((MetricRaw)metric).setThreadData(dataManager.getThreadDataCollection());
+					((MetricRaw)metric).setThreadData(dataThread);
 			}
+	}
+	
+	public IThreadDataCollection getThreadDataCollection()
+	{
+		return dataThread;
 	}
 
 	/**
@@ -87,7 +86,7 @@ public class Database {
 	}
 	
 	public void dispose() {
-		dataManager.dispose();
 		experiment.dispose();
+		dataThread.dispose();
 	}
 }

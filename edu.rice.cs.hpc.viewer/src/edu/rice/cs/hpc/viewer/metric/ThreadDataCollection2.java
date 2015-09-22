@@ -25,7 +25,6 @@ import edu.rice.cs.hpc.data.util.MergeDataFiles;
  ******************************************************************/
 public class ThreadDataCollection2 implements IThreadDataCollection 
 {
-	final private ThreadLevelDataCompatibility thread_data;
 	private ThreadLevelDataFile data_file[];
 	private File directory;
 	private Experiment experiment;
@@ -33,7 +32,6 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	public ThreadDataCollection2(Experiment experiment)
 	{
 		this.experiment = experiment;
-		thread_data 	= new ThreadLevelDataCompatibility();
 		int num_metrics = experiment.getMetricRaw().length;
 		data_file		= new ThreadLevelDataFile[num_metrics];
 	}
@@ -159,7 +157,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 			}
 		}
 		// data hasn't been created. Try to merge and open the file
-		String file = thread_data.getMergedFile(directory, metricIndex);
+		String file = ThreadLevelDataCompatibility.getMergedFile(experiment, directory, metricIndex);
 		if (file != null)
 		{
 			data_file[metricIndex] = new ThreadLevelDataFile(Util.getActiveStatusLineManager());
@@ -175,14 +173,8 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	 * The class also check compatibility with the old version.
 	 *
 	 */
-	private class ThreadLevelDataCompatibility {
-		
-		private HashMap<String, String> listOfFiles;
-		
-		public ThreadLevelDataCompatibility() {
-			listOfFiles = new HashMap<String, String>();
-		}
-		
+	static private class ThreadLevelDataCompatibility 
+	{
 		/**
 		 * method to find the name of file for a given metric ID. 
 		 * If the files are not merged, it will be merged automatically
@@ -194,8 +186,9 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		 * @return
 		 * @throws IOException
 		 */
-		public String getMergedFile(File directory, int metric_raw_id) throws IOException {
-			
+		static public String getMergedFile(Experiment experiment, File directory, int metric_raw_id) throws IOException 
+		{
+			final HashMap<String, String> listOfFiles = new HashMap<String, String>();
 			final MetricRaw metric = (MetricRaw) experiment.getMetricRaw()[metric_raw_id];
 			final String globInputFile = metric.getGlob();
 			
@@ -215,7 +208,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 					"experiment-" + experiment_id + ".mdb";
 
 			// check if the file is already merged
-			String cacheFileName = this.listOfFiles.get(outputFile);
+			String cacheFileName = listOfFiles.get(outputFile);
 			
 			if (cacheFileName == null) {
 				
@@ -223,7 +216,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 				// the file doesn't exist, we need to merge metric-db files
 				// ----------------------------------------------------------
 				// check with the old version of thread level data
-				this.checkOldVersionOfData(directory);
+				checkOldVersionOfData(directory);
 				
 				final ProgressReport progress= new ProgressReport( Util.getActiveStatusLineManager() );
 				
@@ -246,13 +239,13 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 				} else {
 					cacheFileName = outputFile;
 				}
-				this.listOfFiles.put(outputFile, cacheFileName);
+				listOfFiles.put(outputFile, cacheFileName);
 
 			}
 			return cacheFileName;
 		}
 		
-		private void checkOldVersionOfData(File directory) {
+		static private void checkOldVersionOfData(File directory) {
 			
 			String oldFile = directory.getAbsolutePath() + File.separatorChar + "experiment.mdb"; 
 			File file = new File(oldFile);
@@ -271,10 +264,9 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	
 	/*******************
 	 * Progress bar
-	 * @author laksonoadhianto
 	 *
 	 */
-	private class ProgressReport implements IProgressReport 
+	static private class ProgressReport implements IProgressReport 
 	{
 		final private IStatusLineManager statusLine;
 

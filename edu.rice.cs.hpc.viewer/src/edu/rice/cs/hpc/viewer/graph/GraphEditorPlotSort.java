@@ -13,7 +13,7 @@ public class GraphEditorPlotSort extends GraphEditor {
 	@Override
 	protected double[] getValuesX(Scope scope, MetricRaw metric) throws NumberFormatException, IOException {
 
-		double x_values[] = threadData.getProcessIDsDouble(metric.getID());
+		double x_values[] = threadData.getRankLabels();
 		double sequence_x[] = new double[x_values.length];
 		for (int i=0; i<x_values.length; i++) {
 			sequence_x[i] = (double) i;
@@ -28,7 +28,7 @@ public class GraphEditorPlotSort extends GraphEditor {
 
 		double y_values[] = null;
 		{
-			y_values = threadData.getMetrics( metric, scope.getCCTIndex());
+			y_values = threadData.getMetrics(scope.getCCTIndex(),metric.getRawID(), metric.getSize());
 			
 			java.util.Arrays.sort(y_values);
 		}			

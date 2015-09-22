@@ -14,6 +14,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.dialogs.ListSelectionDialog;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -79,7 +80,8 @@ class ThreadViewFactory
 	static private List<Integer> getThreads(IWorkbenchWindow window, Database db) 
 			throws NumberFormatException, IOException 
 	{
-		double []ids = db.getThreadLevelDataManager().getProcessIDsDouble(0);
+		IThreadDataCollection threadData = db.getThreadDataCollection();
+		double []ids = threadData.getRankLabels();
 		List<Double> dbList = new ArrayList<Double>(ids.length);
 		for(int i=0; i<ids.length; i++) {
 			dbList.add(ids[i]);

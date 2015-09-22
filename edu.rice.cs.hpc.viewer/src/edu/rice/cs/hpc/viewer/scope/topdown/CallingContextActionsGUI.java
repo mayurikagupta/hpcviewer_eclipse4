@@ -18,7 +18,7 @@ import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 import edu.rice.cs.hpc.viewer.provider.DatabaseState;
 import edu.rice.cs.hpc.viewer.resources.Icons;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
@@ -32,16 +32,12 @@ import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
  *****************************************************/
 public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	
-	private GraphMenu graphMenuManager;
-	
 	private ToolItem tiGraph;
 
 	public CallingContextActionsGUI(Shell objShell, IWorkbenchWindow window,
 			Composite parent, CallingContextViewActions objActions) 
 	{
 		super(objShell, window, parent, objActions);
-		
-		graphMenuManager = new GraphMenu(window);
 	}
 
 	/**
@@ -90,7 +86,7 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 					mgr.createContextMenu(toolbar);
 					
 					// create the context menu of graphs
-					graphMenuManager.createAdditionalContextMenu(mgr, database, getSelectedScope());
+					GraphMenu.createAdditionalContextMenu(objWindow, mgr, database, getSelectedScope());
 					
 					// make the context menu appears next to tool item
 					final Menu menu = mgr.getMenu();
@@ -116,14 +112,10 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		DatabaseState dbState 		   = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_THREAD_STATE);
 		
 		if (database != null) {
-			ThreadLevelDataManager tld_mgr = database.getThreadLevelDataManager();
-			if (tld_mgr != null) {
-				boolean available = tld_mgr.isDataAvailable();
-				tiGraph.setEnabled(available);
-				String value = available ? DatabaseState.ENABLED : DatabaseState.DISABLED;
-				dbState.setState(DatabaseState.DATABASE_THREAD_STATE, value);
-				return;
-			}
+			boolean available = ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
+			String value = available ? DatabaseState.ENABLED : DatabaseState.DISABLED;
+			dbState.setState(DatabaseState.DATABASE_THREAD_STATE, value);
+			return;
 		}
 		dbState.setState(DatabaseState.DATABASE_THREAD_STATE, DatabaseState.DISABLED);
 		tiGraph.setEnabled(false);
@@ -145,7 +137,11 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	 */
 	public void enableNodeButtons()
 	{
-		tiGraph.setEnabled(true);
+		if (database != null) {
+			boolean available = ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
+			tiGraph.setEnabled(available);
+		} else 
+			tiGraph.setEnabled(false);
 	}
 	
 	private Scope getSelectedScope()

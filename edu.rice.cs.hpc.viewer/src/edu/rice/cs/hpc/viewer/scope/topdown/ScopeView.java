@@ -24,7 +24,6 @@ public class ScopeView extends BaseScopeView
 {
     public static final String ID = "edu.rice.cs.hpc.viewer.scope.ScopeView";
 	
-    private GraphMenu graphMenu;
     private int lastClickColumn = -1;
     
     
@@ -41,8 +40,6 @@ public class ScopeView extends BaseScopeView
     protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
     	ScopeViewActions action = new CallingContextViewActions(this.getViewSite().getShell(), window, parent, coolbar);
-
-		graphMenu = new GraphMenu(getSite().getWorkbenchWindow());
     	
     	return action;
     }
@@ -59,7 +56,7 @@ public class ScopeView extends BaseScopeView
 
 	@Override
 	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
-		graphMenu.createAdditionalContextMenu(mgr, database, scope);
+		GraphMenu.createAdditionalContextMenu(getViewSite().getWorkbenchWindow(), mgr, database, scope);
 	} 
 
 
