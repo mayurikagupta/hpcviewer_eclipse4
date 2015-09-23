@@ -25,7 +25,7 @@ public class MetricRaw  extends BaseMetric {
 	
 	/*** list of scope metric values of a certain threads. The length of the array is the number of cct nodes*/
 	private double []thread_values = null;
-	private MetricValue	rootValue  = MetricValue.NONE;
+	private MetricValue	rootValue  = null;
 	
 	public MetricRaw(String sID, String sDisplayName, boolean displayed, String format, AnnotationType annotationType, int index) {
 		super(sID, sDisplayName, displayed, format, annotationType, index, index,  MetricType.EXCLUSIVE);
@@ -110,14 +110,25 @@ public class MetricRaw  extends BaseMetric {
 					{
 						value = getSpecificValue(s, threads.get(0));
 					}
-					if (s instanceof RootScope) {
-						rootValue = value;
+					// to compute the percentage, we need to have the value of the root
+					// If the root has no value, we have to recompute it only for one time
+					// Once we have the root's value, we don't have to recompute it
+					if (rootValue == null) {
+						if (s instanceof RootScope)
+							rootValue = value;
+						else {
+							rootValue = getValue(s.getRootScope());
+						}
+						if (rootValue != MetricValue.NONE) {
+							// root value is available: we can show the percent
+							setAnnotationType(AnnotationType.PERCENT);
+						}
 					}
-					if (rootValue != null) {
+					if (rootValue != MetricValue.NONE) {
+						// if the value exist, we compute the percentage
 						MetricValue.setAnnotationValue(value, value.getValue() / rootValue.getValue());
 					}
 				}
-				return getSpecificValue(s, 0);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -150,24 +161,33 @@ public class MetricRaw  extends BaseMetric {
 		{
 			val_mean += (values[thread] * divider);
 		}
-		MetricValue value = new MetricValue(val_mean); 
+		MetricValue value = setValue(val_mean); 
 		return value;
 	}
 	
 	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
 	{
 		checkValues(thread_id);
+		MetricValue mv = MetricValue.NONE;
 		if (thread_values != null) {
-			return new MetricValue( thread_values[s.getCCTIndex()-1], thread_values[0] );
+			mv = setValue(thread_values[s.getCCTIndex()-1]);
 		} else {
 			// there is no API implementation for reading the whold CCT metrics
 			// TODO: using the old get metric for the new database
 			double []values = threadData.getMetrics(s.getCCTIndex(), getIndex(), num_metrics);
 			double value    = values[thread_id];
-			if (value != 0.0)
-				return new MetricValue(value);
+			mv  = setValue(value);
 		}
-		return MetricValue.NONE;
+		return mv;
+	}
+	
+	
+	private MetricValue setValue(double value)
+	{
+		MetricValue mv = MetricValue.NONE;
+		if (value != 0.0)
+			mv = new MetricValue(value);
+		return mv;
 	}
 	
 	private void checkValues(int thread_id) throws IOException

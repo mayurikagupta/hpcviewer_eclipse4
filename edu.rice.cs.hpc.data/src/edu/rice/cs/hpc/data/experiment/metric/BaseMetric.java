@@ -49,6 +49,14 @@ public abstract class BaseMetric {
 	private char unit;
 
 	final private String EMPTY_SUFFIX = "   ";
+	
+	final static private MetricValueFormat FormatDefault = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
+	final static private MetricValueFormat FormatPercent = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
+	final static private MetricValueFormat FormatProcess = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
+	
 	//-------------------------------------------------------------------------------
 	// CONSTRUCTOR
 	//-------------------------------------------------------------------------------
@@ -82,13 +90,7 @@ public abstract class BaseMetric {
 		
 		// format
 		if (format == null) {
-			if (annotationType == AnnotationType.PERCENT) {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
-			} else if (annotationType == AnnotationType.PROCESS) {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
-			} else {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
-			}
+			displayFormat = getFormatBasedOnAnnotation(annotationType);
 		} else {
 			this.displayFormat = new MetricValuePredefinedFormat(format);
 		}
@@ -210,6 +212,7 @@ public abstract class BaseMetric {
 	public void setAnnotationType( AnnotationType annType ) 
 	{
 		annotationType = annType;
+		displayFormat = getFormatBasedOnAnnotation(annotationType);
 	}
 	
 	/**
@@ -315,8 +318,8 @@ public abstract class BaseMetric {
 	//=================================================================================
 	/*************************************************************************
 	 * method to return the value of a given scope. To be implemented by derived class.
-	 * @param s
-	 * @return
+	 * @param s : scope of the metric value
+	 * @return a metric value
 	 *************************************************************************/
 	abstract public MetricValue getValue(Scope s);
 
@@ -337,6 +340,19 @@ public abstract class BaseMetric {
 	 */
 	private boolean isUnitEvent() {
 		return this.unit == 'e';
+	}
+	
+	private IMetricValueFormat getFormatBasedOnAnnotation(AnnotationType annotationType) {
+		
+		IMetricValueFormat displayFormat;
+		if (annotationType == AnnotationType.PERCENT) {
+			displayFormat = FormatPercent;
+		} else if (annotationType == AnnotationType.PROCESS) {
+			displayFormat = FormatProcess; 
+		} else {
+			displayFormat = FormatDefault; 
+		}
+		return displayFormat;
 	}
 
 	/**
