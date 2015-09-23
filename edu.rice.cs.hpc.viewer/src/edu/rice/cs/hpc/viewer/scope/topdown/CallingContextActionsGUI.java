@@ -2,6 +2,8 @@ package edu.rice.cs.hpc.viewer.scope.topdown;
 
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -21,7 +23,9 @@ import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 import edu.rice.cs.hpc.viewer.provider.DatabaseState;
 import edu.rice.cs.hpc.viewer.resources.Icons;
+import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 
 /*****************************************************
  * 
@@ -33,9 +37,10 @@ import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
 public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	
 	private ToolItem tiGraph;
+	private ToolItem tiThreadView;
 
 	public CallingContextActionsGUI(Shell objShell, IWorkbenchWindow window,
-			Composite parent, CallingContextViewActions objActions) 
+			Composite parent, ScopeViewActions objActions) 
 	{
 		super(objShell, window, parent, objActions);
 	}
@@ -96,6 +101,21 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 			}			
 		});
 		
+		tiThreadView = new ToolItem(toolbar, SWT.PUSH);
+		final Image imgThread = Icons.getImage(Icons.Image_ThreadView);
+		tiThreadView.setImage(imgThread);
+		tiThreadView.setToolTipText("Show the metric(s) of a group of threads");
+		tiThreadView.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				ThreadView.showView(objWindow, database.getExperiment(), null);
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
+		
 		// associate the tool bar as a cool item
 		createCoolItem(parent, toolbar);
 		
@@ -119,6 +139,7 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		}
 		dbState.setState(DatabaseState.DATABASE_THREAD_STATE, DatabaseState.DISABLED);
 		tiGraph.setEnabled(false);
+		tiThreadView.setEnabled(false);
 	}
 	
 	@Override
@@ -130,6 +151,7 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	{
 		super.disableNodeButtons();
 		tiGraph.setEnabled(false);
+		tiThreadView.setEnabled(false);
 	}
 	
 	/***
@@ -140,8 +162,11 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		if (database != null) {
 			boolean available = ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
 			tiGraph.setEnabled(available);
-		} else 
+			tiThreadView.setEnabled(available);
+		} else  {
 			tiGraph.setEnabled(false);
+			tiThreadView.setEnabled(false);
+		}
 	}
 	
 	private Scope getSelectedScope()

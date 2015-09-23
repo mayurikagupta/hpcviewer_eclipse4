@@ -36,7 +36,7 @@ public class CallingContextViewActions extends BaseScopeViewActions {
 	protected  Composite createGUI(Composite parent, CoolBar coolbar) 
 	{
     	this.objActionsGUI = new CallingContextActionsGUI(this.objShell, 
-    			this.objWindow, parent, this);
+    			this.objWindow, parent,  this);
     	return objActionsGUI.buildGUI(parent, coolbar);
 	}
 }

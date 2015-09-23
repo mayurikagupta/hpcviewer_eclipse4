@@ -20,6 +20,7 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricRawManager;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
@@ -187,6 +188,7 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
+		GraphMenu.createAdditionalContextMenu(getViewSite().getWorkbenchWindow(), mgr, database, scope);
 	}
 
 	@Override

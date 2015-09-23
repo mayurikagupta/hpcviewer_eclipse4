@@ -16,7 +16,6 @@ import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.BaseEditorManager;
-import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 /****
@@ -39,7 +38,6 @@ public class GraphMenu
 			if (metrics == null)
 				return;
 			
-			ThreadView.showMenu(mgr, window, database.getExperiment());
 			mgr.add( new Separator() );
 			
 			final int num_metrics = metrics.length;

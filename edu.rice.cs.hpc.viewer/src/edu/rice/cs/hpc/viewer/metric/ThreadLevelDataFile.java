@@ -116,9 +116,11 @@ public class ThreadLevelDataFile extends FileDB2
 		return values;
 	}
 	
+	@Override
 	public void dispose()
 	{
 		threadExecutor.shutdown();
+		super.dispose();
 	}
 	
 	private int getNumberOfCCT(int thread_id, int num_metrics)

@@ -39,6 +39,7 @@ public class Icons  extends BaseIconManager
 	final static public String Image_FontSmaller = "FontSmaller.gif";
 	final static public String Image_SaveCSV = "savecsv.gif";
 	final static public String Image_Graph = "Graph.png";
+	final static public String Image_ThreadView = "cct-thread.png";
 	
 	static private Icons __singleton=null;
 	static private final AtomicBoolean isInitialized = new AtomicBoolean(false);
@@ -93,6 +94,7 @@ public class Icons  extends BaseIconManager
 			registerImage(registry, getClass(), Image_FontSmaller);
 			registerImage(registry, getClass(), Image_SaveCSV);
 			registerImage(registry, getClass(), Image_Graph);
+			registerImage(registry, getClass(), Image_ThreadView);
 		}
 	}
 	

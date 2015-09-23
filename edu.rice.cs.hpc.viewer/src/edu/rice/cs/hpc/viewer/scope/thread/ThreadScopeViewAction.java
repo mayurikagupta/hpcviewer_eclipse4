@@ -8,7 +8,7 @@ import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
-import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
+import edu.rice.cs.hpc.viewer.scope.topdown.CallingContextActionsGUI;
 
 public class ThreadScopeViewAction extends BaseScopeViewActions 
 {
@@ -24,7 +24,9 @@ public class ThreadScopeViewAction extends BaseScopeViewActions
 
 	@Override
 	protected  Composite createGUI(Composite parent, CoolBar coolbar) {
-    	this.objActionsGUI = new ScopeViewActionsGUI(objShell, objWindow, parent, this, false);
+    	this.objActionsGUI = new CallingContextActionsGUI(this.objShell, 
+    			this.objWindow, parent, this);
+
     	return objActionsGUI.buildGUI(parent, coolbar);
 	}
 	
