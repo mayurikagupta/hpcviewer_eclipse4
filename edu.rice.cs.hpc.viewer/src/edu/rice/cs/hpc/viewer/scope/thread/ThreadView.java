@@ -66,7 +66,8 @@ public class ThreadView extends AbstractBaseScopeView
     	myRootScope = scope;// try to get the aggregate value
 
         // tell the action class that we have built the tree
-        this.objViewActions.setTreeViewer(treeViewer);
+        objViewActions.setTreeViewer(treeViewer);
+        ((ThreadScopeViewAction)objViewActions).setMetricManager(getMetricManager());
         
         initTableColumns(threads);
         

@@ -6,13 +6,14 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
+import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.topdown.CallingContextActionsGUI;
 
 public class ThreadScopeViewAction extends BaseScopeViewActions 
 {
-	final private IMetricManager manager;
+	private IMetricManager manager;
 	final private AbstractBaseScopeView view;
 	
 	public ThreadScopeViewAction(AbstractBaseScopeView view, IWorkbenchWindow window,
@@ -20,6 +21,20 @@ public class ThreadScopeViewAction extends BaseScopeViewActions
 		super(window.getShell(), window, parent, coolbar);
 		this.view 	 = view;
 		this.manager = metricManager;
+	}
+
+	public void setMetricManager(IMetricManager manager)
+	{
+		this.manager = manager;
+	}
+	
+	@Override
+	public void checkStates(Scope nodeSelected)
+	{
+		super.checkStates(nodeSelected);
+		if (nodeSelected != null) {
+			((CallingContextActionsGUI)objActionsGUI).enableNodeButtons();
+		}
 	}
 
 	@Override

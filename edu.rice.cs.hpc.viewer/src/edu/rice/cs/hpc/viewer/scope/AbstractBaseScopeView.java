@@ -491,7 +491,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	myRootScope = scope;// try to get the aggregate value
 
         // tell the action class that we have built the tree
-        this.objViewActions.setTreeViewer(treeViewer);
+        objViewActions.setTreeViewer(treeViewer);
         
         initTableColumns(keepColumnStatus);
         
