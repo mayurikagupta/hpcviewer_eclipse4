@@ -147,15 +147,11 @@ public class FlatScopeViewActions extends BaseScopeViewActions {
 
 		((FlatScopeViewActionsGUI) objActionsGUI).checkFlattenButtons();
 
-		checkStates();
-	}
-
-	@Override
-	public void checkStates() {
 		boolean bCanZoomOut = objZoom.canZoomOut() && 
 				(!stackActions.isEmpty() && stackActions.peek()==ActionType.ZoomIn);
 		objActionsGUI.enableZoomOut( bCanZoomOut );
 	}
+
 
 	
 	//-----------------------------------------------------------------------

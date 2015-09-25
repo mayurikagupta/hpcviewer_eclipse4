@@ -513,8 +513,6 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
      */
     public abstract void checkStates ( Scope nodeSelected );
     
-    public abstract void checkStates();
-    
     protected abstract void registerAction( IActionType type );
         
     protected abstract IMetricManager getMetricManager();

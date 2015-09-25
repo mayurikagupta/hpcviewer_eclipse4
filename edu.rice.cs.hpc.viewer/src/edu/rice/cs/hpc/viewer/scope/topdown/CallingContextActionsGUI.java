@@ -154,20 +154,22 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		tiThreadView.setEnabled(false);
 	}
 	
-	/***
-	 * enable all buttons in this view
-	 */
-	public void enableNodeButtons()
+	public void checkStates(Scope nodeSelected)
 	{
 		if (database != null) {
 			boolean available = ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
-			tiGraph.setEnabled(available);
 			tiThreadView.setEnabled(available);
+
+			if (nodeSelected != null)
+				tiGraph.setEnabled(available);
+			else 
+				tiGraph.setEnabled(false);
 		} else  {
 			tiGraph.setEnabled(false);
 			tiThreadView.setEnabled(false);
 		}
 	}
+
 	
 	private Scope getSelectedScope()
 	{

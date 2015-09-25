@@ -20,9 +20,7 @@ public class CallingContextViewActions extends BaseScopeViewActions {
 	public void checkStates(Scope nodeSelected)
 	{
 		super.checkStates(nodeSelected);
-		if (nodeSelected != null) {
-			((CallingContextActionsGUI)objActionsGUI).enableNodeButtons();
-		}
+		((CallingContextActionsGUI)objActionsGUI).checkStates(nodeSelected);
 	}
 
     /**

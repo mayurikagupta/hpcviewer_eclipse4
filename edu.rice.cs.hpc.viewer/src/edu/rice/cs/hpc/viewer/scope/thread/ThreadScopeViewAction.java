@@ -32,9 +32,7 @@ public class ThreadScopeViewAction extends BaseScopeViewActions
 	public void checkStates(Scope nodeSelected)
 	{
 		super.checkStates(nodeSelected);
-		if (nodeSelected != null) {
-			((CallingContextActionsGUI)objActionsGUI).enableNodeButtons();
-		}
+		((CallingContextActionsGUI)objActionsGUI).checkStates(nodeSelected);
 	}
 
 	@Override
