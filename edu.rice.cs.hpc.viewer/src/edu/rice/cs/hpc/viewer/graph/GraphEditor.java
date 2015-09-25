@@ -1,6 +1,7 @@
 package edu.rice.cs.hpc.viewer.graph;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IEditorPart;
@@ -10,6 +11,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.swtchart.Chart;
+import org.swtchart.IAxisTick;
 import org.swtchart.ILineSeries;
 import org.swtchart.ISeries;
 import org.swtchart.ISeriesSet;
@@ -128,6 +130,9 @@ public abstract class GraphEditor extends GraphEditorBase {
 			String axis_x = this.getXAxisTitle( );
 			chart.getAxisSet().getXAxis(0).getTitle().setText( axis_x );
 			chart.getAxisSet().getYAxis(0).getTitle().setText( "Metric Value" );
+			
+			final IAxisTick xTick = chart.getAxisSet().getXAxis(0).getTick();
+			xTick.setFormat(new DecimalFormat("#############"));
 
 		} catch (IOException e) {
 			MessageDialog.openError(getSite().getShell(), "File to open the file", 

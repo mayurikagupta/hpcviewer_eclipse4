@@ -35,7 +35,7 @@ import edu.rice.cs.hpc.viewer.window.Database;
 public class ThreadView extends AbstractBaseScopeView 
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
-	static final private int MAX_THREAD_INDEX = 3;
+	static final private int MAX_THREAD_INDEX = 2;
 	
 	private IMetricManager metricManager;
 	
