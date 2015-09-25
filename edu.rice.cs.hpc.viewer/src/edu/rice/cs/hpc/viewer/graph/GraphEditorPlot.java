@@ -2,6 +2,7 @@ package edu.rice.cs.hpc.viewer.graph;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
@@ -95,5 +96,11 @@ public class GraphEditorPlot extends GraphEditor {
 			}
 		}
 		return values;
+	}
+
+	@Override
+	protected ArrayList<Integer> translateUserSelection(
+			ArrayList<Integer> selections) {
+		return selections;
 	}
 }

@@ -30,12 +30,12 @@ import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 
-/**
+/**************************************************************************************
  * Base class for hpcviewer editor to display graph
- *  
+ *  <p>
  * The class implements IViewerEditor, so it can be renamed, manipulated and changed
- * 	by the viewer manager
- */
+ * 	by the viewer manager</p>
+ **************************************************************************************/
 public abstract class GraphEditorBase extends EditorPart implements IViewerEditor 
 {
 	// chart is used to plot graph or histogram on canvas. each editor has its own chart
@@ -135,7 +135,10 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 			public void selection(UserSelectionData data) {
 				ArrayList<Integer> threads = new ArrayList<Integer>(1);
 				threads.add(data.index);
-				ThreadView.showView(window, getExperiment(), threads);
+				
+				ArrayList<Integer> list = translateUserSelection(threads);
+				
+				ThreadView.showView(window, getExperiment(), list);
 			}
 		});
 
@@ -191,5 +194,17 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 	 * @param metric: the raw metric to plot
 	 */
 	protected abstract void plotData(Scope scope, MetricRaw metric );
+	
+	/****
+	 * Translate a set of thread-index selections into the original set of
+	 * thread-index selection.<br/>
+	 * It is possible that the child class change the index of x-axis. This
+	 * method will then translate from the current selected index to the original
+	 * index so that it can be displayed properly by {@link ThreadView}. 
+	 *  
+	 * @param selections : a set of selected index (usually only one item)
+	 * @return the translated set of indexes
+	 */
+	protected abstract ArrayList<Integer> translateUserSelection(ArrayList<Integer> selections); 
 
 }
