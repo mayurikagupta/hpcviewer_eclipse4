@@ -1,9 +1,8 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
@@ -13,6 +12,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
@@ -35,27 +35,22 @@ import edu.rice.cs.hpc.viewer.window.Database;
 public class ThreadView extends AbstractBaseScopeView 
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
-	//private List<Integer> threads = new ArrayList<>();
+	static final private int MAX_THREAD_INDEX = 3;
+	
 	private IMetricManager metricManager;
 	
-	/**********
-	 * Show the menu to open this view
-	 * 
-	 * @param mgr : parent menu manager
-	 * @param window : current active window
-	 * @param experiment : active experiment (should have metric database)
-	 */
-	static public void showMenu(IMenuManager mgr, IWorkbenchWindow window, 
-			Experiment experiment)
-	{
-		mgr.add(new ThreadViewAction(window, experiment));
-	}
 	
+	/************
+	 * Activate the thread view
+	 * 
+	 * @param window : current active window
+	 * @param experiment : current experiment
+	 * @param threads : a list of thread indexes to be viewed
+	 ************/
 	static public void showView(IWorkbenchWindow window, 
 			Experiment experiment, List<Integer> threads)
 	{
-		ThreadViewAction action = new ThreadViewAction(window, experiment, threads);
-		action.run();
+		ThreadViewFactory.build(window, experiment, threads);
 	}
 
 	/*****
@@ -139,41 +134,8 @@ public class ThreadView extends AbstractBaseScopeView
 		updateDisplay();
 	}
 	
-	/****
-	 * customized table initialization
-	 * @param threads : list of threads
-	 */
-	void initTableColumns(List<Integer> threads) {
-		
-		IMetricManager mm = getMetricManager();
-		BaseMetric []mr   = mm.getMetrics();
-		if (mr == null)
-		{
-			objViewActions.showErrorMessage("The database has no thread-level metrics.");
-			objViewActions.disableButtons();
-		}
-		else {
-			boolean sort = true;
-			for(BaseMetric m : mr)
-			{
-				MetricRaw mdup = (MetricRaw) m.duplicate();
-				mdup.setThread(threads);
-				mdup.setDisplayName(threads + "-" + mdup.getDisplayName());
-				treeViewer.addTreeColumn(mdup, sort);
-				
-				// sort initially the first column metric
-				if (sort)
-					sort = false;
-			}
-		}
-	}
-
 	@Override
-	protected void initTableColumns(boolean keepColumnStatus) {	
-		ArrayList<Integer> threads = new ArrayList<Integer>(1);
-		threads.add(0);
-		initTableColumns(threads);
-	}
+	protected void initTableColumns(boolean keepColumnStatus) {	}
 
 	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
@@ -214,6 +176,76 @@ public class ThreadView extends AbstractBaseScopeView
 		return new StyledScopeLabelProvider( getSite().getWorkbenchWindow() ); 
 	}
 
+	/****
+	 * customized table initialization
+	 * @param threads : list of threads
+	 * @throws IOException 
+	 */
+	private void initTableColumns(List<Integer> threads)  {
+		
+		IMetricManager mm = getMetricManager();
+		if (mm == null)
+			throw new RuntimeException("Database not found");
+		
+		BaseMetric []mr   = mm.getMetrics();
+		if (mr == null)
+		{
+			objViewActions.showErrorMessage("The database has no thread-level metrics.");
+			objViewActions.disableButtons();
+		}
+		else {
+			IThreadDataCollection threadData = database.getThreadDataCollection();
+			double[] labels;
+			try {
+				labels = threadData.getRankLabels();
+				
+				// duplicate "raw metrics" before setting them into the column. The reason for duplication is: 
+				// Although metric A in column X is the same as metric A in column Y (they are both metric A),
+				// but column X is for displaying the values for threads P while column Y is for displaying
+				// for threads Q. 
+				boolean sort = true;
+				for(BaseMetric m : mr)
+				{
+					MetricRaw mdup = (MetricRaw) m.duplicate();
+					mdup.setThread(threads);
+					
+					StringBuffer buffer = new StringBuffer();
+					buffer.append("[");
+					int size = threads.size();
+					
+					// for the column title: only list the first MAX_THREAD_INDEX of the set of threads
+					for(int i=0; i<size && i<=MAX_THREAD_INDEX; i++) {
+						final int index;
+						if (i<MAX_THREAD_INDEX) {
+							index = threads.get(i);
+						} else {
+							// show the last thread index
+							if (size > MAX_THREAD_INDEX)
+								buffer.append("..");
+							index = threads.get(size-1);
+						}
+						buffer.append(labels[index]);
+						if (i < MAX_THREAD_INDEX-1 && i<size-1)
+							buffer.append(",");
+					}
+					buffer.append("]");
+					buffer.append("-");
+					buffer.append(mdup.getDisplayName());
+
+					mdup.setDisplayName(buffer.toString());
+					treeViewer.addTreeColumn(mdup, sort);
+					
+					// sort initially the first column metric
+					if (sort)
+						sort = false;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/***
 	 * copy CCT root and duplicate its children to create a new 
 	 * root scope for this thread view.
@@ -252,36 +284,5 @@ public class ThreadView extends AbstractBaseScopeView
 			}
 		}
 		return null;
-	}
-	
-	/*******************************
-	 * 
-	 * Action class to show the menu to open this view
-	 *
-	 *******************************/
-	static private class ThreadViewAction extends Action
-	{
-		final private IWorkbenchWindow window;
-		final private Experiment experiment;
-		private List<Integer> threads;
-		
-		public ThreadViewAction(IWorkbenchWindow window, Experiment experiment)
-		{
-			this(window, experiment, null);
-		}
-		
-		public ThreadViewAction(IWorkbenchWindow window, Experiment experiment, List<Integer> threads)
-		{
-			super("Show thread view ");
-			this.window 	= window;
-			this.experiment = experiment;
-			this.threads	= threads;
-		}
-		
-		@Override
-		public void run()
-		{
-			ThreadViewFactory.build(window, experiment, threads);
-		}
 	}
 }

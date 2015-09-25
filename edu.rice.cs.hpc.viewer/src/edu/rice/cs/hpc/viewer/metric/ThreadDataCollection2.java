@@ -71,7 +71,6 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	@Override
 	public double[] getRankLabels() throws IOException {
 		ensureDataFile(0);
-		final int numLevels = data_file[0].getParallelismLevel();
 		final String []labels = data_file[0].getRankLabels();
 		
 		double []rankLabels = new double[labels.length];
@@ -82,32 +81,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		for(int i=0; i<labels.length; i++)
 		{
 			double rank_double = Double.parseDouble(labels[i]); 
-			if (numLevels == 1)
-			{
-				rankLabels[i] = rank_double;
-			} else {
-				// for hybrid application we need to reorder the ranks
-				int rank_first = (int) Math.floor(rank_double);
-				int num_sibling = 0;
-				int j;
-				// compute the number of threads of this process
-				for(j=i+1; j<labels.length; j++)
-				{
-					int next_rank = (int) Math.floor(Double.parseDouble(labels[j]));
-					num_sibling++;
-					if (next_rank != rank_first) {
-						break;
-					} else if (j==labels.length-1) {
-						num_sibling++;
-					}
-				}
-				// evenly sparse the thread number
-				for(int k=0; k<num_sibling; k++)
-				{
-					rankLabels[i+k] = (double)rank_first + ((double)k/num_sibling);
-				}
-				i = j-1;
-			}
+			rankLabels[i] = rank_double;
 		}
 		
 		return rankLabels;
