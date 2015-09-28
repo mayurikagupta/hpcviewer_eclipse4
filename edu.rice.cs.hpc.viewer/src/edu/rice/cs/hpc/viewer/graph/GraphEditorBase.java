@@ -1,11 +1,16 @@
 package edu.rice.cs.hpc.viewer.graph;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -128,17 +133,40 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		//----------------------------------------------
 		chart = new InteractiveChart(parent, SWT.NONE);
 		chart.getTitle().setText( title );
+		final MenuManager menuManager = new MenuManager("Show-view");
 		
 		((InteractiveChart)chart).setChartSelectionListener(new IChartSelectionListener() {
 			
 			@Override
 			public void selection(UserSelectionData data) {
-				ArrayList<Integer> threads = new ArrayList<Integer>(1);
-				threads.add(data.index);
-				
-				ArrayList<Integer> list = translateUserSelection(threads);
-				
-				ThreadView.showView(window, getExperiment(), list);
+				menuManager.removeAll();
+				menuManager.createContextMenu(chart);
+
+				try {
+					// show the menu with the real thread label
+					ArrayList<Integer> threads = new ArrayList<Integer>(1);
+					threads.add(data.index);
+					
+					final ArrayList<Integer> list = translateUserSelection(threads);
+					final double []labels = threadData.getRankLabels();
+					final double thread_label = labels[list.get(0)];
+					
+					menuManager.add(new Action("Show thread " + thread_label) {
+						public void run() {
+							// display the view
+							ThreadView.showView(window, getExperiment(), list);
+						}
+					});
+	            	final Menu menu = menuManager.getMenu();
+	            	// adjust the appearance of the menu, make it closer to the cursor
+	            	// but not to distract the user
+					final Point point = chart.toDisplay(new Point(data.event.x+40, data.event.y+10));
+					menu.setLocation(point);
+	            	menu.setVisible(true);
+	            	
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		});
 
