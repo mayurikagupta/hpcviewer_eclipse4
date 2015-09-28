@@ -8,7 +8,6 @@ import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
@@ -16,10 +15,10 @@ import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
-import edu.rice.cs.hpc.data.experiment.metric.MetricRawManager;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.viewer.metric.MetricRawManager;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
@@ -37,6 +36,8 @@ public class ThreadView extends AbstractBaseScopeView
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadView";
 	static final private int MAX_THREAD_INDEX = 2;
 	
+	/** the metric manager of the view. DO NOT access this variable directly.
+	 *  Instead, we need to query to getMetricManager() */
 	private IMetricManager metricManager;
 	
 	
@@ -69,7 +70,8 @@ public class ThreadView extends AbstractBaseScopeView
         objViewActions.setTreeViewer(treeViewer);
         ((ThreadScopeViewAction)objViewActions).setMetricManager(getMetricManager());
         
-        initTableColumns(threads);
+        Experiment experiment = db.getExperiment();
+        initTableColumns(threads, experiment.getMetricRaw());
         
         // notify the children class to update the display
     	updateDisplay();
@@ -105,13 +107,14 @@ public class ThreadView extends AbstractBaseScopeView
 	 * @param threads : list of threads
 	 */
 	void addTableColumns(List<Integer> threads) {
+		IMetricManager mm = getMetricManager();
+		BaseMetric []metrics = mm.getMetrics();
+		
 		// 1. check if the threads already exist in the view
-		TreeColumn []columns = getTreeViewer().getTree().getColumns();
 		boolean col_exist = false;
-		for (TreeColumn col : columns) {
-			Object obj = col.getData();
-			if (obj instanceof MetricRaw) {
-				List<Integer> lt = ((MetricRaw)obj).getThread();
+		for (BaseMetric metric : metrics) {
+			if (metric instanceof MetricRaw) {
+				List<Integer> lt = ((MetricRaw)metric).getThread();
 				if (lt.size() == threads.size()) {
 					for(Integer i : threads) {
 						col_exist = lt.contains(i);
@@ -129,7 +132,8 @@ public class ThreadView extends AbstractBaseScopeView
 			return;
 
 		// 3. add the new metrics into the table
-		initTableColumns(threads);
+		final Experiment experiment = database.getExperiment();
+		initTableColumns(threads, experiment.getMetricRaw());
 		
 		// 4. update the table content, including the aggregate experiment
 		updateDisplay();
@@ -182,13 +186,7 @@ public class ThreadView extends AbstractBaseScopeView
 	 * @param threads : list of threads
 	 * @throws IOException 
 	 */
-	private void initTableColumns(List<Integer> threads)  {
-		
-		IMetricManager mm = getMetricManager();
-		if (mm == null)
-			throw new RuntimeException("Database not found");
-		
-		BaseMetric []mr   = mm.getMetrics();
+	private void initTableColumns(List<Integer> threads, BaseMetric []mr)  {
 		if (mr == null)
 		{
 			objViewActions.showErrorMessage("The database has no thread-level metrics.");
@@ -234,6 +232,8 @@ public class ThreadView extends AbstractBaseScopeView
 					buffer.append(mdup.getDisplayName());
 
 					mdup.setDisplayName(buffer.toString());
+					final String metricID = String.valueOf(treeViewer.getTree().getColumnCount());
+					mdup.setShortName(metricID);
 					treeViewer.addTreeColumn(mdup, sort);
 					
 					// sort initially the first column metric
@@ -276,14 +276,6 @@ public class ThreadView extends AbstractBaseScopeView
 			return metricManager;
 		
 		// create a new metric manager for this view
-		Database db 	= getDatabase();
-		if (db != null ){
-			Experiment exp 	= db.getExperiment();
-			if (exp != null) {
-				metricManager = new MetricRawManager(exp);
-				return metricManager;
-			}
-		}
-		return null;
+		return new MetricRawManager(treeViewer);
 	}
 }

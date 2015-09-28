@@ -21,14 +21,48 @@ import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
+/*****************************************************************************
+ * 
+ * A collection of methods to build a thread view intelligently
+ * The function {@link ThreadViewFactory.build} returns the thread view of
+ * a given experiment and the list of threads as follows:
+ * 
+ * build ( experiment x threads ) -> thread_view
+ * <ul>
+ *  <li>if the input is unique, it will create the view with the column for the threads.
+ *  <li>if the experiment is not unique but the threads is unique, it activates the view
+ * 	but creates the new column for threads
+ *  <li>if the input is not unique, it just activates the view
+ *  <li>if the thread is null, it prompts a dialog box to ask the list of threads to display
+ * </ul>
+ *****************************************************************************/
 class ThreadViewFactory 
 {
-
+	/****
+	 * Build or activate a thread view. <br>
+	 * This method will prompt a dialog box to ask users which threads to be displayed.
+	 * 
+	 * @param window : the current active window
+	 * @param experiment : the current database
+	 * 
+	 * @return the thread view if successful, null otherwise
+	 */
 	static public IViewPart build(IWorkbenchWindow window, Experiment experiment) 
 	{
 		return build(window, experiment, null);
 	}
 	
+	/*****
+	 * Build or activate a thread view. <br>
+	 * This method will prompt a dialog box to ask users which threads to be displayed.
+	 * 
+	 * @param window : the current active window
+	 * @param experiment : the current database
+	 * @param threads : the list of threads to be displayed. If the this parameter is null,
+	 * it will prompt users to choose the threads.
+	 * 
+	 * @return the thread view if successful, null otherwise
+	 */
 	static public IViewPart build(IWorkbenchWindow window, Experiment experiment, List<Integer> threads) 
 	{
 		final IWorkbenchPage page = window.getActivePage();

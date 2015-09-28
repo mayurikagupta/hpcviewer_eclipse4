@@ -54,7 +54,7 @@ public class GraphEditorPlot extends GraphEditor {
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
-		return null;
+		return "Rank";
 	}
 
 	/****
