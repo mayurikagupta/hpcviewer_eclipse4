@@ -8,6 +8,7 @@ import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
@@ -92,8 +93,11 @@ public class ThreadView extends AbstractBaseScopeView
         	treeViewer.setInput(myRootScope);
         	objViewActions.updateContent(experiment, myRootScope);
         	
-        	TreeItem item = treeViewer.getTree().getItem(1);
-        	treeViewer.getTree().select(item);
+        	Tree tree = treeViewer.getTree();
+        	if (tree.getSelectionCount() == 0) {
+            	TreeItem item = tree.getItem(1);
+            	tree.select(item);
+        	}
         	
         	objViewActions.checkNodeButtons();
         }
@@ -202,7 +206,7 @@ public class ThreadView extends AbstractBaseScopeView
 				// Although metric A in column X is the same as metric A in column Y (they are both metric A),
 				// but column X is for displaying the values for threads P while column Y is for displaying
 				// for threads Q. 
-				boolean sort = true;
+				boolean sort = getMetricManager().getMetricCount() == 0;
 				for(BaseMetric m : mr)
 				{
 					MetricRaw mdup = (MetricRaw) m.duplicate();
