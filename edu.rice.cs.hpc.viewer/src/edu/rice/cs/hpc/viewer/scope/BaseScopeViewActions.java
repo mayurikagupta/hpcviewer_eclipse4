@@ -97,6 +97,8 @@ public class BaseScopeViewActions extends ScopeViewActions {
 	 */
 	protected void addMetricColumn(AbstractBaseScopeView view, DerivedMetric objMetric) {
 		ScopeTreeViewer objTreeViewer = view.getTreeViewer();
+		if (objTreeViewer.getTree().isDisposed())
+			return;
 		
 		objTreeViewer.getTree().setRedraw(false);
 		TreeViewerColumn colDerived = objTreeViewer.addTreeColumn(objMetric,  false);

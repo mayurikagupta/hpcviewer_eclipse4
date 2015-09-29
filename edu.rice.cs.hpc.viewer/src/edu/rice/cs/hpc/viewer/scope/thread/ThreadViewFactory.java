@@ -5,14 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.dialogs.ListSelectionDialog;
-
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
@@ -116,25 +113,24 @@ class ThreadViewFactory
 	{
 		IThreadDataCollection threadData = db.getThreadDataCollection();
 		double []ids = threadData.getRankLabels();
-		List<Double> dbList = new ArrayList<Double>(ids.length);
-		for(int i=0; i<ids.length; i++) {
-			dbList.add(ids[i]);
-		}
-		// put up a dialog with the open databases in the current window in a drop down selection box
-		ListSelectionDialog dlg = new ListSelectionDialog(window.getShell(), dbList, 
-			new ArrayContentProvider(), new LabelProvider(), "Select the processes/threads to view:");
-		dlg.setTitle("Select processes/threads");
-		dlg.open();
-		Object[] selectedDatabases = dlg.getResult();
-		if (selectedDatabases != null) 
+		String []labels = new String [ids.length];
+		for(int i=0; i<ids.length; i++) 
 		{
-			List<Integer> indexOfThreads = new ArrayList<Integer>(selectedDatabases.length);
-			for(int i=0; i<selectedDatabases.length; i++) 
-			{
-				int index = dbList.indexOf(selectedDatabases[i]);
-				indexOfThreads.add(index);
+			labels[i] = String.valueOf(ids[i]);
+		}
+		ThreadFilterDialog dialog = new ThreadFilterDialog(window.getShell(), labels);
+		if (dialog.open() == Window.OK) {
+			boolean []result = dialog.getResult();
+			if (result != null) {
+				List<Integer> threads = new ArrayList<Integer>();
+				for(int i=0; i<result.length; i++) {
+					if (result[i]) {
+						threads.add(i);
+					}
+				}
+				return threads;
 			}
-			return indexOfThreads;
+			
 		}
 		return null;
 	}

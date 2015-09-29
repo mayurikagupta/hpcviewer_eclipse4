@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.*;
 import org.eclipse.swt.SWT;
@@ -34,8 +35,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
+import edu.rice.cs.hpc.viewer.metric.MetricColumnDialog;
 import edu.rice.cs.hpc.viewer.resources.Icons;
-import edu.rice.cs.hpc.viewer.util.ColumnPropertiesDialog;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -75,9 +76,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	protected Scope nodeTopParent; // the current node which is on the top of the table (used as the aggregate node)
 	protected Database 	database;		// experiment data	
 
-	final private boolean affectOtherViews;
-    
-    /**
+	/**
      * Constructor initializing the data
      * @param shellGUI
      * @param objViewer
@@ -101,8 +100,6 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
 			ScopeViewActions objActions, boolean affectOtherViews) {
 
-		this.affectOtherViews = affectOtherViews;
-		
 		this.objViewActions = objActions;
 		this.shell = objShell;
 		this.objWindow = window;
@@ -300,22 +297,27 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      * Show column properties (hidden, visible ...)
      */
     protected void showColumnsProperties() {
+
+    	TreeColumn []column = treeViewer.getTree().getColumns();
+    	String []label = new String[column.length-1];
+    	boolean []checked = new boolean[column.length-1];
     	
-    	ColumnPropertiesDialog objProp = new ColumnPropertiesDialog(objWindow.getShell(), 
-    			treeViewer.getTree().getColumns(), affectOtherViews);
-    	objProp.open();
-    	if(objProp.getReturnCode() == org.eclipse.jface.dialogs.IDialogConstants.OK_ID) {
-        	boolean result[] = objProp.getResult();
-        	boolean isAppliedToAllViews = objProp.getStatusApplication();
-        	// apply to all views ?
-        	if(isAppliedToAllViews) {
-        		// apply the changes for all views
-        		this.showHideColumnsAllViews(result);
-        	} else {
-        		// apply the changes only in this view
-        		this.setColumnsStatus(result);
-        	}
-   		}
+    	for(int i=1; i<column.length; i++) {
+    		if (column[i].getData() != null) {
+    			checked[i-1] = column[i].getWidth()>1;
+    			label[i-1]	 = column[i].getText();
+    		}
+    	}
+    	MetricColumnDialog dialog = new MetricColumnDialog(shell, label, checked);
+    	if (dialog.open() == Dialog.OK) {
+    		boolean isAppliedToAllViews = dialog.isAppliedToAllViews();
+    		checked = dialog.getResult();
+    		if (isAppliedToAllViews) {
+    			showHideColumnsAllViews(checked);
+    		} else {
+    			setColumnsStatus(checked);
+    		}
+    	}
     }
     
     /**
@@ -336,7 +338,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      * Change the column status (hide/show) in this view only
      */
     public void setColumnsStatus(boolean []status) {
-
+    	if (treeViewer.getTree().isDisposed())
+    		return;
+    	
 		TreeColumn []columns = treeViewer.getTree().getColumns();
 		
 		// the number of table columns have to be bigger than the number of status
