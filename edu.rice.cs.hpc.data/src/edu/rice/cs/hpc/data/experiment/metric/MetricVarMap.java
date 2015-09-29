@@ -37,6 +37,7 @@ public class MetricVarMap extends VarMap {
 	public MetricVarMap(RootScope root, Scope s, IMetricManager metricManager) {
 		super(false);
 		this.scope = s;
+		this.root  = root;
 		this.metricManager = metricManager;
 	}
 	
