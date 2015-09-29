@@ -55,7 +55,7 @@ public class MetricRawManager implements IMetricManager
 	public BaseMetric[] getMetrics() {
 		TreeColumn []columns = treeViewer.getTree().getColumns();
 		if (columns != null && columns.length > 1) {
-			ArrayList<BaseMetric> listMetrics = new ArrayList<>(columns.length);
+			ArrayList<BaseMetric> listMetrics = new ArrayList<BaseMetric>(columns.length);
 			for(TreeColumn col : columns) {
 				Object obj = col.getData();
 				if (obj instanceof BaseMetric) {

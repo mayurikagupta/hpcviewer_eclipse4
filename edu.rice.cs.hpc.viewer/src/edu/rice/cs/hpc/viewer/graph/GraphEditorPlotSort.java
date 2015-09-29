@@ -54,7 +54,7 @@ public class GraphEditorPlotSort extends GraphEditor {
 			ArrayList<Integer> selections) {
 		
 		if (pairThreadIndex != null) {
-			ArrayList<Integer> list = new ArrayList<>( selections.size());
+			ArrayList<Integer> list = new ArrayList<Integer>( selections.size());
 			for(Integer i : selections) {
 				list.add(pairThreadIndex[i].index);
 			}
