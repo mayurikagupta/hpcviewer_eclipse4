@@ -15,7 +15,7 @@
 package edu.rice.cs.hpc.data.experiment.source;
 
 
-import edu.rice.cs.hpc.data.experiment.source.SourceFile;
+
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -134,10 +134,9 @@ public boolean isAvailable()
 	return true;
 }
 
-
+@Deprecated
 public void setIsText(boolean bi)
 {
-   ;
 }
 
 /*************************************************************************
@@ -153,7 +152,7 @@ public boolean hasLine(int lineNumber)
 /*************************************************************************
  *	Returns whether the source file is text (not load module/binary)
  ************************************************************************/
-
+@Deprecated
 public boolean isText()
 {
         return true;

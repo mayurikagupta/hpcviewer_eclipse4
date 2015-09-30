@@ -602,7 +602,7 @@ public void accumulateMetrics(Scope source, MetricValuePropagationFilter filter,
 public void accumulateMetric(Scope source, int src_i, int targ_i, MetricValuePropagationFilter filter) {
 	if (filter.doPropagation(source, this, src_i, targ_i)) {
 		MetricValue m = source.getMetricValue(src_i);
-		if (m != MetricValue.NONE && MetricValue.getValue(m) != 0.0) {
+		if (m != MetricValue.NONE && Double.compare(MetricValue.getValue(m), 0.0) != 0) {
 			this.accumulateMetricValue(targ_i, MetricValue.getValue(m));
 		}
 	}
@@ -793,7 +793,8 @@ public void copyMetrics(Scope targetScope, int offset) {
 		MetricValue mine = null;
 		MetricValue crtMetric = metrics.getValue(this, k);
 
-		if ( MetricValue.isAvailable(crtMetric) && MetricValue.getValue(crtMetric) != 0.0) { // there is something to copy
+		if ( MetricValue.isAvailable(crtMetric) && 
+				Float.compare(MetricValue.getValue(crtMetric), 0.0f) != 0) { // there is something to copy
 			mine = new MetricValue();
 			MetricValue.setValue(mine, MetricValue.getValue(crtMetric));
 

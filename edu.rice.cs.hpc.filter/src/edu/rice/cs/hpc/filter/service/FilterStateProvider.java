@@ -52,7 +52,7 @@ public class FilterStateProvider extends AbstractSourceProvider
 		map.put(FILTER_STATE_PROVIDER, getSelectedValue());
 		map.put(FILTER_REFRESH_PROVIDER, FilterMap.getInstance());
 		
-		final String filterVal = System.getenv("FILTER");
+		final String filterVal = System.getProperty("FILTER");
 		map.put(FILTER_ENABLE_PROVIDER, filterVal);
 		
 		return map;

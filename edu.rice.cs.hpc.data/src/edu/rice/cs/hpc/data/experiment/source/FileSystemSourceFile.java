@@ -17,7 +17,7 @@ package edu.rice.cs.hpc.data.experiment.source;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
-import edu.rice.cs.hpc.data.experiment.source.SourceFile;
+
 import edu.rice.cs.hpc.data.util.*;
 
 import java.io.*;

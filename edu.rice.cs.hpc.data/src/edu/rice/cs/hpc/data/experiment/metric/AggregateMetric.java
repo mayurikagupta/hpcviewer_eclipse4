@@ -139,7 +139,7 @@ public class AggregateMetric extends BaseMetric {
 			double dValue = expression.eval(var_map, this.fctMap);
 			// ugly checking if the value is zero or not. There is no zero comparison in
 			// Java double, so we assume we can compare it with 0.0d
-			if (dValue == 0.0d)
+			if (Double.compare(dValue, 0.0d) == 0)
 				mv = MetricValue.NONE;
 			else
 				mv = new MetricValue(dValue);

@@ -36,12 +36,4 @@ public class StdDevFunction implements Function {
 	public String toString() {
 		return "stdev(x1, x2, ..., xn)";
 	}
-	
-	static public void main(String args[]) {
-		double num[] = {1,2,4,5};
-		final double answer = 1.83;
-		StdDevFunction f = new StdDevFunction();
-		double result = f.of(num, num.length);
-		System.out.println("Result = "+result+" correct answer = "+answer+" test: " + (result == answer));
-	}
 }

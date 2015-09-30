@@ -458,12 +458,12 @@ public String format(MetricValue value)
 	{
 		if( MetricValue.isAnnotationAvailable(value) )
 		{
-			double number = MetricValue.getAnnotationValue(value);
+			float number = MetricValue.getAnnotationValue(value);
 
 			// if the formatter pattern is set for percent values, we need to handle special values differently
 			if (this.annotationFormatPattern.contains("%")) {
 				// if value shows this used all of it, show that without decimal places
-				if (number == 1.0) {
+				if (Float.compare(number, 1.0f)==0) {
 					formatted.append("100 %");
 					return formatted.toString();
 				}
@@ -510,7 +510,7 @@ protected String formatDouble(double d, DecimalFormat formatter, Style style)
 		// hpcrun can generate incorrect metrics which are incredibly huge 
 		// converted in Java it becomes infinity
 		
-		if (d == Float.POSITIVE_INFINITY)
+		if (Double.compare(d, Float.POSITIVE_INFINITY) == 0.0)
 			return "" ;
 					
 		int exponent = 0;
@@ -523,7 +523,7 @@ protected String formatDouble(double d, DecimalFormat formatter, Style style)
 			d /= 10.0;
 			exponent += 1;
 		}
-		if (d != 0.0) {
+		if (Double.compare(d, 0.0d) != 0) {
 			// Laks 2009.02.12: turn it back to the original format. Previously: < 9.5
 			// Laks 2009.02.13: bug fix for displaying .999x into 1.0e00 and .99x into 9.9x
 			// FIXME this is an ugly bug fix, but since the formatter is handled by jvm, we have to hack from here

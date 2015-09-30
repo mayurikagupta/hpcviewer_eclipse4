@@ -80,7 +80,7 @@ public class Experiment extends BaseExperimentWithMetrics
 	protected void copyMetric(Scope target, Scope source, int src_i, int targ_i, MetricValuePropagationFilter filter) {
 		if (filter.doPropagation(source, target, src_i, targ_i)) {
 			MetricValue mv = source.getMetricValue(src_i);
-			if (mv != MetricValue.NONE && MetricValue.getValue(mv) != 0.0) {
+			if (mv != MetricValue.NONE && Float.compare(MetricValue.getValue(mv), 0.0f)!=0) {
 				target.setMetricValue(targ_i, mv);
 			}
 		}
@@ -429,7 +429,7 @@ public class Experiment extends BaseExperimentWithMetrics
 		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitor(this.getMetrics());
 
 		this.finalizeAggregateMetrics(flatViewRootScope, diVisitor);	// flat view
-		addPercents(flatViewRootScope, (RootScope) rootCCT);
+		addPercents(flatViewRootScope, rootCCT);
 	}
 
 	@Override

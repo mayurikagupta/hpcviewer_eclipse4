@@ -1115,7 +1115,9 @@ public class BaseExperimentBuilder extends Builder {
 	 *************************************************************************/
 	protected String getAttributeByName(String name, String[] attributes, String[] values)
 	{
-		for (int i = 0; i < attributes.length; i++) if (name == attributes[i]) return values[i];
+		for (int i = 0; i < attributes.length; i++) 
+			if (name.equals(attributes[i])) 
+				return values[i];
 		return null;
 	}
 

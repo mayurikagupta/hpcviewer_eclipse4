@@ -185,7 +185,7 @@ public class MetricRaw  extends BaseMetric {
 	private MetricValue setValue(double value)
 	{
 		MetricValue mv = MetricValue.NONE;
-		if (value != 0.0)
+		if (Double.compare(value, 0) != 0)
 			mv = new MetricValue(value);
 		return mv;
 	}

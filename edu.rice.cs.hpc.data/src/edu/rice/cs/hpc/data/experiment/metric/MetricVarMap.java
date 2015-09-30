@@ -75,7 +75,7 @@ public class MetricVarMap extends VarMap {
 	public double getValue(String varName) {
 		assert(metricManager != null);
 		
-		if(varName.startsWith("$")) {
+		if(varName.charAt(0)=='$') {
 			// Metric variable
 			String sIndex = varName.substring(1);
 			BaseMetric metric = metricManager.getMetric(sIndex);
@@ -88,7 +88,7 @@ public class MetricVarMap extends VarMap {
 			}
 			return 0.0;
 			
-		} else if (varName.startsWith("@")) {
+		} else if (varName.charAt(0)=='@') {
 			//---------------------------------------------------------
 			// 2011.02.08: new interpretation of the symbol "@x" where x is the metric ID
 			// @x returns the aggregate value of metric x 

@@ -24,7 +24,7 @@ import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricValueCollection;
 import edu.rice.cs.hpc.data.experiment.metric.version2.MetricValueCollection2;
 import edu.rice.cs.hpc.data.experiment.metric.version3.MetricValueCollection3;
-import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
+
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
 
 

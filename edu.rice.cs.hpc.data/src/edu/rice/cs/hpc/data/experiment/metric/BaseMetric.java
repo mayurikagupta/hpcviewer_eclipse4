@@ -242,9 +242,9 @@ public abstract class BaseMetric {
 		else if (Math.abs(mv.value) < 1.00e-99)  mv.value = (float) 0.0;
 		
 		// if not a special case, convert the number to a string
-		if (mv.value == 0.0 || mv == MetricValue.NONE || !MetricValue.isAvailable(mv) ) sText = "";
-		else if (mv.value == Float.POSITIVE_INFINITY) sText = "Infinity";
-		else if (mv.value == Float.NEGATIVE_INFINITY) sText = "-Infinity";
+		if (Float.compare(mv.value, 0.0f) == 0 || mv == MetricValue.NONE || !MetricValue.isAvailable(mv) ) sText = "";
+		else if (Float.compare(mv.value, Float.POSITIVE_INFINITY)==0) sText = "Infinity";
+		else if (Float.compare(mv.value, Float.NEGATIVE_INFINITY)==0) sText = "-Infinity";
 		else if (Float.isNaN(mv.value)) sText = "NaN";
 		else {
 			sText = getDisplayFormat().format(mv);
