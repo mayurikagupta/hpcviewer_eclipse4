@@ -43,15 +43,6 @@ public class DataPlot extends DataCommon
 	// Override methods from DataCommon
 	//////////////////////////////////////////////////////////////////////////
 
-	/*****
-	 * open plot.db database
-	 * @param directory
-	 */
-	public void open(String filePlot) throws IOException
-	{
-		super.open(filePlot);
-	}
-	
 	
 	@Override
 	public void dispose() {

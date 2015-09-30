@@ -126,7 +126,7 @@ public class GraphMenu
 	        	}
 	        	
 	        	if (editor instanceof GraphEditorBase) {
-	        		((GraphEditorBase)editor).finalize();
+	        		((GraphEditorBase)editor).editorFinalize();
 	        	}
 	        	
 	        	// finalize the pane splitting if needed

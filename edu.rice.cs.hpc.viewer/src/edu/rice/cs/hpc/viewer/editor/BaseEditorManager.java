@@ -76,7 +76,7 @@ public abstract class BaseEditorManager {
 	 */
 	static public void splitEnd(boolean needNewPartition, IEditorPart iep) {
 		// if this is the first editor from this database, create new partition to put it in
-		if (needNewPartition == true) {
+		if (needNewPartition) {
 			splitEditorArea(iep);
 		}
 

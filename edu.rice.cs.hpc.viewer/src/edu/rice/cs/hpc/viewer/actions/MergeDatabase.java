@@ -62,8 +62,8 @@ public abstract class MergeDatabase extends AbstractHandler
 			// otherwise we should ask user to select which database to be merged
 			if (dbArray.length == 2)
 			{
-				db1 = (Experiment) dbArray[0];
-				db2 = (Experiment) dbArray[1];
+				db1 = dbArray[0];
+				db2 = dbArray[1];
 				
 			} else
 			{

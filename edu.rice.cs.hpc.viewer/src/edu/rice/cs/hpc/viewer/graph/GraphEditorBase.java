@@ -96,7 +96,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 	 * Due to SWT Chart bug, we need to adjust the range once the create-part-control
 	 * 	finishes its layout.
 	 */
-	public void finalize() {
+	public void editorFinalize() {
 		IAxisSet axisSet = this.getChart().getAxisSet();
 		axisSet.adjustRange();
 

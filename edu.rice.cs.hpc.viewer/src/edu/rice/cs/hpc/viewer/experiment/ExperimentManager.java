@@ -144,7 +144,7 @@ public class ExperimentManager {
 					
 					if (db == null) {						
 						// check if we can open the database successfully
-						bContinue = (this.setExperiment(sFile, flag) == false);
+						bContinue = (!setExperiment(sFile, flag));
 					} else {
 						MessageDialog.openError(window.getShell(), "Database is already opened", 
 								"The database is already opened in this window.\n" +

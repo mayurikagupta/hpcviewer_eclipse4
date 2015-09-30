@@ -213,7 +213,7 @@ public class ThreadView extends AbstractBaseScopeView
 					mdup.setThread(threads);
 					
 					StringBuffer buffer = new StringBuffer();
-					buffer.append("[");
+					buffer.append('[');
 					int size = threads.size();
 					
 					// for the column title: only list the first MAX_THREAD_INDEX of the set of threads
@@ -229,10 +229,9 @@ public class ThreadView extends AbstractBaseScopeView
 						}
 						buffer.append(labels[index]);
 						if (i < MAX_THREAD_INDEX-1 && i<size-1)
-							buffer.append(",");
+							buffer.append(',');
 					}
-					buffer.append("]");
-					buffer.append("-");
+					buffer.append("]-");
 					buffer.append(mdup.getDisplayName());
 
 					mdup.setDisplayName(buffer.toString());

@@ -238,7 +238,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         if(scope instanceof CallSiteScope) {
         	// get the call site scope
         	CallSiteScope callSiteScope = (CallSiteScope) scope;
-        	LineScope lineScope = (LineScope) callSiteScope.getLineScope();
+        	LineScope lineScope = callSiteScope.getLineScope();
         	// setup the menu
         	sMenuTitle = "Callsite "+lineScope.getToolTip();
         	ScopeViewTreeAction acShowCallsite = new ScopeViewTreeAction(sMenuTitle, lineScope){
@@ -646,7 +646,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	            if(scope instanceof CallSiteScope) {
     	            	// get the call site scope
     	            	CallSiteScope callSiteScope = (CallSiteScope) scope;
-    	            	LineScope lineScope = (LineScope) callSiteScope.getLineScope();
+    	            	LineScope lineScope = callSiteScope.getLineScope();
     	            	displaySourceCode(lineScope);
     	            } else {
     	            }

@@ -208,10 +208,6 @@ public class ColumnViewerSorter extends ViewerComparator {
 		return 0;
 	}
 
-	public void sort(Viewer viewer,
-            Object[] elements) {
-		super.sort(viewer, elements);
-	}
 	
 
 }

@@ -273,7 +273,7 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 			int iLevel = 0;
 			HotCallPath objHot = this.getHotCallPath(arrPath[0], item, current, metric, iLevel);
 			this.treeViewer.setSelection(new TreeSelection(objHot.path), true);
-			if(objHot.is_found == false) {
+			if(!objHot.is_found) {
 				this.showErrorMessage("No hot child.");
 			}
 		} else {

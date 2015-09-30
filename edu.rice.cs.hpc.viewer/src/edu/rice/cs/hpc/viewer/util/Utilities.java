@@ -190,7 +190,7 @@ public class Utilities {
 			COLOR_TOP.dispose();
 			
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 	}
 	
@@ -243,7 +243,7 @@ public class Utilities {
 					// we will prioritize the visible view to be refreshed first
 					for(int i=0;i<numViews;i++) {
 						if (!visible_view.contains( ev.getView(i))) {
-							ScopeTreeViewer tree = (ScopeTreeViewer) ev.getView(i).getTreeViewer();
+							ScopeTreeViewer tree = ev.getView(i).getTreeViewer();
 							
 							// reset the view
 							Utilities.resetView(objItemManager, tree);
@@ -424,7 +424,7 @@ public class Utilities {
 	static public Image getScopeNavButton(Scope scope) {
 		if (scope instanceof CallSiteScope) {
 			CallSiteScope scopeCall = (CallSiteScope) scope;
-        	LineScope lineScope = (LineScope) (scopeCall).getLineScope();
+        	LineScope lineScope = (scopeCall).getLineScope();
 			if (((CallSiteScope) scope).getType() == CallSiteScopeType.CALL_TO_PROCEDURE) {
 				if(Utilities.isFileReadable(lineScope))
 					return Icons.getImage(Icons.Image_CallTo);
@@ -465,7 +465,7 @@ public class Utilities {
     static public boolean isFileReadable(Scope scope) {
     	// check if the source code availability is already computed
     	if(scope.iSourceCodeAvailability == Scope.SOURCE_CODE_UNKNOWN) {
-    		SourceFile newFile = ((SourceFile)scope.getSourceFile());
+    		SourceFile newFile = (scope.getSourceFile());
     		if (newFile != null) {
         		if( (newFile != SourceFile.NONE)
             			|| ( newFile.isAvailable() )  ) {

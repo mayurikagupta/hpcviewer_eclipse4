@@ -6,7 +6,6 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
-import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.filter.service.FilterMap;
 
@@ -171,7 +170,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             treeViewer.setColumnProperties(titles); // do we need this ??
         }
         // update the root scope of the actions !
-        this.objViewActions.updateContent(myExperiment, (RootScope)this.myRootScope);
+        this.objViewActions.updateContent(myExperiment, this.myRootScope);
     	this.objViewActions.objActionsGUI.setColumnsStatus(status);
 
 	}

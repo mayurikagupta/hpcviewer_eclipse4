@@ -141,7 +141,7 @@ public class ShowView extends AbstractHandler {
 		public Image getImage(Object element) {
 			Object o = ((TreeNode)element).getValue();
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = (BaseScopeView) ((TreeItemNode)o).view;
+				BaseScopeView view = ((TreeItemNode)o).view;
 				return view.getTitleImage();
 			}
 			return null;
@@ -154,7 +154,7 @@ public class ShowView extends AbstractHandler {
 			Object o = node.getValue();
 			
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = (BaseScopeView) ((TreeItemNode)o).view;
+				BaseScopeView view = ((TreeItemNode)o).view;
 				String title = wt.setTitle(window, view);
 
 				if (view.getTreeViewer().getTree().isDisposed()) {
