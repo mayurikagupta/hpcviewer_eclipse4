@@ -142,6 +142,10 @@ public String getRootName()
 	return rootScopeName;
 }
 
+public void setRootName(String name)
+{
+	this.rootScopeName = name;
+}
 
 public RootScopeType getType()
 {

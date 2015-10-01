@@ -55,6 +55,12 @@ public class ThreadView extends AbstractBaseScopeView
 		ThreadViewFactory.build(window, experiment, threads);
 	}
 
+	@Override
+	public void setInput(Database db, RootScope scope, boolean keepColumnStatus)
+	{
+		
+	}
+	
 	/*****
 	 * Customized setInput from {@link edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView}
 	 * using list of threads as the additional parameter.
@@ -262,6 +268,7 @@ public class ThreadView extends AbstractBaseScopeView
 	{	
 		// create and duplicate the configuration
 		RootScope rootThread = (RootScope) rootCCT.duplicate();
+		rootThread.setRootName("Thread View");
 		
 		// duplicate the children
 		for(int i=0; i<rootCCT.getChildCount(); i++)

@@ -1,5 +1,7 @@
 package edu.rice.cs.hpc.viewer.actions;
 
+import java.util.ArrayList;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -23,6 +25,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -62,21 +65,28 @@ public class ShowView extends AbstractHandler {
 			final ExperimentView ev = db.getExperimentView();
 			int numViews = ev.getViewCount();
 			
-			TreeNode []viewNode = new TreeNode[numViews];
-			
+			ArrayList<TreeNode> listOfNodes = new ArrayList<TreeNode>(numViews);
 			// gather all the views of this database
 			for(int j=0; j<numViews; j++) {
-				TreeItemNode item = new TreeItemNode(ev, j, ev.getView(j));
-				viewNode[j] = new TreeNode(item);
-				viewNode[j].setParent(dbNode[i]);
+				AbstractBaseScopeView view = ev.getView(j);
+				// only the traditional views (cct, callers and flat) can be resurrected.
+				// thread view can be disposed and thrown away
+				if (view instanceof BaseScopeView) {
+					TreeItemNode item = new TreeItemNode(ev, j, view);
+					TreeNode viewNode = new TreeNode(item);
+					viewNode.setParent(dbNode[i]);
+					listOfNodes.add(viewNode);
+				}
 			}
-			dbNode[i].setChildren(viewNode);
+			TreeNode []nodes  = new TreeNode[listOfNodes.size()];
+			listOfNodes.toArray(nodes);
+			dbNode[i].setChildren(nodes);
 		}
 		
 		// ------------------------------------------------------------
 		// show dialog box so that users can choose which view to show
 		// ------------------------------------------------------------
-		final DatabaseLabelProvider dbLabelProvider = new DatabaseLabelProvider();
+		final DatabaseLabelProvider dbLabelProvider = new DatabaseLabelProvider(window);
 		
 		ViewTreeDialog dlg = new ViewTreeDialog(window.getShell(),
 				dbLabelProvider, new TreeNodeContentProvider());
@@ -91,7 +101,7 @@ public class ShowView extends AbstractHandler {
 					
 					if (item instanceof TreeItemNode) {
 						TreeItemNode itemNode = (TreeItemNode) item;
-						BaseScopeView view = itemNode.view;
+						AbstractBaseScopeView view = itemNode.view;
 						try {
 							IViewSite site = (IViewSite) view.getSite();
 							IWorkbenchPage page = window.getActivePage();
@@ -99,7 +109,7 @@ public class ShowView extends AbstractHandler {
 							// ------------------------------------------------------------
 							// Activate the view
 							// ------------------------------------------------------------
-							BaseScopeView newView = ExperimentView.openView(page, 
+							AbstractBaseScopeView newView = ExperimentView.openView(page, 
 									view.getRootScope(), site.getSecondaryId(), 
 									view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
 							
@@ -132,16 +142,21 @@ public class ShowView extends AbstractHandler {
 	 * Label provider for the tree node item
 	 *
 	 */
-	private class DatabaseLabelProvider 
+	static private class DatabaseLabelProvider 
 		extends BaseLabelProvider implements ILabelProvider
 	{
 		final private WindowTitle wt = new WindowTitle();
+		final private IWorkbenchWindow window;
+		
+		DatabaseLabelProvider(IWorkbenchWindow window) {
+			this.window = window;
+		}
 		
 		//@Override
 		public Image getImage(Object element) {
 			Object o = ((TreeNode)element).getValue();
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = ((TreeItemNode)o).view;
+				AbstractBaseScopeView view = ((TreeItemNode)o).view;
 				return view.getTitleImage();
 			}
 			return null;
@@ -154,7 +169,7 @@ public class ShowView extends AbstractHandler {
 			Object o = node.getValue();
 			
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = ((TreeItemNode)o).view;
+				AbstractBaseScopeView view = ((TreeItemNode)o).view;
 				String title = wt.setTitle(window, view);
 
 				if (view.getTreeViewer().getTree().isDisposed()) {
@@ -171,12 +186,12 @@ public class ShowView extends AbstractHandler {
 	 * class to store the information of views
 	 *
 	 */
-	private class TreeItemNode {
+	static private class TreeItemNode {
 		private ExperimentView ev;
 		private int index;
-		private BaseScopeView view;
+		private AbstractBaseScopeView view;
 		
-		public TreeItemNode(ExperimentView ev, int index, BaseScopeView view) {
+		public TreeItemNode(ExperimentView ev, int index, AbstractBaseScopeView view) {
 			this.ev = ev;
 			this.index = index;
 			this.view = view;
@@ -205,7 +220,7 @@ public class ShowView extends AbstractHandler {
 	 * private class to show all "created "views, whether it's opened or not
 	 *
 	 */
-	private class ViewTreeDialog extends ElementTreeSelectionDialog
+	static private class ViewTreeDialog extends ElementTreeSelectionDialog
 	{
 		/***
 		 * create a view tree dialog

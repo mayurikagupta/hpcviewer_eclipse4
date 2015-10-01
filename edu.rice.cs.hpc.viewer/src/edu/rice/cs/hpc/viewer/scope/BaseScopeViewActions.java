@@ -84,7 +84,7 @@ public class BaseScopeViewActions extends ScopeViewActions {
 		// add the new metric column to all registered views (cct, callers and flat)
 		ExperimentView ev = db.getExperimentView();
 		for(int i=0; i<ev.getViewCount(); i++) {
-			BaseScopeView view = ev.getView(i);
+			AbstractBaseScopeView view = ev.getView(i);
 			addMetricColumn(view, objMetric);
 		}
 		

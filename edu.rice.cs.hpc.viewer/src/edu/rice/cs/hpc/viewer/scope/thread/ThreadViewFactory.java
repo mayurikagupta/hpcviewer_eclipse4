@@ -14,6 +14,8 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
@@ -95,6 +97,8 @@ class ThreadViewFactory
 						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
 						if (threads != null) {
 							((ThreadView)view).setInput(db, scope, threads);
+							ExperimentView ev = db.getExperimentView();
+							ev.addView((AbstractBaseScopeView) view);
 							return view;
 						}
 					}

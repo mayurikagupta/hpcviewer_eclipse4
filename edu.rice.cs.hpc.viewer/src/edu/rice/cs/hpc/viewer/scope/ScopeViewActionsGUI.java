@@ -329,7 +329,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		// get the views created for our database
     	ExperimentView ev = database.getExperimentView();
 		for(int i=0; i<ev.getViewCount(); i++) {
-			BaseScopeView view = ev.getView(i);
+			AbstractBaseScopeView view = ev.getView(i);
 			view.getViewActions().setColumnStatus(status);
 		}
     }

@@ -40,7 +40,7 @@ import edu.rice.cs.hpc.viewer.editor.SourceCodeEditor;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.resources.Icons;
-import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.ScopeTreeViewer;
 import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
@@ -218,9 +218,9 @@ public class Utilities {
 		final TreeItemManager objItemManager = new TreeItemManager();
 		
 		// first, we need to refresh the visible view
-		final ArrayList<BaseScopeView> visible_view = Utilities.getTopView(window);
+		final ArrayList<AbstractBaseScopeView> visible_view = Utilities.getTopView(window);
 		if (visible_view != null && visible_view.size()>0) {
-			for (BaseScopeView view : visible_view) {
+			for (AbstractBaseScopeView view : visible_view) {
 				Utilities.resetView(objItemManager, view.getTreeViewer());
 			}
 		}
@@ -258,16 +258,16 @@ public class Utilities {
 	 * Find the first visible scope view (the view can be active or not)
 	 * @return the visible view, null if there is no view
 	 */
-	static ArrayList<BaseScopeView> getTopView(IWorkbenchWindow window) {
+	static ArrayList<AbstractBaseScopeView> getTopView(IWorkbenchWindow window) {
 		IWorkbenchPage page = window.getActivePage();
 		IViewReference [] viewRefs = page.getViewReferences();
-		ArrayList<BaseScopeView> listViews = new ArrayList<BaseScopeView>(viewRefs.length);
+		ArrayList<AbstractBaseScopeView> listViews = new ArrayList<AbstractBaseScopeView>(viewRefs.length);
 		
 		for(int i=0;i<viewRefs.length;i++) {
 			IWorkbenchPart part = viewRefs[i].getPart(false);
 			if (page.isPartVisible(part)) {
-				if (part instanceof BaseScopeView) {
-					listViews.add((BaseScopeView)part);
+				if (part instanceof AbstractBaseScopeView) {
+					listViews.add((AbstractBaseScopeView)part);
 				}
 			}
 		}
@@ -520,9 +520,9 @@ public class Utilities {
 			// multiple databases are opened:
 			// need to select an experiment to show
 			IWorkbenchPart part = window.getActivePage().getActivePart();
-			if (part instanceof BaseScopeView)
+			if (part instanceof AbstractBaseScopeView)
 			{
-				experiment = ((BaseScopeView)part).getExperiment();
+				experiment = ((AbstractBaseScopeView)part).getExperiment();
 				
 			} else if (part instanceof SourceCodeEditor)
 			{

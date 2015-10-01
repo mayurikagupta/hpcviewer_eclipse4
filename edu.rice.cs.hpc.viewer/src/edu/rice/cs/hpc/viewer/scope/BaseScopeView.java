@@ -22,10 +22,6 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     //======================================================
     // ................ METHODS  ..........................
     //======================================================
-	public BaseScopeView()
-	{
-		super();
-	}
 	
     /// ---------------------------------------------
     /// filter feature
