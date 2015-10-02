@@ -423,14 +423,16 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 		final TreeColumn []columns = treeViewer.getTree().getColumns();
 		sbText.append( "\"" + objScope.getName() + "\"" );
 		
-		final Experiment exp = (Experiment) objScope.getExperiment();
-		
 		for(int j=1; j<columns.length; j++) 
 		{
 			if (columns[j].getWidth()>0) {
-				// the column is not hidden
-				BaseMetric metric = exp.getMetric(j-1); // bug fix: the metric starts from 0
-				sbText.append(sSeparator + metric.getMetricTextValue(objScope));
+				Object obj = columns[j].getData();
+				if (obj != null && obj instanceof BaseMetric) {
+					// the column is not hidden
+					BaseMetric metric = (BaseMetric) obj;
+							//exp.getMetric(j-1); // bug fix: the metric starts from 0
+					sbText.append(sSeparator + metric.getMetricTextValue(objScope));
+				}
 			}
 		}
 	}
