@@ -20,22 +20,24 @@ public class MetricRaw  extends BaseMetric {
 	
 	private IThreadDataCollection threadData;
 	
-	/*** list of threads that its metric values have to be computed **/
+	/*** list of threads that its metric values have to be computed.<br/> 
+	 *   each MetricRaw may have different threads. **/
 	private List<Integer> threads = null;
 	
 	/*** list of scope metric values of a certain threads. The length of the array is the number of cct nodes*/
 	private double []thread_values = null;
+	
+	/*** we need to initialize it as null to differentiate with the default value NONE **/
 	private MetricValue	rootValue  = null;
 	
-	public MetricRaw(String sID, String sDisplayName, boolean displayed, String format, AnnotationType annotationType, int index) {
-		super(sID, sDisplayName, displayed, format, annotationType, index, index,  MetricType.EXCLUSIVE);
-	}
+	/*** similar to partner index, but this partner refers directly to the metric partner.**/
+	private MetricRaw partner;
 	
-	
-	public MetricRaw(int id, String title, String db_pattern, 
-			int db_num, int metrics) {
+
+	public MetricRaw(int id, String title, String db_pattern, int db_num, int partner_index, 
+			MetricType type, int metrics) {
 		// raw metric has no partner
-		super( String.valueOf(id), title, true, null, AnnotationType.NONE, db_num, db_num, MetricType.EXCLUSIVE);
+		super( String.valueOf(id), title, true, null, AnnotationType.NONE, db_num, partner_index, type);
 		this.ID 	 = id;
 		this.db_glob = db_pattern;
 		this.db_id 	 = db_num;
@@ -94,7 +96,24 @@ public class MetricRaw  extends BaseMetric {
 		return this.ID;
 	}
 
+	/**
+	 * set the metric partner of this metric. If this metric is exclusive,
+	 * the metric partner should be inclusive.
+	 * 
+	 * @param partner : the metric partner
+	 */
+	public void setMetricPartner(MetricRaw partner) {
+		this.partner = partner;
+	}
 
+	/**
+	 * get the metric partner
+	 * @return metric partner
+	 */
+	public MetricRaw getMetricPartner() {
+		return partner;
+	}
+	
 	@Override
 	public MetricValue getValue(Scope s) {
 		MetricValue value = MetricValue.NONE;
@@ -103,29 +122,29 @@ public class MetricRaw  extends BaseMetric {
 			try {
 				if (threads != null)
 				{
-					if (threads.size()>1)
-					{
-						value = getAverageValue(s);
-					} else if (threads.size()==1)
-					{
-						value = getSpecificValue(s, threads.get(0));
-					}
+					value = getValue(s, threads);
+					
 					// to compute the percentage, we need to have the value of the root
 					// If the root has no value, we have to recompute it only for one time
 					// Once we have the root's value, we don't have to recompute it
 					if (rootValue == null) {
-						if (s instanceof RootScope)
+						if (s instanceof RootScope && value != MetricValue.NONE)
 							rootValue = value;
-						else {
-							rootValue = getValue(s.getRootScope());
+						else if (metricType == MetricType.INCLUSIVE){
+							rootValue = getValue(s.getRootScope(), threads);
 						}
-						if (rootValue != MetricValue.NONE) {
-							// root value is available: we can show the percent
-							setAnnotationType(AnnotationType.PERCENT);
+						else if (metricType == MetricType.EXCLUSIVE && partner != null) {
+							// dereference the value from the partner
+							if (s instanceof RootScope)
+								rootValue = partner.getValue(s, threads);
+							else {
+								rootValue = partner.getValue(s.getRootScope(), threads);
+							}
 						}
 					}
 					if (rootValue != MetricValue.NONE) {
 						// if the value exist, we compute the percentage
+						setAnnotationType(AnnotationType.PERCENT);
 						MetricValue.setAnnotationValue(value, value.getValue() / rootValue.getValue());
 					}
 				}
@@ -139,10 +158,38 @@ public class MetricRaw  extends BaseMetric {
 
 	@Override
 	public BaseMetric duplicate() {
-		MetricRaw dup = new MetricRaw(ID, this.displayName, this.db_glob, this.db_id, this.num_metrics);
+		MetricRaw dup = new MetricRaw(ID, displayName, db_glob, db_id, 
+				partner_index, metricType, num_metrics);
 		// TODO: hack to duplicate also the thread data
 		dup.threadData = threadData;
 		return dup;
+	}
+	
+	
+	/****
+	 * Basic method to retrieve the value of a scope for a given set of threads
+	 * @param s : scope 
+	 * @param threads : a list of threads
+	 * @return a metric value
+	 * @throws IOException
+	 */
+	private MetricValue getValue(Scope s, List<Integer> threads) throws IOException  {
+		MetricValue value = MetricValue.NONE;
+		if (threads != null)
+		{
+			if (threads.size()>1)
+			{
+				value = getAverageValue(s, threads);
+			} else if (threads.size()==1)
+			{
+				value = getSpecificValue(s, threads.get(0));
+			}
+			if (value == MetricValue.NONE && s instanceof RootScope 
+					&& metricType == MetricType.EXCLUSIVE) {
+				value = partner.getValue(s, threads);
+			}
+		}
+		return value;
 	}
 	
 	/*****
@@ -152,7 +199,7 @@ public class MetricRaw  extends BaseMetric {
 	 * @return
 	 * @throws IOException
 	 */
-	private MetricValue getAverageValue(Scope s) throws IOException
+	private MetricValue getAverageValue(Scope s, List<Integer> threads) throws IOException
 	{
 		double val_mean = 0.0;
 		final double divider  = 1.0d / threads.size();
@@ -165,6 +212,14 @@ public class MetricRaw  extends BaseMetric {
 		return value;
 	}
 	
+	/****
+	 * get the metric value of a give scope on a given thread
+	 * 
+	 * @param s : the scope
+	 * @param thread_id : the thread ID
+	 * @return a metric value
+	 * @throws IOException
+	 */
 	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
 	{
 		checkValues(thread_id);

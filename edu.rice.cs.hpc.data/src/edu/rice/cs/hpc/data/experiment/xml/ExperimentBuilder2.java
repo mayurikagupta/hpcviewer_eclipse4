@@ -271,10 +271,8 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 				}
 			} else if (attributes[i].charAt(0) == 't') {
 				// type: inclusive|exclusive|nil
-				if (values[i].charAt(0) == 'i')
-					objType = MetricType.INCLUSIVE;
-				else if (values[i].charAt(0) == 'e')
-					objType = MetricType.EXCLUSIVE;
+				objType = getMetricType(values[i]);
+
 			} else if (attributes[i].charAt(0) == 'f') {
 				// format to display
 				format = values[i];
@@ -369,13 +367,20 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 		String title = null;
 		String db_glob = null;
 		int db_id = 0;
-		int num_metrics = 0;
+		int num_metrics = 0, partner_index = 0;
+		MetricType type = MetricType.EXCLUSIVE;
 		
 		for (int i=0; i<attributes.length; i++) {
 			if (attributes[i].charAt(0) == 'i') {
 				ID = Integer.valueOf(values[i]);
 			} else if (attributes[i].charAt(0) == 'n') {
 				title = values[i];
+			} else if (attributes[i].charAt(0) == 't') {
+				// type of metric
+				type = getMetricType(values[i]);
+			} else if (attributes[i].charAt(0) == 'p') {
+				// partner of this metric
+				partner_index = Integer.valueOf(values[i]);
 			} else if (attributes[i].equals("db-glob")) {
 				db_glob = values[i];
 			} else if (attributes[i].equals("db-id")) {
@@ -385,8 +390,9 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 			}
 		}
 		
-		MetricRaw metric = new MetricRaw(ID, title, db_glob, db_id, num_metrics);
-		this.metricRawList.add(metric);
+		MetricRaw metric = new MetricRaw(ID, title, db_glob, db_id, 
+				partner_index, type, num_metrics);
+		this.metricRawList.add(db_id, metric);
 	}
 	
 
@@ -536,6 +542,15 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 		}
 	}
 	
+	private MetricType getMetricType(String value)
+	{
+		MetricType type = MetricType.EXCLUSIVE;
+		
+		if (value.charAt(0) == 'i')
+			type = MetricType.INCLUSIVE;
+
+		return type;
+	}
 	//--------------------------------------------------------------------------------
 	// raw metric database
 	//--------------------------------------------------------------------------------
@@ -553,10 +568,15 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 	 */
 	private void end_MetricRawTable() 
 	{
-		if (this.metricRawList != null && this.metricRawList.size()>0) {
+		if (metricRawList != null && metricRawList.size()>0) {
+			for (MetricRaw m : metricRawList) {
+				int partner_index = m.getPartner();
+				MetricRaw partner = metricRawList.get(partner_index);
+				m.setMetricPartner(partner);
+			}
 			MetricRaw[] metrics = new MetricRaw[metricRawList.size()];
-			this.metricRawList.toArray( metrics );
-			((Experiment)this.experiment).setMetricRaw( metrics );
+			metricRawList.toArray( metrics );
+			((Experiment) experiment).setMetricRaw( metrics );
 		}
 	}
 }

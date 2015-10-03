@@ -1,7 +1,10 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -213,9 +216,11 @@ public class ThreadView extends AbstractBaseScopeView
 				// but column X is for displaying the values for threads P while column Y is for displaying
 				// for threads Q. 
 				boolean sort = getMetricManager().getMetricCount() == 0;
-				for(BaseMetric m : mr)
+				HashMap<Integer, BaseMetric> listOfDuplicates = new HashMap<Integer, BaseMetric>(mr.length);
+				
+				for(int j=0; j<mr.length; j++)
 				{
-					MetricRaw mdup = (MetricRaw) m.duplicate();
+					MetricRaw mdup = (MetricRaw) mr[j].duplicate();
 					mdup.setThread(threads);
 					
 					StringBuffer buffer = new StringBuffer();
@@ -243,12 +248,21 @@ public class ThreadView extends AbstractBaseScopeView
 					mdup.setDisplayName(buffer.toString());
 					final String metricID = String.valueOf(treeViewer.getTree().getColumnCount());
 					mdup.setShortName(metricID);
+					listOfDuplicates.put(mr[j].getIndex(), mdup);
+					
 					treeViewer.addTreeColumn(mdup, sort);
 					
 					// sort initially the first column metric
-					if (sort)
-						sort = false;
+					sort = false;
 				}
+				Iterator<Entry<Integer, BaseMetric>> iterator = listOfDuplicates.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Entry<Integer, BaseMetric> entry = iterator.next();
+					BaseMetric metric = entry.getValue();
+					BaseMetric partner = listOfDuplicates.get(metric.getPartner());
+					((MetricRaw)metric).setMetricPartner((MetricRaw) partner);
+				}
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
