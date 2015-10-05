@@ -132,7 +132,8 @@ class ThreadViewFactory
 						threads.add(i);
 					}
 				}
-				return threads;
+				if (threads.size()>0)
+					return threads;
 			}
 			
 		}

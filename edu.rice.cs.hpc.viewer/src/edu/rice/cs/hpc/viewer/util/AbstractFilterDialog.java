@@ -160,6 +160,7 @@ public abstract class AbstractFilterDialog extends TitleAreaDialog
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				PropertiesModel objItem = (PropertiesModel) event.getElement();
 				objItem.isVisible = event.getChecked();
+				// check if the selected item is in the list
 				if (arrElements.get(objItem.iIndex) != objItem) {
 					arrElements.get(objItem.iIndex).isVisible = objItem.isVisible;
 				}
