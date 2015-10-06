@@ -145,6 +145,7 @@
           class="edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor"
           default="false"
           extensions="*"
+          icon="icons/cct-thread-map.png"
           id="edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor"
           name="Thread metrics">
     </editor>

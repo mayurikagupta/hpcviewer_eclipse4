@@ -25,6 +25,7 @@ import edu.rice.cs.hpc.viewer.provider.DatabaseState;
 import edu.rice.cs.hpc.viewer.resources.Icons;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadEditorMenu;
 import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 
 /*****************************************************
@@ -36,8 +37,7 @@ import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
  *****************************************************/
 public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	
-	private ToolItem tiGraph;
-	private ToolItem tiThreadView;
+	private ToolItem tiGraph, tiThreadView, tiThreadMap;
 
 	public CallingContextActionsGUI(Shell objShell, IWorkbenchWindow window,
 			Composite parent, ScopeViewActions objActions) 
@@ -116,6 +116,34 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		});
 		
+		tiThreadMap = new ToolItem(toolbar, SWT.PUSH);
+		final Image imgThreadMap = Icons.getImage(Icons.Image_ThreadMap);
+		tiThreadMap.setImage(imgThreadMap);
+		tiThreadMap.setToolTipText("Show the metric map between CCT nodes and ranks");
+		tiThreadMap.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Rectangle rect = tiThreadMap.getBounds();
+				Point pt = new Point(rect.x, rect.y + rect.height);
+				pt = toolbar.toDisplay(pt);
+
+				mgr.removeAll();
+				mgr.createContextMenu(toolbar);
+				
+				// create the menu
+				ThreadEditorMenu.createAdditionalMenu(objWindow, mgr, database);
+				
+				// make the context menu appears next to tool item
+				final Menu menu = mgr.getMenu();
+				menu.setLocation(pt);
+				menu.setVisible(true);
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
+		
 		// associate the tool bar as a cool item
 		createCoolItem(parent, toolbar);
 		
@@ -152,22 +180,19 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		super.disableNodeButtons();
 		tiGraph.setEnabled(false);
 		tiThreadView.setEnabled(false);
+		tiThreadMap.setEnabled(false);
 	}
 	
 	public void checkStates(Scope nodeSelected)
 	{
-		if (database != null) {
-			boolean available = ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
-			tiThreadView.setEnabled(available);
+		boolean available = (database != null) && 
+				ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
 
-			if (nodeSelected != null)
-				tiGraph.setEnabled(available);
-			else 
-				tiGraph.setEnabled(false);
-		} else  {
-			tiGraph.setEnabled(false);
-			tiThreadView.setEnabled(false);
-		}
+		tiThreadView.setEnabled(available);
+		tiThreadMap.setEnabled(available);
+		
+		available = available && (nodeSelected != null);
+		tiGraph.setEnabled(available);
 	}
 
 	

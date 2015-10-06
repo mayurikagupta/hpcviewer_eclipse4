@@ -14,6 +14,11 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.window.Database;
 
+/***********************************************************************************
+ * 
+ * Class to create thread map menu
+ *
+ ***********************************************************************************/
 public class ThreadEditorMenu 
 {
 	static public void createAdditionalMenu(IWorkbenchWindow window, IMenuManager mgr,
@@ -37,7 +42,7 @@ public class ThreadEditorMenu
 		final private IWorkbenchPage page;
 		
 		ThreadEditorAction(IWorkbenchPage page, Database database, MetricRaw metric) {
-			super("Map of " + metric.getDisplayName());
+			super("Show the map of " + metric.getDisplayName());
 			this.page     = page;
 			this.database = database;
 			this.metric   = metric;
