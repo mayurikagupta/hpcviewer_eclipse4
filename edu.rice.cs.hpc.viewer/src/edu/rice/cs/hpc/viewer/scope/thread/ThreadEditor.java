@@ -9,15 +9,14 @@ import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-//import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 import org.swtchart.IAxisSet;
@@ -31,6 +30,8 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
+import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
+import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 /**************************************************************************************************
@@ -38,14 +39,12 @@ import edu.rice.cs.hpc.viewer.window.Database;
  * Class to display the relationship between all ranks and cct nodes
  *
  **************************************************************************************************/
-public class ThreadEditor extends EditorPart 
+public class ThreadEditor extends EditorPart implements IViewerEditor
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor";
 	
 	private Database database;
 	private MetricRaw metric;
-	
-	private Image image;
 	
 	private InteractiveChart chart;
 	
@@ -82,12 +81,6 @@ public class ThreadEditor extends EditorPart
 		return false;
 	}
 
-	@Override
-	public void dispose()
-	{
-		if (image != null && !image.isDisposed())
-			image.dispose();
-	}
 	
 	@Override
 	public boolean isSaveAsAllowed() {
@@ -110,6 +103,13 @@ public class ThreadEditor extends EditorPart
 	
 	private void createPlot(InteractiveChart chart, Database database)
 	{
+		setPartName(getEditorPartName());
+
+		// set the window title with a possible db number
+		WindowTitle wt = new WindowTitle();
+		final IWorkbenchWindow window = getEditorSite().getWorkbenchWindow(); 
+		wt.setEditorTitle(window, this); 
+		
 		IThreadDataCollection threadData = database.getThreadDataCollection();
 		if (threadData == null)
 			return;
@@ -125,7 +125,6 @@ public class ThreadEditor extends EditorPart
 
 	@Override
 	public void setFocus() {
-		chart.forceFocus();
 	}
 
 	/************************************************
@@ -257,7 +256,7 @@ public class ThreadEditor extends EditorPart
 				double []vals = threadData.getMetrics(i, metric.getRawID(), numMetric);
 				for(int j=0; j<vals.length; j++) {
 					if (vals[j] > 0.0) {
-						rankValues[j].values[i] = j;
+						rankValues[j].values[i] = ranks[j];
 					}
 				}
 				monitor.worked(1);
@@ -323,5 +322,21 @@ public class ThreadEditor extends EditorPart
 			rainbow[i]=new RGB((int)(r1 + (r2 - r1) * rr),(int)(g1 + (g2 - g1) * rr),(int)(b1 + (b2 - b1) * rr));
 		}
 		return new PaletteData(rainbow);
+	}
+
+	@Override
+	public String getEditorPartName() {
+		final String name = database.getExperiment().getName() + ": " + metric.getDisplayName();
+		return name;
+	}
+
+	@Override
+	public void setEditorPartName(String title) {
+		setPartName(title);
+	}
+
+	@Override
+	public Experiment getExperiment() {
+		return database.getExperiment();
 	}
 }

@@ -21,20 +21,33 @@ import edu.rice.cs.hpc.viewer.window.Database;
  ***********************************************************************************/
 public class ThreadEditorMenu 
 {
+	/*****
+	 * create a list of menus for thread map for each thread-level metric
+	 * 
+	 * @param window : current active window
+	 * @param mgr : the menu manager
+	 * @param database : the current database (should have thread-level metric)
+	 */
 	static public void createAdditionalMenu(IWorkbenchWindow window, IMenuManager mgr,
 			Database database) {
 		if (database != null) {
 			Experiment experiment = database.getExperiment();
 			BaseMetric []metrics = experiment.getMetricRaw();
 			
-			for(BaseMetric m : metrics) {
-				ThreadEditorAction action = new ThreadEditorAction(
-						window.getActivePage(), database, (MetricRaw) m);
-				mgr.add(action);
-			}
+			if (metrics != null)
+				for(BaseMetric m : metrics) {
+					ThreadEditorAction action = new ThreadEditorAction(
+							window.getActivePage(), database, (MetricRaw) m);
+					mgr.add(action);
+				}
 		}
 	}
 
+	/***************
+	 * 
+	 * class to generate the menu for a specific metric
+	 *
+	 ***************/
 	static private class ThreadEditorAction extends Action
 	{
 		final private Database database;

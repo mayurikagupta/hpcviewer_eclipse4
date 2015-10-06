@@ -118,10 +118,8 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		if (input == null || !(input instanceof GraphEditorInput) )
 			throw new RuntimeException("Invalid input for graph editor");
 		
-		GraphEditorInput editor_input = (GraphEditorInput) input;
-		String title = editor_input.getName();
-		
-		this.setPartName( title );
+		String title = getPartName();
+		setPartName( title );
 
 		// set the window title with a possible db number
 		WindowTitle wt = new WindowTitle();
@@ -183,6 +181,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		//----------------------------------------------
 		// plot data
 		//----------------------------------------------
+		GraphEditorInput editor_input = (GraphEditorInput) input;
 		Scope scope = editor_input.getScope();
 		BaseMetric metric = editor_input.getMetric();
 		
