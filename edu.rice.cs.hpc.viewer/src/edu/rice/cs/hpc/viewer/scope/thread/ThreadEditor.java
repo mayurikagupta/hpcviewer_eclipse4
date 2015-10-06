@@ -1,65 +1,59 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
 import java.io.IOException;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.layout.GridDataFactory;
-import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-//import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 //import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
+import org.swtchart.IAxisSet;
+import org.swtchart.ILineSeries;
+import org.swtchart.ISeriesSet;
+import org.swtchart.LineStyle;
+import org.swtchart.ISeries.SeriesType;
+import org.swtchart.ext.InteractiveChart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
-import edu.rice.cs.hpc.data.experiment.scope.RootScope;
-import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
-import edu.rice.cs.hpc.data.experiment.scope.Scope;
-import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 import edu.rice.cs.hpc.viewer.window.Database;
 
-public class ThreadEditor extends EditorPart implements PaintListener 
+/**************************************************************************************************
+ * 
+ * Class to display the relationship between all ranks and cct nodes
+ *
+ **************************************************************************************************/
+public class ThreadEditor extends EditorPart 
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor";
 	
-	private Canvas canvas ;
-	private Combo cbMetrics;
-	
 	private Database database;
-	private int metricIndex = 0;
-	private Image image;
-	//private Display display;
+	private MetricRaw metric;
 	
-	public ThreadEditor() {
-		// TODO Auto-generated constructor stub
-	}
+	private Image image;
+	
+	private InteractiveChart chart;
+	
+	@Override
+	public void doSave(IProgressMonitor monitor) {}
 
 	@Override
-	public void doSave(IProgressMonitor monitor) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void doSaveAs() {
-		// TODO Auto-generated method stub
-
-	}
+	public void doSaveAs() {}
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input)
@@ -69,6 +63,14 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		
 		if (input instanceof ThreadEditorInput) {
 			database = ((ThreadEditorInput)input).getDatabase();
+			metric	   = ((ThreadEditorInput)input).getMetric();
+			if (metric == null) {
+				Experiment experiment = database.getExperiment();
+				BaseMetric []metrics  = experiment.getMetricRaw();
+				if (metrics != null) {
+					metric = (MetricRaw) metrics[0];
+				}
+			}
 		} else {
 			throw new PartInitException("Input is not a known class: " + input.getClass());
 		}
@@ -95,107 +97,196 @@ public class ThreadEditor extends EditorPart implements PaintListener
 
 	@Override
 	public void createPartControl(Composite parent) {
+
+		//----------------------------------------------
+		// chart creation
+		//----------------------------------------------
+		chart = new InteractiveChart(parent, SWT.NONE);
+
+		// turn off the legend
+		chart.getLegend().setVisible(false);
+		createPlot(chart, database);
+	}
+	
+	private void createPlot(InteractiveChart chart, Database database)
+	{
+		IThreadDataCollection threadData = database.getThreadDataCollection();
+		if (threadData == null)
+			return;
 		
-		final Composite cArea = new Composite(parent, SWT.NONE);
-		cbMetrics = new Combo(cArea, SWT.READ_ONLY | SWT.DROP_DOWN);
-		
-		final Experiment experiment = database.getExperiment();
-		final BaseMetric []metrics   = experiment.getMetricRaw();
-		if (metrics != null)
-		{
-			for(BaseMetric m : metrics)
-			{
-				cbMetrics.add(m.getDisplayName());
-			}
-			cbMetrics.select(metricIndex);
-		}
-		
-		canvas = new Canvas(cArea, SWT.NONE);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(canvas);
-		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(canvas);
-		
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(cArea);
-		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(cArea);
-		
-		canvas.addPaintListener(this);
-		//display = getSite().getShell().getDisplay();
+		GatheringDataJob job = new GatheringDataJob(getSite().getShell(), database, metric);
+		job.setUser(true);
+		job.addJobChangeListener(new JobDone(chart, metric));
+		job.schedule();
+		chart.getTitle().setText("... gathering data.... please wait...");
+		chart.getAxisSet().getXAxes()[0].getTitle().setText("");
+		chart.getAxisSet().getYAxes()[0].getTitle().setText("");		
 	}
 
 	@Override
 	public void setFocus() {
-		// TODO Auto-generated method stub
-
+		chart.forceFocus();
 	}
 
-	@Override
-	public void paintControl(PaintEvent e) {
-		if (image == null) {
-			paint(e.gc);
-		} else {
-			e.gc.drawImage(image, 0, 0);
+	/************************************************
+	 * 
+	 * Listener class to wait until a job has completed
+	 *
+	 ************************************************/
+	static private class JobDone implements IJobChangeListener
+	{
+		final private InteractiveChart chart;
+		final private MetricRaw metric;
+		
+		JobDone(InteractiveChart chart, MetricRaw metric) {
+			this.chart 	= chart;
+			this.metric = metric;
+		}
+		
+		@Override
+		public void done(IJobChangeEvent event) {
+			final GatheringDataJob job = (GatheringDataJob) event.getJob();
+			
+			final RankValue []rankValues = job.rankValues;
+			if (rankValues == null) {
+				chart.getTitle().setText("Fail to read data");
+			}
+
+			final ISeriesSet seriesSet = chart.getSeriesSet();
+			final Display display 	   = chart.getDisplay();
+			
+			display.asyncExec(new Runnable() {
+				
+				@Override
+				public void run() {
+					for(int i=0; i<rankValues.length; i++) {
+						ILineSeries scatterSeries = (ILineSeries) seriesSet.
+								createSeries(SeriesType.LINE, "Rank " + rankValues[i].rank );
+						scatterSeries.setLineStyle(LineStyle.NONE);
+						scatterSeries.setSymbolSize(3);
+						scatterSeries.setXSeries(job.listCCT);
+						scatterSeries.setYSeries(rankValues[i].values);
+					}
+					
+					chart.getTitle().setText(metric.getDisplayName());
+					chart.getAxisSet().getXAxes()[0].getTitle().setText("CCT Node ID");
+					chart.getAxisSet().getYAxes()[0].getTitle().setText("Rank");		
+
+					// -----------------------------------------------------------------
+					// set the values x and y to the plot
+					// -----------------------------------------------------------------
+					IAxisSet axisSet = chart.getAxisSet();
+					axisSet.adjustRange();
+				}
+			});
+		}
+		
+		@Override
+		public void sleeping(IJobChangeEvent event) {}
+		
+		@Override
+		public void scheduled(IJobChangeEvent event) {}
+		
+		@Override
+		public void running(IJobChangeEvent event) {}
+				
+		@Override
+		public void awake(IJobChangeEvent event) {}
+		
+		@Override
+		public void aboutToRun(IJobChangeEvent event) {}
+	}
+	
+	/************************************************
+	 * 
+	 * Active class to gathering data from the file
+	 *
+	 ************************************************/
+	static private class GatheringDataJob extends Job
+	{
+		final private Database  database;
+		final private MetricRaw metric;
+		final private Shell	    shell;
+		private RankValue []	rankValues;
+		private double []		listCCT;
+
+		GatheringDataJob(Shell shell, Database database, MetricRaw metric) {
+			super("Gathering data");
+			this.shell    = shell;
+			this.database = database;
+			this.metric	  = metric;
+		}
+		
+ 		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			Experiment experiment = database.getExperiment();
+
+			int numCCTs = experiment.getMaxCCTID()-experiment.getMinCCTID();
+
+			IThreadDataCollection threadData = database.getThreadDataCollection();
+			if (threadData == null)
+				return null;
+
+			try {
+				rankValues = getValues(experiment, threadData, numCCTs, monitor);
+			} catch (IOException e) {
+				MessageDialog.openError(shell, "Fail to read data", e.getMessage());
+				e.printStackTrace();
+				return Status.CANCEL_STATUS;
+			}
+			return Status.OK_STATUS;
+		}
+		
+		private RankValue []getValues(Experiment experiment, IThreadDataCollection threadData,
+				int numCCTs, IProgressMonitor monitor) throws IOException {
+			
+			monitor.beginTask(getName(), numCCTs);
+			
+			double[] ranks 		   = threadData.getRankLabels();
+			RankValue []rankValues = new RankValue[ranks.length];
+
+			for (int i=0; i<ranks.length; i++) {
+				rankValues[i] = new RankValue(ranks[i], numCCTs);
+			}
+			BaseMetric []metrics = experiment.getMetricRaw();
+			int numMetric 		 = metrics.length;
+			listCCT 			 = new double[numCCTs];
+			
+			for(int i=0; i<numCCTs; i++) {
+				listCCT[i] = experiment.getMinCCTID() + i;
+				double []vals = threadData.getMetrics(i, metric.getRawID(), numMetric);
+				for(int j=0; j<vals.length; j++) {
+					if (vals[j] > 0.0) {
+						rankValues[j].values[i] = j;
+					}
+				}
+				monitor.worked(1);
+			}
+			monitor.done();
+			return rankValues;
 		}
 	}
 
-	private void paint(GC gc)
+	/************************************************
+	 * 
+	 * Data class to store the rank and its metric values
+	 *
+	 ************************************************/
+	static private class RankValue 
 	{
-		final Experiment experiment = database.getExperiment();
-		IThreadDataCollection manager;
-		try {
-			manager = ThreadDataCollectionFactory.build(experiment);
-			BaseMetric []metrics = experiment.getMetricRaw();
-			if (metrics == null)
-				return;
-			
-			final Rectangle r = canvas.getClientArea();
-			
-			final RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
-			Scope parent = root;
-			int numChildren = root.getChildCount();
-			
-			if (image != null && !image.isDisposed())
-				image.dispose();
-			image = new Image(gc.getDevice(), r.width, r.height);
-			GC gcImage = new GC(image);
-			
-			while(numChildren > 0)
-			{					
-				int cct_id  = parent.getCCTIndex(); 
-				print(manager, metrics[metricIndex], cct_id);
-
-				// display the children
-				for(int i=0; i<numChildren; i++)
-				{
-					Scope scope = (Scope) parent.getChildAt(i);
-					cct_id  = scope.getCCTIndex(); 
-					print(manager, metrics[metricIndex], cct_id);
-				}
-				parent = (Scope) parent.getChildAt(0);
-				numChildren = parent.getChildCount();
-			}
-			gcImage.dispose();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		public double[]values;
+		final public double rank;
+		
+		RankValue(double rank, int numCCT) {
+			values 	  = new double[numCCT];
+			this.rank = rank;
+		}
+		
+		public String toString() {
+			return values.toString();
 		}
 	}
 	
-	private void print(IThreadDataCollection data, BaseMetric metric, int cct_id)
-	{
-		double[] values;
-		System.out.format("[%d] ", cct_id);
-		try {
-			values = data.getMetrics(cct_id, ((MetricRaw)metric).getRawID(), ((MetricRaw)metric).getSize()); 
-			for(double v : values)
-			{
-				System.out.print(v + " ");
-			}
-			System.out.println();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	/**
 	 * Make 256 rainbow color palette - Jean-Luc Pon's algorithm.
 	 */
@@ -233,6 +324,4 @@ public class ThreadEditor extends EditorPart implements PaintListener
 		}
 		return new PaletteData(rainbow);
 	}
-
-
 }

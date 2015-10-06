@@ -81,7 +81,8 @@ public class ThreadView extends AbstractBaseScopeView
         ((ThreadScopeViewAction)objViewActions).setMetricManager(getMetricManager());
         
         Experiment experiment = db.getExperiment();
-        initTableColumns(threads, experiment.getMetricRaw());
+        BaseMetric []metrics  = experiment.getMetricRaw();
+        initTableColumns(threads, metrics);
         
         // notify the children class to update the display
     	updateDisplay();

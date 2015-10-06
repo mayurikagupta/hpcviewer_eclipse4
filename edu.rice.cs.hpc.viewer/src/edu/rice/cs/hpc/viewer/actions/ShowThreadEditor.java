@@ -30,7 +30,7 @@ public class ShowThreadEditor extends AbstractHandler {
 			final ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
 			final Database database = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
 			try {
-				IEditorInput input = new ThreadEditorInput(database);
+				IEditorInput input = new ThreadEditorInput(database, null);
 				page.openEditor(input, ThreadEditor.ID);
 				
 			} catch (PartInitException e) {

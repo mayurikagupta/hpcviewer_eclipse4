@@ -1,6 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope.topdown;
 
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Point;
@@ -15,6 +16,7 @@ import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadEditorMenu;
 
 /**
  * Basic class for scope views: calling context and caller view
@@ -56,7 +58,10 @@ public class ScopeView extends BaseScopeView
 
 	@Override
 	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {
-		GraphMenu.createAdditionalContextMenu(getViewSite().getWorkbenchWindow(), mgr, database, scope);
+		IWorkbenchWindow window = getViewSite().getWorkbenchWindow();
+		GraphMenu.createAdditionalContextMenu(window, mgr, database, scope);
+		mgr.add(new Separator());
+		ThreadEditorMenu.createAdditionalMenu(window, mgr, database);
 	} 
 
 

@@ -4,20 +4,37 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
 
+import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 public class ThreadEditorInput implements IEditorInput {
 
 	private final Database database;
+	private final MetricRaw metric;
 	
-	public ThreadEditorInput(Database database)
+	public ThreadEditorInput(Database database, MetricRaw metric)
 	{
+		this.metric   = metric;
 		this.database = database;
 	}
 	
 	public Database getDatabase()
 	{
 		return database;
+	}
+	
+	public MetricRaw getMetric()
+	{
+		return metric;
+	}
+	
+	public String getID() {
+		return getID(database, metric);
+	}
+	
+	static public String getID(Database database, MetricRaw metric) {
+		String ID = database.getWindowIndex() + ":" + metric.getID();
+		return ID;
 	}
 	
 	@Override
