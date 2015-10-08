@@ -32,6 +32,22 @@ public interface IThreadDataCollection
 	 */
 	public double[]	getRankLabels() throws IOException;	
 	
+	/*****
+	 * Similar to {@link getRankLabels()}, but the labels are evenly sparsed
+	 * which is ideal for a plot graph.
+	 * 
+	 * It recomputes the values of x into an evenly spread values if the application is a 
+	 * hybrid parallel code.<br/><p>
+	 * For instance, if the database has the following threads: 0.0, 0.1, 0.2, 2.0, and 2.1
+	 * this method will return an "evenly spread" values into:  0.0, 0.3, 0.6, 2.0, and 2.5
+	 * </p>
+	 * This method is only used for plotting the graph. 
+
+	 * @return
+	 * @throws IOException
+	 */
+	public double[] getEvenlySparseRankLabels() throws IOException;
+	
 	/****
 	 * Get the level of parallelism. If it's a thread only or process only
 	 * application, it returns 1, if it's a hybrid it returns 2. 

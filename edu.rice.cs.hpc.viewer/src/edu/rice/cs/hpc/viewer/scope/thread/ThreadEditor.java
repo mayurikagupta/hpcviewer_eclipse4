@@ -1,6 +1,8 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
 import java.io.IOException;
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -19,11 +21,13 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
+import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
 import org.swtchart.ILineSeries;
 import org.swtchart.ISeriesSet;
 import org.swtchart.LineStyle;
 import org.swtchart.ISeries.SeriesType;
+import org.swtchart.Range;
 import org.swtchart.ext.InteractiveChart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
@@ -42,7 +46,7 @@ import edu.rice.cs.hpc.viewer.window.Database;
 public class ThreadEditor extends EditorPart implements IViewerEditor
 {
 	static final public String ID = "edu.rice.cs.hpc.viewer.scope.thread.ThreadEditor";
-	
+	static final private double VALUE_INVALID = Double.NaN;
 	private Database database;
 	private MetricRaw metric;
 	
@@ -101,6 +105,13 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 		createPlot(chart, database);
 	}
 	
+	/***
+	 * Create the plot map using a background thread, and a UI thread
+	 * to paint the graph.
+	 * 
+	 * @param chart : the current chart, it mustn't be null
+	 * @param database : the current database, it mustn't be null
+	 */
 	private void createPlot(InteractiveChart chart, Database database)
 	{
 		setPartName(getEditorPartName());
@@ -114,10 +125,15 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 		if (threadData == null)
 			return;
 		
+		// schedule a background job to gather data from the file
 		GatheringDataJob job = new GatheringDataJob(getSite().getShell(), database, metric);
 		job.setUser(true);
+		// paint the chart if the job has terminated
 		job.addJobChangeListener(new JobDone(chart, metric));
+		
 		job.schedule();
+		
+		// temporary message on the chart
 		chart.getTitle().setText("... gathering data.... please wait...");
 		chart.getAxisSet().getXAxes()[0].getTitle().setText("");
 		chart.getAxisSet().getYAxes()[0].getTitle().setText("");		
@@ -147,9 +163,6 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 			final GatheringDataJob job = (GatheringDataJob) event.getJob();
 			
 			final RankValue []rankValues = job.rankValues;
-			if (rankValues == null) {
-				chart.getTitle().setText("Fail to read data");
-			}
 
 			final ISeriesSet seriesSet = chart.getSeriesSet();
 			final Display display 	   = chart.getDisplay();
@@ -158,6 +171,9 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 				
 				@Override
 				public void run() {
+					if (rankValues == null) {
+						chart.getTitle().setText("Fail to read data");
+					}
 					for(int i=0; i<rankValues.length; i++) {
 						ILineSeries scatterSeries = (ILineSeries) seriesSet.
 								createSeries(SeriesType.LINE, "Rank " + rankValues[i].rank );
@@ -176,6 +192,10 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 					// -----------------------------------------------------------------
 					IAxisSet axisSet = chart.getAxisSet();
 					axisSet.adjustRange();
+					IAxis yaxs  = axisSet.getYAxes()[0];
+					Range range = yaxs.getRange();
+					range.lower = -1.0;
+					yaxs.setRange(range);
 				}
 			});
 		}
@@ -236,12 +256,22 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 			return Status.OK_STATUS;
 		}
 		
+ 		/***
+ 		 * read the value from the file and return the ranks and its values
+ 		 * 
+ 		 * @param experiment
+ 		 * @param threadData
+ 		 * @param numCCTs
+ 		 * @param monitor
+ 		 * @return
+ 		 * @throws IOException
+ 		 */
 		private RankValue []getValues(Experiment experiment, IThreadDataCollection threadData,
 				int numCCTs, IProgressMonitor monitor) throws IOException {
 			
 			monitor.beginTask(getName(), numCCTs);
 			
-			double[] ranks 		   = threadData.getRankLabels();
+			double[] ranks 		   = threadData.getEvenlySparseRankLabels();
 			RankValue []rankValues = new RankValue[ranks.length];
 
 			for (int i=0; i<ranks.length; i++) {
@@ -256,7 +286,7 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 				double []vals = threadData.getMetrics(i, metric.getRawID(), numMetric);
 				for(int j=0; j<vals.length; j++) {
 					if (vals[j] > 0.0) {
-						rankValues[j].values[i] = ranks[j];
+						rankValues[j].values[i] = rankValues[j].rank;
 					}
 				}
 				monitor.worked(1);
@@ -278,6 +308,8 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 		
 		RankValue(double rank, int numCCT) {
 			values 	  = new double[numCCT];
+			// set default values with invalid value
+			Arrays.fill(values, VALUE_INVALID);
 			this.rank = rank;
 		}
 		

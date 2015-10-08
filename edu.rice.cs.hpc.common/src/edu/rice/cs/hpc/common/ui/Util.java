@@ -93,9 +93,12 @@ public class Util {
 
 	
 	static public Shell getActiveShell() {
+		Shell shell = null;
 		final IWorkbenchWindow window = getActiveWindow();
-		return window.getShell();
-	}
+		if (window != null)
+			shell = window.getShell();
+		return shell;
+	}	
 	
 	static public IWorkbenchWindow getActiveWindow() {
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();

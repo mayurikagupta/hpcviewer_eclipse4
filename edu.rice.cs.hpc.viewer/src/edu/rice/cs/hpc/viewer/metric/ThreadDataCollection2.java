@@ -11,7 +11,7 @@ import org.eclipse.ui.PlatformUI;
 
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.experiment.Experiment;
-import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
+import edu.rice.cs.hpc.data.experiment.extdata.AbstractThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.util.IProgressReport;
 import edu.rice.cs.hpc.data.util.MergeDataFiles;
@@ -23,7 +23,7 @@ import edu.rice.cs.hpc.data.util.MergeDataFiles;
  * while version 2 is when the files are merged into one mega file.
  *
  ******************************************************************/
-public class ThreadDataCollection2 implements IThreadDataCollection 
+public class ThreadDataCollection2 extends AbstractThreadDataCollection
 {
 	private ThreadLevelDataFile data_file[];
 	private File directory;
