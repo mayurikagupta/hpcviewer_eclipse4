@@ -37,9 +37,9 @@ public class ThreadScopeViewAction extends BaseScopeViewActions
 
 	@Override
 	protected  Composite createGUI(Composite parent, CoolBar coolbar) {
-    	this.objActionsGUI = new CallingContextActionsGUI(this.objShell, 
-    			this.objWindow, parent, this);
-
+    	objActionsGUI = new CallingContextActionsGUI(this.objShell, 
+    			this.objWindow, parent, this, false);
+    	
     	return objActionsGUI.buildGUI(parent, coolbar);
 	}
 	

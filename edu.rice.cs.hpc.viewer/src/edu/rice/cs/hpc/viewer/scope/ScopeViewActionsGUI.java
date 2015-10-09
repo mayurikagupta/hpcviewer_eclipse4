@@ -75,6 +75,8 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	//------------------------------------DATA
 	protected Scope nodeTopParent; // the current node which is on the top of the table (used as the aggregate node)
 	protected Database 	database;		// experiment data	
+	
+	private boolean affectOtherViews;
 
 	/**
      * Constructor initializing the data
@@ -110,6 +112,8 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		this.clrYELLOW = display.getSystemColor(SWT.COLOR_YELLOW);
 		this.clrRED = display.getSystemColor(SWT.COLOR_RED);
 		this.clrGREEN = display.getSystemColor(SWT.COLOR_GREEN);
+		
+		this.affectOtherViews = affectOtherViews; 
 	}
 
 	/**
@@ -309,6 +313,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     		}
     	}
     	MetricColumnDialog dialog = new MetricColumnDialog(shell, label, checked);
+    	dialog.enableAllViewOption(affectOtherViews);
     	if (dialog.open() == Dialog.OK) {
     		boolean isAppliedToAllViews = dialog.isAppliedToAllViews();
     		checked = dialog.getResult();

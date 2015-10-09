@@ -1,6 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope.thread;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -9,12 +10,16 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.PaletteData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
@@ -28,7 +33,9 @@ import org.swtchart.ISeriesSet;
 import org.swtchart.LineStyle;
 import org.swtchart.ISeries.SeriesType;
 import org.swtchart.Range;
+import org.swtchart.ext.IChartSelectionListener;
 import org.swtchart.ext.InteractiveChart;
+import org.swtchart.ext.UserSelectionData;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
@@ -102,7 +109,50 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 
 		// turn off the legend
 		chart.getLegend().setVisible(false);
-		createPlot(chart, database);
+		try {
+			setMenu(chart);
+			createPlot(chart, database);
+		} catch (IOException e) {
+			chart.getTitle().setText(e.getMessage());
+			e.printStackTrace();
+		}	
+	}
+	
+	private void setMenu(final InteractiveChart chart) throws IOException
+	{
+		final IWorkbenchWindow window = getSite().getWorkbenchWindow();
+
+		final MenuManager menuManager = new MenuManager("Show-view");
+		chart.setChartSelectionListener(new IChartSelectionListener() {
+			
+			@Override
+			public void selection(UserSelectionData data) {
+				menuManager.removeAll();
+				menuManager.createContextMenu(chart);
+
+				// set the thread to be viewed in the thread view
+				String id 	   = data.serie.getId();
+				final int rank = Integer.valueOf(id);
+				final ArrayList<Integer> threads = new ArrayList<Integer>(1);
+				threads.add(rank);
+				
+				// show the menu with the real thread label
+				final double thread_label = data.valueY;
+				
+				menuManager.add(new Action("Show thread " + thread_label) {
+					public void run() {
+						// display the view
+						ThreadView.showView(window, getExperiment(), threads);
+					}
+				});
+				final Menu menu = menuManager.getMenu();
+				// adjust the appearance of the menu, make it closer to the cursor
+				// but not to distract the user
+				final Point point = chart.toDisplay(new Point(data.event.x+40, data.event.y+10));
+				menu.setLocation(point);
+				menu.setVisible(true);
+			}
+		});
 	}
 	
 	/***
@@ -175,8 +225,10 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 						chart.getTitle().setText("Fail to read data");
 					}
 					for(int i=0; i<rankValues.length; i++) {
+						// we "encode" the ID of this serie as the same as the index of the rank
+						// this index will be used later on to display with the thread view
 						ILineSeries scatterSeries = (ILineSeries) seriesSet.
-								createSeries(SeriesType.LINE, "Rank " + rankValues[i].rank );
+								createSeries(SeriesType.LINE, String.valueOf(i) );
 						scatterSeries.setLineStyle(LineStyle.NONE);
 						scatterSeries.setSymbolSize(3);
 						scatterSeries.setXSeries(job.listCCT);

@@ -40,9 +40,9 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	private ToolItem tiGraph, tiThreadView, tiThreadMap;
 
 	public CallingContextActionsGUI(Shell objShell, IWorkbenchWindow window,
-			Composite parent, ScopeViewActions objActions) 
+			Composite parent, ScopeViewActions objActions, boolean affectOtherViews) 
 	{
-		super(objShell, window, parent, objActions);
+		super(objShell, window, parent, objActions, affectOtherViews);
 	}
 
 	/**

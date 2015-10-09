@@ -37,6 +37,12 @@ public class MetricColumnDialog extends AbstractFilterDialog
 				label, checked);
 	}
 	
+	
+	public void enableAllViewOption(boolean applyToAllViewOption)
+	{
+		this.applyToAllViewOption = applyToAllViewOption;
+	}
+	
 
 	/**
 	 * Return the status if the modification is to apply to all views or not
