@@ -36,7 +36,7 @@ Import-Package:
  org.osgi.framework;version="1.6.0",
  org.osgi.service.prefs;version="1.1.1"
 Bundle-ClassPath: hpcviewer.jar,
- external-jars/org.swtchart.ext_0.9.1_v20151009.jar
+ external-jars/org.swtchart.ext_0.9.1_v20151014.jar
 Export-Package: edu.rice.cs.hpc.viewer.editor,
  edu.rice.cs.hpc.viewer.experiment,
  edu.rice.cs.hpc.viewer.framework,
