@@ -37,9 +37,6 @@ import edu.rice.cs.hpc.data.experiment.metric.*;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric.AnnotationType;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
-// math expression
-import com.graphbuilder.math.*;
-import com.graphbuilder.math.func.*;
 
 /**
  * @author la5
@@ -66,7 +63,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	
 	// ------------ Metric and math variables
 	private String []arrStrMetrics;
-	private Expression expFormula;
+	private String expFormula;
 	
 	private final ExtFuncMap fctMap;
 	private final MetricVarMap varMap;
@@ -178,7 +175,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	    	cbExpression.setToolTipText("A spreadsheet-like formula using other metrics (variables), arithmetic operators, functions, and numerical constants");
 
 	    	if (metric != null) {
-				cbExpression.setText( metric.getFormula().toString() );
+				cbExpression.setText( metric.getFormula() );
 	    	}
 	    	
 			GridLayoutFactory.fillDefaults().numColumns(2).generateLayout(nameArea);
@@ -259,17 +256,13 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	    	lblFunc.setText("Functions:");
 	    	
 	    	final Combo cbFunc = new Combo(grpInsertion, SWT.READ_ONLY);
-	    	fctMap.loadDefaultFunctions();
-	    	Function arrFct[] = fctMap.getFunctions();
 	    	
 	    	// create the list of the name of the function
 	    	// list of the name  of the function and its arguments
-	    	final String []arrFunctions = new String[arrFct.length];
+	    	final String []arrFunctions = fctMap.getFunctionNamesWithType();
 	    	// the list of the name of the function to be inserted
 	    	final String []arrFuncNames = fctMap.getFunctionNames();
-	    	for(int i=0;i<arrFct.length;i++) {
-	    		arrFunctions[i] = arrFct[i].toString();
-	    	}
+
 	    	// insert the name of the function into the combo box
 	    	if(arrFunctions != null && arrFunctions.length>0) {
 	    		cbFunc.setItems(arrFunctions);
@@ -438,14 +431,9 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	   */
 	  private boolean checkExpression() {
 		  boolean bResult = false;
-			String sExpression = this.cbExpression.getText();
-			if(sExpression.length() > 0) {
-				try {
-					expFormula = ExpressionTree.parse(sExpression);
-					bResult = evaluateExpression ( this.expFormula );
-				} catch (ExpressionParseException e) {
-					MessageDialog.openError(this.getShell(), "Invalid expression", e.getDescription());
-				}
+		  	expFormula = this.cbExpression.getText();
+			if(expFormula.length() > 0) {
+				bResult = DerivedMetric.evaluateExpression(expFormula, varMap, fctMap);
 			} else {
 				MessageDialog.openError(this.getShell(), "Error: empty expression", 
 					"An expression can not be empty.");
@@ -485,24 +473,6 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 		  return bResult;
 	  }
 	  
-	  /**
-	   * Run the evaluation 
-	   * @param objExpression
-	   * @return
-	   */
-	  private boolean evaluateExpression ( Expression objExpression ) {
-			try {
-				objExpression.eval( varMap, fctMap);
-				// if there is no exception, we assume everything goes fine
-				return true;
-				
-			} catch(java.lang.Exception e) {
-				// should throw an exception
-				MessageDialog.openError( this.getShell(), "Error: incorrect expression", e.getMessage());
-			}
-
-			return false;
-		}
 	  
 	  
 	  /*****

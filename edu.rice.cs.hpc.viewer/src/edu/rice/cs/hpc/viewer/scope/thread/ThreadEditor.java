@@ -26,22 +26,19 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
-import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
 import org.swtchart.ILineSeries;
 import org.swtchart.ISeriesSet;
 import org.swtchart.LineStyle;
 import org.swtchart.ISeries.SeriesType;
-import org.swtchart.Range;
-import org.swtchart.ext.IChartSelectionListener;
-import org.swtchart.ext.InteractiveChart;
-import org.swtchart.ext.UserSelectionData;
-
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
+import edu.rice.cs.hpc.viewer.graph.GraphChart;
+import edu.rice.cs.hpc.viewer.graph.IChartSelectionListener;
+import edu.rice.cs.hpc.viewer.graph.UserSelectionData;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
 
@@ -57,7 +54,7 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 	private Database database;
 	private MetricRaw metric;
 	
-	private InteractiveChart chart;
+	private GraphChart chart;
 	
 	@Override
 	public void doSave(IProgressMonitor monitor) {}
@@ -105,7 +102,7 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 		//----------------------------------------------
 		// chart creation
 		//----------------------------------------------
-		chart = new InteractiveChart(parent, SWT.NONE);
+		chart = new GraphChart(parent, SWT.NONE);
 
 		// turn off the legend
 		chart.getLegend().setVisible(false);
@@ -118,7 +115,7 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 		}	
 	}
 	
-	private void setMenu(final InteractiveChart chart) throws IOException
+	private void setMenu(final GraphChart chart) throws IOException
 	{
 		final IWorkbenchWindow window = getSite().getWorkbenchWindow();
 
@@ -162,7 +159,7 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 	 * @param chart : the current chart, it mustn't be null
 	 * @param database : the current database, it mustn't be null
 	 */
-	private void createPlot(InteractiveChart chart, Database database)
+	private void createPlot(GraphChart chart, Database database)
 	{
 		setPartName(getEditorPartName());
 
@@ -200,10 +197,10 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 	 ************************************************/
 	static private class JobDone implements IJobChangeListener
 	{
-		final private InteractiveChart chart;
+		final private GraphChart chart;
 		final private MetricRaw metric;
 		
-		JobDone(InteractiveChart chart, MetricRaw metric) {
+		JobDone(GraphChart chart, MetricRaw metric) {
 			this.chart 	= chart;
 			this.metric = metric;
 		}
@@ -244,10 +241,10 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 					// -----------------------------------------------------------------
 					IAxisSet axisSet = chart.getAxisSet();
 					axisSet.adjustRange();
-					IAxis yaxs  = axisSet.getYAxes()[0];
+/*					IAxis yaxs  = axisSet.getYAxes()[0];
 					Range range = yaxs.getRange();
 					range.lower = -1.0;
-					yaxs.setRange(range);
+					yaxs.setRange(range);*/
 				}
 			});
 		}
@@ -332,10 +329,11 @@ public class ThreadEditor extends EditorPart implements IViewerEditor
 			BaseMetric []metrics = experiment.getMetricRaw();
 			int numMetric 		 = metrics.length;
 			listCCT 			 = new double[numCCTs];
+			int cctMin			 = experiment.getMinCCTID();
 			
 			for(int i=0; i<numCCTs; i++) {
 				listCCT[i] = experiment.getMinCCTID() + i;
-				double []vals = threadData.getMetrics(i, metric.getRawID(), numMetric);
+				double []vals = threadData.getMetrics(i + cctMin, metric.getRawID(), numMetric);
 				for(int j=0; j<vals.length; j++) {
 					if (vals[j] > 0.0) {
 						rankValues[j].values[i] = rankValues[j].rank;

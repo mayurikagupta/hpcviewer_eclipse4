@@ -48,8 +48,26 @@ public class ThreadDataCollection2Test
 	public void testGetMetrics() {
 		int numMetrics = experiment.getMetricRaw().length;
 		try {
-			double []values = data.getMetrics(2, 0, numMetrics);
-			assertNotNull(values);
+			final int THREAD = 0;
+			final int METRIC = 0;
+			
+			double []values2 = data.getScopeMetrics(THREAD, METRIC, numMetrics);
+			checkScopeMetrics(values2);
+			
+			int cctMin = experiment.getMinCCTID();
+			int cctMax = experiment.getMaxCCTID();
+			int numThreads	 = data.getRankLabels().length;
+			
+			for (int i=cctMin; i<cctMax; i++) {
+				double []values1 = data.getMetrics(i, METRIC, numMetrics);
+				
+				assertNotNull(values1);
+				assertTrue(values1.length == numThreads);
+
+				double valMin2 = values2[i-cctMin];
+				double valMin1 = values1[THREAD];
+				assertTrue(valMin1 == valMin2);
+			}
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -57,14 +75,27 @@ public class ThreadDataCollection2Test
 		}
 	}
 
+	private void checkScopeMetrics(double []values) {
+		assertNotNull(values);
+		
+		int cctMax = experiment.getMaxCCTID();
+		assertTrue(cctMax > 0);
+		
+		int length   = values.length;
+		assertTrue(length > cctMax + 1);
+	}
+	
 	@Test
 	public void testGetScopeMetrics() {
 		int numMetrics = experiment.getMetricRaw().length;
+		final int THREAD = 0;
+		
 		for (int i=0; i<numMetrics; i++)
 		{
 			try {
-				double []values = data.getScopeMetrics(0, i, numMetrics);
-				assertNotNull(values);
+				double []values = data.getScopeMetrics(THREAD, i, numMetrics);
+				checkScopeMetrics(values);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 				fail("error occurs");

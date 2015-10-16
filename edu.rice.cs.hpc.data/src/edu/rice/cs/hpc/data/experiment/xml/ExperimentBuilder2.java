@@ -235,7 +235,7 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 		String sNativeName = null;
 		boolean toShow = true;
 		AnnotationType percent = AnnotationType.NONE;
-		MetricType objType = MetricType.EXCLUSIVE;
+		MetricType objType = MetricType.UNKNOWN;
 		boolean needPartner = isCallingContextTree();
 		
 		MetricValueDesc mDesc = MetricValueDesc.Raw; // by default is a raw metric
@@ -367,8 +367,8 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 		String title = null;
 		String db_glob = null;
 		int db_id = 0;
-		int num_metrics = 0, partner_index = 0;
-		MetricType type = MetricType.EXCLUSIVE;
+		int num_metrics = 0, partner_index = -1;
+		MetricType type = MetricType.UNKNOWN;
 		
 		for (int i=0; i<attributes.length; i++) {
 			if (attributes[i].charAt(0) == 'i') {
@@ -571,8 +571,10 @@ public class ExperimentBuilder2 extends BaseExperimentBuilder
 		if (metricRawList != null && metricRawList.size()>0) {
 			for (MetricRaw m : metricRawList) {
 				int partner_index = m.getPartner();
-				MetricRaw partner = metricRawList.get(partner_index);
-				m.setMetricPartner(partner);
+				if (partner_index >= 0) {
+					MetricRaw partner = metricRawList.get(partner_index);
+					m.setMetricPartner(partner);
+				}
 			}
 			MetricRaw[] metrics = new MetricRaw[metricRawList.size()];
 			metricRawList.toArray( metrics );

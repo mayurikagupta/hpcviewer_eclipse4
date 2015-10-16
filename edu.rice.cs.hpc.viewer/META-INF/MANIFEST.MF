@@ -34,9 +34,10 @@ Import-Package:
  org.eclipse.ui.preferences,
  org.eclipse.ui.texteditor,
  org.osgi.framework;version="1.6.0",
- org.osgi.service.prefs;version="1.1.1"
-Bundle-ClassPath: hpcviewer.jar,
- external-jars/org.swtchart.ext_0.9.1_v20151014.jar
+ org.osgi.service.prefs;version="1.1.1",
+ org.swtchart,
+ org.swtchart.ext
+Bundle-ClassPath: hpcviewer.jar
 Export-Package: edu.rice.cs.hpc.viewer.editor,
  edu.rice.cs.hpc.viewer.experiment,
  edu.rice.cs.hpc.viewer.framework,

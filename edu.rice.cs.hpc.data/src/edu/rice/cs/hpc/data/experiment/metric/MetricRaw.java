@@ -130,10 +130,10 @@ public class MetricRaw  extends BaseMetric {
 					if (rootValue == null) {
 						if (s instanceof RootScope && value != MetricValue.NONE)
 							rootValue = value;
-						else if (metricType == MetricType.INCLUSIVE){
+						else if (metricType != MetricType.EXCLUSIVE){
 							rootValue = getValue(s.getRootScope(), threads);
 						}
-						else if (metricType == MetricType.EXCLUSIVE && partner != null) {
+						else if (partner != null) {
 							// dereference the value from the partner
 							if (s instanceof RootScope)
 								rootValue = partner.getValue(s, threads);
@@ -142,7 +142,7 @@ public class MetricRaw  extends BaseMetric {
 							}
 						}
 					}
-					if (rootValue != MetricValue.NONE) {
+					if (rootValue != null && rootValue != MetricValue.NONE) {
 						// if the value exist, we compute the percentage
 						setAnnotationType(AnnotationType.PERCENT);
 						MetricValue.setAnnotationValue(value, value.getValue() / rootValue.getValue());

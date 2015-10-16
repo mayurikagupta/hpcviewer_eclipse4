@@ -20,9 +20,6 @@ import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
 import org.swtchart.Chart;
 import org.swtchart.Range;
-import org.swtchart.ext.IChartSelectionListener;
-import org.swtchart.ext.InteractiveChart;
-import org.swtchart.ext.UserSelectionData;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
@@ -118,8 +115,8 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		if (input == null || !(input instanceof GraphEditorInput) )
 			throw new RuntimeException("Invalid input for graph editor");
 		
-		String title = getPartName();
-		setPartName( title );
+		String title = getEditorPartName();
+		setEditorPartName( title );
 
 		// set the window title with a possible db number
 		WindowTitle wt = new WindowTitle();
@@ -129,11 +126,11 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		//----------------------------------------------
 		// chart creation
 		//----------------------------------------------
-		chart = new InteractiveChart(parent, SWT.NONE);
+		chart = new GraphChart(parent, SWT.NONE);
 		chart.getTitle().setText( title );
 		final MenuManager menuManager = new MenuManager("Show-view");
 		
-		((InteractiveChart)chart).setChartSelectionListener(new IChartSelectionListener() {
+		((GraphChart)chart).setChartSelectionListener(new IChartSelectionListener() {
 			
 			@Override
 			public void selection(UserSelectionData data) {

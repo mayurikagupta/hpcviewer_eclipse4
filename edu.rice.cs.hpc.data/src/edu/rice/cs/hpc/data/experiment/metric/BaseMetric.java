@@ -11,6 +11,8 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  */
 public abstract class BaseMetric {
 
+	static final public int PARTNER_UNKNOWN = -1;
+	
 	//-------------------------------------------------------------------------------
 	// DATA
 	//-------------------------------------------------------------------------------
@@ -70,7 +72,8 @@ public abstract class BaseMetric {
 	 * @param format : format of the display
 	 * @param annotationType : show the percent or process number ?
 	 * @param index : index in the table
-	 * @param partner_index : index of the partner metric
+	 * @param partner_index : index of the partner metric. 
+	 * 		IT HAS TO BE NEGATIVE IF IT DOESNT HAVE A PARTNER !!
 	 * @param type : type of the metric
 	 *************************************************************************/
 	public BaseMetric(String sID, String sDisplayName, boolean displayed, String format, 
@@ -125,7 +128,8 @@ public abstract class BaseMetric {
 	
 	/*****
 	 * get the partner metric index
-	 * @return
+	 * 
+	 * @return the index partner, negative if it has no partner
 	 */
 	public int getPartner() {
 		return partner_index;

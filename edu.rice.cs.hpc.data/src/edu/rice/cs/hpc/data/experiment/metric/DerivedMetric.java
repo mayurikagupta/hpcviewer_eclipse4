@@ -49,7 +49,7 @@ public class DerivedMetric extends BaseMetric {
 	 * @param annotationType
 	 * @param objType
 	 */
-	public DerivedMetric(RootScope root, IMetricManager experiment, Expression e, 
+	public DerivedMetric(RootScope root, IMetricManager experiment, String expression, 
 			String sName, String sID, 
 			int index, AnnotationType annotationType, MetricType objType) {
 		
@@ -57,7 +57,6 @@ public class DerivedMetric extends BaseMetric {
 		// the partner of this metric is itself (derived metric has no partner)
 		super(sID, sName, true, null, annotationType, index, index, objType);
 		
-		this.expression = e;
 		this.experiment = experiment;
 		
 		// set up the functions
@@ -68,9 +67,9 @@ public class DerivedMetric extends BaseMetric {
 
 		// set up the variables
 		this.varMap = new MetricVarMap(root, experiment);
+		setExpression(expression);
 
 		// Bug fix: always compute the aggregate value 
-		this.dRootValue = getDoubleValue(root);
 		if(Double.compare(dRootValue, 0.0d) == 0)
 			this.annotationType = AnnotationType.NONE ;
 	}
@@ -80,13 +79,19 @@ public class DerivedMetric extends BaseMetric {
 	 * 
 	 * @param expr : the new expression
 	 */
-	public void setExpression( Expression expr ) {
-		this.expression = expr;
+	public void setExpression( String expr ) {
+		expression = ExpressionTree.parse(expr);
 		
 		// new formula has been set, refresh the root value used for computing percent
 		dRootValue = getDoubleValue(root);
 	}
 
+	static public boolean evaluateExpression(String expression, 
+			MetricVarMap varMap, ExtFuncMap funcMap) {
+		Expression exp = ExpressionTree.parse(expression);
+		exp.eval(varMap, funcMap);
+		return true;
+	}
 	
 	
 	//===================================================================================
@@ -132,13 +137,13 @@ public class DerivedMetric extends BaseMetric {
 	 * 
 	 * @return
 	 */
-	public Expression getFormula() {
-		return expression;
+	public String getFormula() {
+		return expression.toString();
 	}
 
 	@Override
 	public BaseMetric duplicate() {
-		return new DerivedMetric(root, experiment, expression, displayName, 
+		return new DerivedMetric(root, experiment, expression.toString(), displayName, 
 				shortName, index, annotationType, metricType);
 	}
 	

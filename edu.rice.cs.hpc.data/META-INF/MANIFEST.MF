@@ -7,10 +7,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Vendor: Rice University
 Import-Package: org.apache.xerces.parsers,
  org.eclipse.jface.viewers
-Export-Package: com.graphbuilder.math,
- com.graphbuilder.math.func,
- com.graphbuilder.struc,
- edu.rice.cs.hpc.data.db,
+Export-Package: edu.rice.cs.hpc.data.db,
  edu.rice.cs.hpc.data.experiment,
  edu.rice.cs.hpc.data.experiment.extdata,
  edu.rice.cs.hpc.data.experiment.merge,
@@ -24,3 +21,4 @@ Export-Package: com.graphbuilder.math,
  edu.rice.cs.hpc.data.framework,
  edu.rice.cs.hpc.data.util
 Main-Class: edu.rice.cs.hpc.data.framework.Application
+Require-Bundle: com.graphbuilder

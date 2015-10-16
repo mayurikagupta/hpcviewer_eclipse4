@@ -46,7 +46,6 @@ Release 5.4.0  (C) Copyright 2015, Rice University.
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -86,6 +85,7 @@ if advised of the possibility of such damage.
    </license>
 
    <plugins>
+      <plugin id="com.graphbuilder"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="edu.rice.cs.hpc.common"/>
       <plugin id="edu.rice.cs.hpc.data"/>
@@ -160,6 +160,8 @@ if advised of the possibility of such damage.
       <plugin id="org.eclipse.ui.win32" fragment="true"/>
       <plugin id="org.eclipse.ui.workbench"/>
       <plugin id="org.eclipse.ui.workbench.texteditor"/>
+      <plugin id="org.swtchart"/>
+      <plugin id="org.swtchart.ext"/>
    </plugins>
 
 

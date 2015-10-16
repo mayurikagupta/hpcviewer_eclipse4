@@ -260,8 +260,11 @@ public class ThreadView extends AbstractBaseScopeView
 				while(iterator.hasNext()) {
 					Entry<Integer, BaseMetric> entry = iterator.next();
 					BaseMetric metric = entry.getValue();
-					BaseMetric partner = listOfDuplicates.get(metric.getPartner());
-					((MetricRaw)metric).setMetricPartner((MetricRaw) partner);
+					int partner 	  = metric.getPartner();
+					if (partner >= 0) {
+						BaseMetric metricPartner = listOfDuplicates.get(partner);
+						((MetricRaw)metric).setMetricPartner((MetricRaw) metricPartner);
+					}
 				}
 				
 			} catch (IOException e) {

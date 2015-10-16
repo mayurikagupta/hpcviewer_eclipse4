@@ -437,27 +437,6 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 		}
 	}
 	
-	/**
-	 * Function to copy all visible nodes into a buffer string
-	 * @param elements
-	 * @param sSeparator
-	 * @return
-	 */
-	public String getContent(TreePath []elements, String sSeparator) {
-    	StringBuffer sbText = new StringBuffer();
-		for (int i=0; i<elements.length; i++ ) {
-			TreePath item = elements[i];
-			int nbSegments = item.getSegmentCount();
-			for ( int j=0; j<nbSegments; j++ ) {
-				Object o = item.getSegment(j);
-				if (o instanceof Scope) {
-					this.getContent((Scope)o, sSeparator, sbText);
-				}
-			}
-			sbText.append(Utilities.NEW_LINE);
-		}
-		return sbText.toString();
-	}
 	
 	//--------------------------------------------------------------------------
 	// BUTTONS CHECK

@@ -108,8 +108,10 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			// Aggregating metrics to load module and flat scope
 			// Notes: this is not correct for Derived incremental metrics
 			//--------------------------------------------------------------------------
-			addCostIfNecessary(id, objFlat.flat_lm, scope, add_inclusive, add_exclusive);
-			addCostIfNecessary(id, objFlat.flat_file, scope, add_inclusive, add_exclusive);
+			if (objFlat != null) {
+				addCostIfNecessary(id, objFlat.flat_lm, scope, add_inclusive, add_exclusive);
+				addCostIfNecessary(id, objFlat.flat_file, scope, add_inclusive, add_exclusive);
+			}
 
 			//--------------------------------------------------------------------------
 			// For call site, we need also to create its procedure scope
@@ -364,7 +366,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			}
 		}
 
-		this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
+		if (objFlat != null)
+			this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
 		return objFlat;
 		
 	}
