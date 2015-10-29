@@ -387,14 +387,18 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 	private String getID( Scope scope ) {
 		final String id = String.valueOf(scope.getFlatIndex());
 		final String class_type = scope.getClass().getSimpleName();
-		String hash_id = (class_type == null ? id : class_type.substring(0, 2) + id);
+		StringBuffer hash_id = new StringBuffer(id);
+		if (class_type != null) {
+			hash_id.insert(0, class_type.substring(0, 2));
+		}
 		if (scope instanceof CallSiteScope)
 		{
 			// forcing to include procedure ID to ensure uniqueness of call site
 			final int proc_id = ((CallSiteScope)scope).getProcedureScope().getFlatIndex();
-			hash_id += ":" + proc_id;
+			hash_id.append(':');
+			hash_id.append(proc_id);
 		}
-		return hash_id;
+		return hash_id.toString();
 	}
 	
 	

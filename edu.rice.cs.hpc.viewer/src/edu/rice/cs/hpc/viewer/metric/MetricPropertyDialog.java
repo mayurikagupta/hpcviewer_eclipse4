@@ -386,8 +386,8 @@ public class MetricPropertyDialog extends TitleAreaDialog
 			}
 			
 		} else {
-			InputDialog inDlg = new InputDialog(getShell(), "Edit metric displayed name", 
-					"Enter the new display name metric", metric.getDisplayName(), null);
+			InputDialog inDlg = new InputDialog(getShell(), "Edit metric display name", 
+					"Enter the new display name", metric.getDisplayName(), null);
 			if (inDlg.open() == Dialog.OK) {
 				String name = inDlg.getValue();
 				updateMetricName(metric, name);
