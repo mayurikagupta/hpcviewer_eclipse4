@@ -160,17 +160,34 @@ public class ExperimentMerger
 		// ----------------------------------------------------------------
 		// step 2: append the second metrics, and reset the index and the key
 		// ----------------------------------------------------------------
+		//HashMap<String, String> mapIndex = new HashMap<String, String>();
+		
 		for (int i=0; i<m2.length; i++) {
 			final BaseMetric m = m2[i].duplicate();
 
 			// change the short name (or ID) of the metric since the old ID is already
 			// taken by previous experiment
 			final int index_new = m1_last_index + m.getIndex();
-			m.setShortName( String.valueOf(index_new) );
-			
-			addMetric(m, m1_last + i +1, exp, 2, metricList);
+			//final String old_id = m.getShortName();
+			final String new_id = String.valueOf(index_new); 
+			m.setShortName( new_id );
+			if (!(m instanceof DerivedMetric))
+				addMetric(m, m1_last + i +1, exp, 2, metricList);
+			//mapIndex.put(old_id, new_id);
 		}
 		
+/*		// step 3: rename the derived metric formulae
+		for(BaseMetric m : m2) {
+			if (m instanceof DerivedMetric) {
+				String formula = ((DerivedMetric)m).getFormula();
+				Iterator<?> iterator = mapIndex.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Map.Entry<String, String> pair = (Map.Entry<String, String>) iterator.next();
+					String new_formula = formula.replace("$"+pair.getKey(), "$"+pair.getValue());
+					((DerivedMetric)m).setExpression(new_formula);
+				}
+			}
+		}*/
 		return metricList;
 	}
 

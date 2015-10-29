@@ -78,6 +78,9 @@ public abstract class MergeDatabase extends AbstractHandler
 
 					db1 = (Experiment) selectedDatabases[0];
 					db2 = (Experiment) selectedDatabases[1];
+				} else if (selectedDatabases.length>2) {
+					MessageDialog.openError(window.getShell(), "Error", "Please just select two databases.\nMerging more than two databases is not supported yet.");
+					return null;
 				} else
 				{
 					// either only select one or none of cancel
