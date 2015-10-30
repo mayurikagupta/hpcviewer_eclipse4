@@ -12,6 +12,7 @@ package edu.rice.cs.hpc.data.experiment.merge;
 
 import java.io.File;
 import java.util.*;
+import java.util.Map.Entry;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.ExperimentConfiguration;
@@ -34,6 +35,7 @@ import edu.rice.cs.hpc.data.util.Constants;
 public class ExperimentMerger 
 {
 	static final private boolean with_raw_metrics = false;
+	static final private boolean with_derived_metrics = false;
 	
 	/**
 	 * Merging two experiments, and return the new experiment
@@ -160,7 +162,8 @@ public class ExperimentMerger
 		// ----------------------------------------------------------------
 		// step 2: append the second metrics, and reset the index and the key
 		// ----------------------------------------------------------------
-		//HashMap<String, String> mapIndex = new HashMap<String, String>();
+		HashMap<String, String> mapIndex = new HashMap<String, String>();
+		ArrayList<DerivedMetric> listDerivedMetrics = new ArrayList<DerivedMetric>(2);
 		
 		for (int i=0; i<m2.length; i++) {
 			final BaseMetric m = m2[i].duplicate();
@@ -168,26 +171,54 @@ public class ExperimentMerger
 			// change the short name (or ID) of the metric since the old ID is already
 			// taken by previous experiment
 			final int index_new = m1_last_index + m.getIndex();
-			//final String old_id = m.getShortName();
+			final String old_id = m.getShortName();
 			final String new_id = String.valueOf(index_new); 
 			m.setShortName( new_id );
-			if (!(m instanceof DerivedMetric))
-				addMetric(m, m1_last + i +1, exp, 2, metricList);
-			//mapIndex.put(old_id, new_id);
+			
+			final BaseMetric mm = addMetric(m, m1_last + i +1, exp, 2, metricList);
+			mapIndex.put(old_id, new_id);
+			
+			if (mm instanceof DerivedMetric) {
+				listDerivedMetrics.add((DerivedMetric) mm);
+				
+			}
 		}
 		
-/*		// step 3: rename the derived metric formulae
-		for(BaseMetric m : m2) {
-			if (m instanceof DerivedMetric) {
-				String formula = ((DerivedMetric)m).getFormula();
-				Iterator<?> iterator = mapIndex.entrySet().iterator();
+		// ----------------------------------------------------------------
+		// step 3: set the list of metric into the experiment
+		// ----------------------------------------------------------------
+		exp.setMetrics(metricList);
+		
+		if (with_derived_metrics) {
+			// ----------------------------------------------------------------
+			// step 4a: rename the derived metric formulae
+			// ----------------------------------------------------------------
+			String []formula = new String[m2.length];
+			int i = 0;
+
+			for(DerivedMetric m : listDerivedMetrics) {
+				formula[i] = m.getFormula();
+				String ID  = m.getShortName();
+				
+				Iterator<Entry<String, String>> iterator = mapIndex.entrySet().iterator();
 				while(iterator.hasNext()) {
-					Map.Entry<String, String> pair = (Map.Entry<String, String>) iterator.next();
-					String new_formula = formula.replace("$"+pair.getKey(), "$"+pair.getValue());
-					((DerivedMetric)m).setExpression(new_formula);
+					Map.Entry<String, String> pair = iterator.next();
+					// avoid recursive substitution
+					if (!ID.equals(pair.getValue()))
+						formula[i] = formula[i].replace("$"+pair.getKey(), "$"+pair.getValue());
 				}
+				i++;
 			}
-		}*/
+			// ----------------------------------------------------------------
+			// step 4b: set the formula into the derived metrics
+			// ----------------------------------------------------------------
+			i = 0;
+			for(BaseMetric m : listDerivedMetrics) {
+				((DerivedMetric)m).setExpression(formula[i]);
+				i++;
+			}
+		}
+		
 		return metricList;
 	}
 
@@ -200,7 +231,7 @@ public class ExperimentMerger
 	 * @param exp    : experiment to which the metric is hosted
 	 * @param metricList : the list of metrics
 	 */
-	private static void addMetric(BaseMetric source, int metric_index, 
+	private static BaseMetric addMetric(BaseMetric source, int metric_index, 
 			Experiment exp, int experiment_index, List<BaseMetric> metricList)
 	{
 		// add metric into the merged list
@@ -214,6 +245,7 @@ public class ExperimentMerger
 		
 		setMetricCombinedName(experiment_index, mm);
 		metricList.add(mm);
+		return mm;
 	}
 	
 	
