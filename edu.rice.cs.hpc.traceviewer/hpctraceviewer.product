@@ -43,12 +43,15 @@ Release 5.4.0  (C) Copyright 2015, Rice University.
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
    <plugins>
+      <plugin id="com.graphbuilder"/>
       <plugin id="com.ibm.icu"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.swt" fragment="true"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.ui.ide" fragment="true"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.ui.workbench" fragment="true"/>
       <plugin id="com.jcraft.jsch"/>
       <plugin id="edu.rice.cs.hpc.common"/>
       <plugin id="edu.rice.cs.hpc.data"/>

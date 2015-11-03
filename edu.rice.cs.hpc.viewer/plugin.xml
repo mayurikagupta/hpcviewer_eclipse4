@@ -264,15 +264,6 @@
                label="Filter"
                mnemonic="F"
                tooltip="Menus for excluding certains functions">
-            <visibleWhen
-                  checkEnabled="false">
-               <with
-                     variable="edu.rice.cs.hpc.filter.enable">
-                  <equals
-                        value="ACTIVE">
-                  </equals>
-               </with>
-            </visibleWhen>
             <command
                   commandId="edu.rice.cs.hpc.filter.action.ShowFilterView"
                   label="Show filter view"

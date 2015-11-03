@@ -672,6 +672,7 @@ public class BaseExperimentBuilder extends Builder {
 				// afterward, we rearrange the top of stack to tuck ls back underneath csn in case it is 
 				// needed for a subsequent procedure frame that is a sibling of csn in the tree.
 				this.beginScope(csn);
+				ls.setParentScope(csn.getParentScope());
 				CallSiteScope csn2 = (CallSiteScope) this.scopeStack.pop();
 				this.scopeStack.push(ls);
 				this.scopeStack.push(csn2);

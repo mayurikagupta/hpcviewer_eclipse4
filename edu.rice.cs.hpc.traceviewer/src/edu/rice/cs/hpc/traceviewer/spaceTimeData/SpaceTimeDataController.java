@@ -15,6 +15,8 @@ import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
 import edu.rice.cs.hpc.data.experiment.extdata.IBaseData;
 import edu.rice.cs.hpc.data.experiment.extdata.IFilteredData;
 import edu.rice.cs.hpc.data.experiment.extdata.TraceAttribute;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
 
@@ -129,7 +131,8 @@ public abstract class SpaceTimeDataController
 	{	
 		// tree traversal to get the list of cpid, procedures and max depth
 		TraceDataVisitor visitor = new TraceDataVisitor();
-		exp.getRootScope().dfsVisitScopeTree(visitor);
+		RootScope root = exp.getRootScope(RootScopeType.CallingContextTree);
+		root.dfsVisitScopeTree(visitor);
 
 		maxDepth   = visitor.getMaxDepth();
 		scopeMap   = visitor.getMap();

@@ -102,27 +102,36 @@ public class ShowView extends AbstractHandler {
 					if (item instanceof TreeItemNode) {
 						TreeItemNode itemNode = (TreeItemNode) item;
 						AbstractBaseScopeView view = itemNode.view;
-						try {
-							IViewSite site = (IViewSite) view.getSite();
-							IWorkbenchPage page = window.getActivePage();
 
+						IViewSite site = (IViewSite) view.getSite();
+						IWorkbenchPage page = window.getActivePage();
+						
+						if (isViewDisposed(view)) {
+							try {
+								// ------------------------------------------------------------
+								// The view has been disposed, we need to recreate it again
+								// from the beginning.
+								// ------------------------------------------------------------
+								AbstractBaseScopeView newView = ExperimentView.openView(page, 
+										view.getRootScope(), site.getSecondaryId(), 
+										view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
+								
+								itemNode.ev.setView(itemNode.index, newView);
+								
+								// when a view is closed, we lose the information of hide/show columns
+								// at the moment, the only thing to fix this, is to reset the column status
+								
+								newView.setInput(view.getDatabase(), view.getRootScope(), false);
+		   
+							} catch (PartInitException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						} else {
 							// ------------------------------------------------------------
-							// Activate the view
+							// if the view already exists, we just need to activate
 							// ------------------------------------------------------------
-							AbstractBaseScopeView newView = ExperimentView.openView(page, 
-									view.getRootScope(), site.getSecondaryId(), 
-									view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
-							
-							itemNode.ev.setView(itemNode.index, newView);
-							
-							// when a view is closed, we lose the information of hide/show columns
-							// at the moment, the only thing to fix this, is to reset the column status
-							
-							newView.setInput(view.getDatabase(), view.getRootScope(), false);
-	   
-						} catch (PartInitException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							page.activate(view);
 						}
 					}
 				}
@@ -172,13 +181,18 @@ public class ShowView extends AbstractHandler {
 				AbstractBaseScopeView view = ((TreeItemNode)o).view;
 				String title = wt.setTitle(window, view);
 
-				if (view.getTreeViewer().getTree().isDisposed()) {
+				if (isViewDisposed(view)) {
 					title += " *closed*"; 
 				}
 				return title;
 			}
 			return (String)o;
 		}
+	}
+	
+	
+	static private boolean isViewDisposed(AbstractBaseScopeView view) {
+		return view.getTreeViewer().getTree().isDisposed();
 	}
 	
 	/***

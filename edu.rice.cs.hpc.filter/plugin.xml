@@ -25,7 +25,6 @@
             name="Filter save">
       </command>
       <command
-            category="Filter"
             categoryId="edu.rice.cs.hpc.filter"
             defaultHandler="edu.rice.cs.hpc.filter.action.ShowFilterView"
             id="edu.rice.cs.hpc.filter.action.ShowFilterView"
@@ -42,14 +41,12 @@
          </state>
       </command>
       <command
-            category="Filter"
             categoryId="edu.rice.cs.hpc.filter"
             defaultHandler="edu.rice.cs.hpc.filter.action.FilterAdd"
             id="edu.rice.cs.hpc.filter.action.FilterAdd"
             name="Add">
       </command>
       <command
-            category="Filter"
             categoryId="edu.rice.cs.hpc.filter"
             defaultHandler="edu.rice.cs.hpc.filter.action.FilterDelete"
             id="edu.rice.cs.hpc.filter.action.FilterDelete"

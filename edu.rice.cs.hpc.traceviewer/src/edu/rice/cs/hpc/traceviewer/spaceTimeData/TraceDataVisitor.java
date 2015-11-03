@@ -69,10 +69,9 @@ public class TraceDataVisitor implements IScopeVisitor
 				int depth = 0;
 				do
 				{
-					Scope parent = cur.getParentScope();
 					if((cur instanceof CallSiteScope) || (cur instanceof ProcedureScope))
 						++depth;
-					cur = parent;
+					cur = cur.getParentScope();
 				}
 				while(cur != null && !(cur instanceof RootScope));
 				this.map.put(cpid, new CallPath(scope, depth));

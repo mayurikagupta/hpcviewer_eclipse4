@@ -37,6 +37,8 @@ import edu.rice.cs.hpc.data.util.IUserData;
 
 public class ProcedureScope extends Scope  implements IMergedScope 
 {
+private static final String TheProcedureWhoShouldNotBeNamed = "-";
+private static final String TheInlineProcedureLabel 	 	= "<inline>";
 
 final private boolean isFalseProcedure;
 /** The name of the procedure. */
@@ -76,6 +78,15 @@ public ProcedureScope(RootScope root, SourceFile file, int first, int last,
 		if (newName != null) 
 			procedureName = newName;
 	}
+	if (isalien) {
+		if (procedureName.isEmpty() || procedureName.equals(TheProcedureWhoShouldNotBeNamed)
+				|| procedureName.equals(TheInlineProcedureLabel)) {
+			procedureName =  "inlined from " + getSourceCitation();
+		}
+		if (!procedureName.startsWith(INLINE_NOTATION))
+			procedureName = INLINE_NOTATION + procedureName;
+	}
+
 	this.objLoadModule 	  = null;
 	this.isFalseProcedure = isFalseProcedure;
 }
@@ -120,14 +131,7 @@ public boolean equals(Object obj) {
 	
 public String getName()
 {	
-	if (isalien) {
-		final String TheProcedureWhoShouldNotBeNamed = "-";
-		if (procedureName.equals(TheProcedureWhoShouldNotBeNamed)) {
-			return "inlined at " + this.getSourceCitation();
-		} 
-		String name = procedureName.isEmpty() ? "" : INLINE_NOTATION + procedureName;
-		return name;
-	} else return this.procedureName;
+	return procedureName;
 }
 
 

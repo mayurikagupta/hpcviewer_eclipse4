@@ -3,6 +3,8 @@ package edu.rice.cs.hpc.filter.view;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -20,14 +22,19 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.ISourceProviderListener;
+import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.commands.ICommandService;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.filter.FilterAttribute;
 import edu.rice.cs.hpc.filter.action.FilterInputDialog;
+import edu.rice.cs.hpc.filter.action.ShowFilterView;
 import edu.rice.cs.hpc.filter.service.FilterMap;
 import edu.rice.cs.hpc.filter.service.FilterStateProvider;
 import edu.rice.cs.hpc.filter.view.FilterTableViewerFactory;
@@ -38,7 +45,7 @@ import edu.rice.cs.hpc.filter.view.IFilterView;
  * Special view class to show the list of filters
  *
  ************************************************************************/
-public class FilterView extends ViewPart implements IFilterView
+public class FilterView extends ViewPart implements IFilterView, IPartListener2
 {
 	final static public String	 	 ID = "edu.rice.cs.hpc.filter.view.FilterView";
 	private CheckboxTableViewer 	 tableViewer;
@@ -71,7 +78,8 @@ public class FilterView extends ViewPart implements IFilterView
 		// -----------------------------------------------------------------
 		// get filter state provider
 		// -----------------------------------------------------------------
-		final ISourceProviderService service   = (ISourceProviderService)getSite().getWorkbenchWindow().
+		final IWorkbenchWindow window 		   = getSite().getWorkbenchWindow();
+		final ISourceProviderService service   = (ISourceProviderService) window.
 				getService(ISourceProviderService.class);
 		serviceProvider  = (FilterStateProvider) service.getSourceProvider(FilterStateProvider.FILTER_REFRESH_PROVIDER);
 		
@@ -158,6 +166,7 @@ public class FilterView extends ViewPart implements IFilterView
 					// enable of disable filter
 					FilterMap map = FilterMap.getInstance();
 					tableViewer.setInput(map.getEntrySet());
+					tableViewer.getTable().pack();
 					tableViewer.refresh();
 				}
 			}
@@ -166,6 +175,8 @@ public class FilterView extends ViewPart implements IFilterView
 			public void sourceChanged(int sourcePriority, Map sourceValuesByName) {}
 		};
 		serviceProvider.addSourceProviderListener( sourceProviderListener );
+		
+		window.getPartService().addPartListener(this);
 	}
 
 	@Override
@@ -214,7 +225,52 @@ public class FilterView extends ViewPart implements IFilterView
 		
 		super.dispose();
 	}
+
+	//------------------------------------------------------------
+	// Implementation of IPartListener2
+	//------------------------------------------------------------
+	@Override
+	public void partActivated(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partBroughtToTop(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partClosed(IWorkbenchPartReference partRef) {
+		IWorkbenchWindow window = partRef.getPage().getWorkbenchWindow();
+		ICommandService service = (ICommandService) window.getService(ICommandService.class);
+		Command filterCommand	= service.getCommand(ShowFilterView.ID);
+		
+		try {
+			HandlerUtil.toggleCommandState(filterCommand);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void partDeactivated(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partOpened(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partHidden(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partVisible(IWorkbenchPartReference partRef) {}
+
+	@Override
+	public void partInputChanged(IWorkbenchPartReference partRef) {}
+
+	//------------------------------------------------------------
+	// private classes
+	//------------------------------------------------------------
 	
+	/******************************************
+	 * 
+	 *
+	 ******************************************/
 	private static class SelectionChangedListener implements ISelectionChangedListener
 	{
 		private final FilterStateProvider provider;
