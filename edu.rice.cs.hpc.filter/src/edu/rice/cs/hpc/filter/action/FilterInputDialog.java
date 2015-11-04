@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
@@ -40,7 +41,7 @@ public class FilterInputDialog extends InputDialog
 	public FilterInputDialog(Shell parentShell, String dialogTitle, String initialValue, FilterAttribute attribute) 
 	{
 		super(parentShell, dialogTitle, "Use a glob pattern to define a filter." + 
-				" For instance, a MPI* will filter all MPI routines", initialValue,
+				" For instance, a 'MPI*' pattern will filter (exclude) all MPI routines", initialValue,
 				new PatternValidator());
 		
 		this.attribute = attribute;
@@ -65,36 +66,46 @@ public class FilterInputDialog extends InputDialog
 	{
 		final Composite container = (Composite) super.createDialogArea(parent);	
 		
-		final Composite attArea   = new Composite(container, SWT.NONE);
+		final Group attArea   = new Group(container, SWT.SHADOW_ETCHED_IN);
+		attArea.setText("Attribute of the pattern");
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(attArea);
-		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(attArea);
+		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(attArea);
 		
-		final Label lblAttribute  = new Label(attArea, SWT.LEFT);
-		lblAttribute.setText("Attribute:");
+		final Label lblAttribute  = new Label(attArea, SWT.WRAP);
+		lblAttribute.setText("A 'Self only' will exclude only the matched functions.\n" +
+							 "A 'Children only' will exclude the children of the matched functions.\n"  +
+							 "A 'Self and children' will exclude both the matched functions and their children.\n");
 		
 		cbAttribute   = new Combo(attArea, SWT.DROP_DOWN | SWT.READ_ONLY);
 		final String []names_attr   = FilterAttribute.getFilterNames();
 		cbAttribute.setItems(names_attr);
+		cbAttribute.select(1);
 		
-		btnEnable = new Button(attArea, SWT.RADIO);
+		final Group applyArea = new Group(container, SWT.SHADOW_NONE);
+		applyArea.setText("Pattern enable/disable");
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(applyArea);
+		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(applyArea);
+		
+		btnEnable = new Button(applyArea, SWT.RADIO);
 		btnEnable.setText("Enabled");
-		btnDisable = new Button(attArea, SWT.RADIO);
+		btnDisable = new Button(applyArea, SWT.RADIO);
 		btnDisable.setText("Disabled");
-		
+
+		// by default it's enabled
+		btnEnable.setSelection(true);
+
 		if (attribute != null)
 		{
 			cbAttribute.setText(attribute.getFilterType());
-			if (attribute.enable)
+			if (!attribute.enable)
 			{
-				btnEnable.setSelection(true);
-			} else {
 				btnDisable.setSelection(true);
 			}
 		}
 		// force to set the tab traversal manually.
 		// Somehow on Linux the tab order is not correct (button first, then the combo)
-		Control []ctab = new Control[] {lblAttribute, cbAttribute, btnEnable, btnDisable};
-		attArea.setTabList(ctab);
+		Control []ctab = new Control[] {attArea, applyArea};
+		container.setTabList(ctab);
 		
 		return container;
 	}
