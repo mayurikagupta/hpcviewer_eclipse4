@@ -238,13 +238,23 @@ public class FilterScopeVisitor implements IScopeVisitor
 		IMetricValueCollection values = child.getMetricValues();
 		for (int i=0; i<metrics.length; i++)
 		{
+			MetricValue childValue = values.getValue(child, i);
+			if (childValue == MetricValue.NONE) {
+				// in the original hpcview (2002), we assign the -1 value as the "none existence value"
+				// this is not proper. we should assign as null for the non-existence
+				// special case: every time the child has "none" value we can skip it instead of
+				//  merging to the parent since x - 1 is not the same as x - 0
+				continue;
+			}
 			if (exclusive_filter && metrics[i].getMetricType() == MetricType.EXCLUSIVE)
 			{
-				MetricValue value = parent.getMetricValue(i).duplicate();
+				MetricValue value = parent.getMetricValue(i);
+				if (value != MetricValue.NONE)
+				  value = value.duplicate();
 				parent.setMetricValue(i, value);
 				
 				// exclusive filter: merge the exclusive metrics to the parent's exclusive
-				mergeMetricToParent(parent, i, values.getValue(child, i));
+				mergeMetricToParent(parent, i, childValue);
 				
 			} else if (!exclusive_filter && metrics[i].getMetricType() == MetricType.INCLUSIVE)
 			{
@@ -255,7 +265,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 				// however, when we ask getMetric(), it requires the metric index in the array (which is 0..n)
 				// we can cheat this by converting the index into "short name" and get the metric.
 				BaseMetric metric_exc = ((Experiment)experiment).getMetric(String.valueOf(index_exclusive_metric));
-				mergeMetricToParent(parent, metric_exc.getIndex(), values.getValue(child, i));
+				mergeMetricToParent(parent, metric_exc.getIndex(), childValue);
 			}
 		}
 	}
