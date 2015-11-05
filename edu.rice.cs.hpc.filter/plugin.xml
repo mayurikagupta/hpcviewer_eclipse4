@@ -29,16 +29,6 @@
             defaultHandler="edu.rice.cs.hpc.filter.action.ShowFilterView"
             id="edu.rice.cs.hpc.filter.action.ShowFilterView"
             name="Show filter view">
-         <state
-               id="org.eclipse.ui.commands.toggleState">
-            <class
-                  class="org.eclipse.ui.handlers.RegistryToggleState">
-               <parameter
-                     name="persisted"
-                     value="false">
-               </parameter>
-            </class>
-         </state>
       </command>
       <command
             categoryId="edu.rice.cs.hpc.filter"

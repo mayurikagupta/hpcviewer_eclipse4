@@ -237,15 +237,6 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 
 	@Override
 	public void partClosed(IWorkbenchPartReference partRef) {
-		IWorkbenchWindow window = partRef.getPage().getWorkbenchWindow();
-		ICommandService service = (ICommandService) window.getService(ICommandService.class);
-		Command filterCommand	= service.getCommand(ShowFilterView.ID);
-		
-		try {
-			HandlerUtil.toggleCommandState(filterCommand);
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override

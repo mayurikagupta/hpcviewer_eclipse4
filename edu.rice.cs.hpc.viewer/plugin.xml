@@ -268,7 +268,7 @@
                   commandId="edu.rice.cs.hpc.filter.action.ShowFilterView"
                   label="Show filter view"
                   mnemonic="S"
-                  style="toggle"
+                  style="push"
                   tooltip="Display the list of filter patterns">
             </command>
             <separator

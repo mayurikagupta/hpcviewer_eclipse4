@@ -5,7 +5,9 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 
@@ -18,13 +20,13 @@ public class ShowFilterView extends AbstractHandler
 	@Override 
 	public Object execute(ExecutionEvent event) throws ExecutionException 
 	{
-		final IWorkbenchPage page = HandlerUtil.getActiveWorkbenchWindow(event).getActivePage();
+		final IWorkbenchWindow w  = HandlerUtil.getActiveWorkbenchWindow(event);
+		final IWorkbenchPage page = w.getActivePage();
 		if (page != null)
 		{
-			boolean oldVal = HandlerUtil.toggleCommandState(event.getCommand());
-			boolean newVal = !oldVal;
+			IViewReference vref = page.findViewReference(FilterView.ID);
 			
-			if (newVal) {
+			if (vref == null) {
 				// show the view
 				try {
 					page.showView(FilterView.ID);
@@ -34,10 +36,9 @@ public class ShowFilterView extends AbstractHandler
 					e.printStackTrace();
 				}
 			} else {
-				// hide the view
-				final IViewPart part = page.findView(FilterView.ID);
-				if (part != null)
-					page.hideView( part );
+				// activate the view
+				IViewPart view = vref.getView(true);
+				page.activate(view);
 			}
 		}
 		return null;
