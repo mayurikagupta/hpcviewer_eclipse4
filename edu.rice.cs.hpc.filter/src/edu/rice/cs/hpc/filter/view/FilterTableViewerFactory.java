@@ -67,7 +67,7 @@ public class FilterTableViewerFactory
 		col = columnType.getColumn();
 		col.setText("Type");
 		col.setWidth(100);
-		col.setToolTipText("Select a type of filtering: exclusive means only the filtered scope is elided while inclusive means the filtered scope and its descendants are elided.");
+		col.setToolTipText("Select a type of filtering: 'Self only' means only the filtered scope is elided, 'Children only' means only the children of the matched node are elided, while 'Self and children' means the filtered scope and its descendants are elided.");
 		columnType.setLabelProvider(new CellLabelProvider() {
 			
 			@Override
