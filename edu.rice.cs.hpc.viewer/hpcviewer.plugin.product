@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="hpcviewer" id="edu.rice.cs.hpc.viewer.product" application="edu.rice.cs.hpc.viewer.application" version="5.4.0.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="hpcviewer" id="edu.rice.cs.hpc.viewer.product" application="edu.rice.cs.hpc.viewer.application" version="5.4.1.qualifier" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="icons/hpcviewerEclipseShadow128.png"/>
@@ -15,7 +15,7 @@ Science as part of the SciDAC Center for Scalable Application Development
 Software (CScADS), the Performance Engineering Research Institute (PERI) 
 and Performance Insight For Programmers and Exascale Runtimes (PIPER).
 
-Release 5.4.0  (C) Copyright 2015, Rice University.
+Release 5.4.1  (C) Copyright 2015, Rice University.
       </text>
    </aboutInfo>
 
@@ -87,6 +87,10 @@ if advised of the possibility of such damage.
    <plugins>
       <plugin id="com.graphbuilder"/>
       <plugin id="com.ibm.icu"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.swt" fragment="true"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.ui.ide" fragment="true"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.ui.workbench" fragment="true"/>
+      <plugin id="com.instantiations.assist.eclipse.fragment.ui.workbench.texteditor" fragment="true"/>
       <plugin id="edu.rice.cs.hpc.common"/>
       <plugin id="edu.rice.cs.hpc.data"/>
       <plugin id="edu.rice.cs.hpc.filter"/>
