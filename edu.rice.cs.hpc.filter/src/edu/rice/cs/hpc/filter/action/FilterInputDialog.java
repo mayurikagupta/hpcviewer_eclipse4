@@ -91,16 +91,17 @@ public class FilterInputDialog extends InputDialog
 		btnDisable = new Button(applyArea, SWT.RADIO);
 		btnDisable.setText("Disabled");
 
-		// by default it's enabled
-		btnEnable.setSelection(true);
-
 		if (attribute != null)
 		{
 			cbAttribute.setText(attribute.getFilterType());
 			if (!attribute.enable)
 			{
 				btnDisable.setSelection(true);
+			} else {
+				btnEnable.setSelection(true);
 			}
+		} else {
+			btnEnable.setSelection(true);
 		}
 		// force to set the tab traversal manually.
 		// Somehow on Linux the tab order is not correct (button first, then the combo)

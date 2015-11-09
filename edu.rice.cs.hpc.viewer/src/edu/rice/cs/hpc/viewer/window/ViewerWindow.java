@@ -97,18 +97,12 @@ public class ViewerWindow {
 		{
 			for (Experiment experiment : experiments)
 			{
-				if (filter) 
-				{
+				try {
+					experiment.reopen();
 					// filtering is needed
 					experiment.filter(FilterMap.getInstance());
-				} else 
-				{
-					// filter is disabled, we need to reopen the database
-					try {
-						experiment.reopen();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 			final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);

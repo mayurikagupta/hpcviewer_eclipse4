@@ -1,6 +1,8 @@
 package edu.rice.cs.hpc.filter.service;
 
+import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
@@ -24,13 +26,56 @@ implements IFilterData
 {
 
 	static private final String FILE_NAME = "filter.map";
-	static private final FilterMap filterMap = new FilterMap();
+	//static private final FilterMap filterMap = new FilterMap();
 	
 	private FilterStateProvider filterStateProvider = null;
 	
+	public FilterMap() {
+		checkData();
+	}
+	
+	/****
+	 * Factory for generating a filter map
+	 * @return FilterMap : a filter map
+	 */
 	public static FilterMap getInstance()
 	{
-		return filterMap;
+		return new FilterMap();
+	}
+	
+	public int size() 
+	{
+		if (data != null) {
+			return data.size();
+		}
+		return 0;
+	}
+	
+	/***
+	 * retrieve the iterator of the hash map
+	 * @return
+	 */
+	public Iterator<Entry<String, FilterAttribute>> iterator() {
+		checkData();
+		return data.entrySet().iterator();
+	}
+	
+	/****
+	 * Check if two FilterMap have the same key and values
+	 * @param other
+	 * @return
+	 */
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof FilterMap) {
+			FilterMap otherMap = (FilterMap) other;
+			if (data.size() == otherMap.data.size()) {
+				Set<Entry<String, FilterAttribute>> set1 = otherMap.data.entrySet();
+				Set<Entry<String, FilterAttribute>> set2 = data.entrySet();
+				return set1.equals(set2);
+			}
+		}
+		return false;
 	}
 	
 	@Override
@@ -62,7 +107,7 @@ implements IFilterData
 	public void put(String filter, FilterAttribute state)
 	{
 		super.put(filter, state);
-		save();
+		//save();
 	}
 
 	@Override
@@ -137,7 +182,7 @@ implements IFilterData
 		{
 			remove(oldKey);
 			put(newKey, attribute);
-			save();
+			//save();
 			return true;
 		}
 		return false;

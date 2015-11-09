@@ -47,6 +47,11 @@ public class FilterAttribute implements Serializable
 		return filterType.name();
 	}
 	
+	public boolean equals(FilterAttribute other) 
+	{
+		return (filterType == other.filterType && enable == other.enable);
+	}
+	
 	/*****
 	 * retrieve the names of filter attributes
 	 * 

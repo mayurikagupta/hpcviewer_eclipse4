@@ -52,7 +52,7 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 	private ISourceProviderListener  sourceProviderListener;
 	private FilterStateProvider 	 serviceProvider;
 	private ICheckStateListener 	 checkStateListener;
-	private SelectionChangedListener selectionChangedListener;
+	//private SelectionChangedListener selectionChangedListener;
 	
 	public FilterView() {
 		new FilterMap();
@@ -113,8 +113,8 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 		// -----------------------------------------------------------------
 	    // add a listener everytime the user change the selections
 		// -----------------------------------------------------------------
-		selectionChangedListener = new SelectionChangedListener();
-		tableViewer.addSelectionChangedListener(selectionChangedListener);
+		//selectionChangedListener = new SelectionChangedListener();
+		//tableViewer.addSelectionChangedListener(selectionChangedListener);
 
 		// -----------------------------------------------------------------
 	    // add listener for double-clicking in the table
@@ -218,10 +218,10 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 	public void dispose()
 	{
 		tableViewer.removeCheckStateListener(checkStateListener);
-		tableViewer.removeSelectionChangedListener(selectionChangedListener);
+		//tableViewer.removeSelectionChangedListener(selectionChangedListener);
 		
 		serviceProvider.removeSourceProviderListener(sourceProviderListener);
-		serviceProvider.setSelection(null);
+		//serviceProvider.setSelection(null);
 		
 		super.dispose();
 	}
@@ -258,27 +258,6 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 	// private classes
 	//------------------------------------------------------------
 	
-	/******************************************
-	 * 
-	 *
-	 ******************************************/
-	private static class SelectionChangedListener implements ISelectionChangedListener
-	{
-		private final FilterStateProvider provider;
-		
-		public SelectionChangedListener()
-		{
-			IWorkbenchWindow winObj = Util.getActiveWindow();
-			ISourceProviderService sourceProviderService = (ISourceProviderService) winObj.getService(
-					ISourceProviderService.class);
-			provider = (FilterStateProvider) sourceProviderService.getSourceProvider(FilterStateProvider.FILTER_STATE_PROVIDER);
-		}
-		
-		@Override
-		public void selectionChanged(SelectionChangedEvent event) {
-			ISelection selection = event.getSelection();
-			provider.setSelection(selection);
-		}	
-	}
+
 
 }

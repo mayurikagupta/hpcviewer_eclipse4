@@ -271,23 +271,6 @@
                   style="push"
                   tooltip="Display the list of filter patterns">
             </command>
-            <separator
-                  name="edu.rice.cs.hpc.viewer.filter.separator">
-            </separator>
-            <command
-                  commandId="edu.rice.cs.hpc.filter.action.FilterApply"
-                  label="Enable filter"
-                  mnemonic="E"
-                  style="toggle"
-                  tooltip="Enable/disable filtering">
-            </command>
-            <command
-                  commandId="edu.rice.cs.hpc.filter.action.FilterAdd"
-                  label="Add a filter pattern"
-                  mnemonic="A"
-                  style="push"
-                  tooltip="Add a filter pattern">
-            </command>
          </menu>
          <menu
                label="View"

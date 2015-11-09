@@ -71,7 +71,7 @@ public class ExperimentView {
 				// check if the filter is enabled
 				FilterMap filter = FilterMap.getInstance();
 				if (filter.isFilterEnabled()) {
-					experiment.filter(FilterMap.getInstance());
+					experiment.filter(filter);
 				}
 		        this.generateView(experiment);
 			} catch (java.lang.OutOfMemoryError e) 
