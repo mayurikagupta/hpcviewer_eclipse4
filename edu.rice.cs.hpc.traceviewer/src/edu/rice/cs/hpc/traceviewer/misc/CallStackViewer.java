@@ -56,7 +56,7 @@ public class CallStackViewer extends TableViewer
     /**Creates a CallStackViewer with Composite parent, SpaceTimeDataController _stData, and HPCTraceView _view.*/
 	public CallStackViewer(Composite parent, final HPCCallStackView csview)
 	{
-		super(parent, SWT.SINGLE );
+		super(parent, SWT.SINGLE | SWT.READ_ONLY );
 		
 		final IWorkbenchWindow window = (IWorkbenchWindow)csview.getSite().
 				getWorkbenchWindow();

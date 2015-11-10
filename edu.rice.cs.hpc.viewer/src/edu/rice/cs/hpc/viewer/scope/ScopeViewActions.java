@@ -6,6 +6,7 @@ import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.dialogs.Dialog;
 
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Composite;
@@ -17,7 +18,9 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.metric.*;
+import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.metric.*;
+import edu.rice.cs.hpc.viewer.util.PreferenceConstants;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 /**
  * Class to manage the actions of the tree view such as zooms, flattening,
@@ -33,7 +36,7 @@ import edu.rice.cs.hpc.viewer.util.Utilities;
 public abstract class ScopeViewActions /*extends ScopeActions /* implements IToolbarManager*/ 
 {
 	// constants
-	static public double fTHRESHOLD = 0.6; 
+	static public double fTHRESHOLD = PreferenceConstants.P_THRESHOLD_DEFAULT; 
 
 	//-------------- DATA
     protected ScopeTreeViewer 	treeViewer;		  	// tree 
@@ -63,6 +66,8 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
     	createGUI(parent, coolbar);
 		// need to instantiate the zoom class after the creation of GUIs
 		objZoom = new ScopeZoom(treeViewer, (ScopeViewActionsGUI) this.objActionsGUI);
+		ScopedPreferenceStore objPref = (ScopedPreferenceStore)Activator.getDefault().getPreferenceStore();
+		fTHRESHOLD = objPref.getFloat(PreferenceConstants.P_THRESHOLD);
     }
 
     /**

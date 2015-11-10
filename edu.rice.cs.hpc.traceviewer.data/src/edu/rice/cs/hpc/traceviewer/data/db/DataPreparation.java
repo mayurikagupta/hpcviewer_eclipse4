@@ -52,6 +52,9 @@ public abstract class DataPreparation
 	/**Painting action*/
 	public void collect()
 	{
+		if (depth < 0) // eclipse Linux bug: it's possible to force the depth to be negative by typing a character on the table 
+			return;
+		
 		int succSampleMidpoint = (int) Math.max(0, (ptl.getTime(0)-begTime)/pixelLength);
 
 		CallPath cp = ptl.getCallPath(0, depth);
