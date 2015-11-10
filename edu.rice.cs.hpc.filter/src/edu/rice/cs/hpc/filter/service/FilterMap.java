@@ -1,16 +1,12 @@
 package edu.rice.cs.hpc.filter.service;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.services.ISourceProviderService;
-
-import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.common.util.AliasMap;
 import edu.rice.cs.hpc.data.filter.FilterAttribute;
 import edu.rice.cs.hpc.data.filter.IFilterData;
@@ -27,8 +23,6 @@ implements IFilterData
 
 	static private final String FILE_NAME = "filter.map";
 	//static private final FilterMap filterMap = new FilterMap();
-	
-	private FilterStateProvider filterStateProvider = null;
 	
 	public FilterMap() {
 		checkData();
@@ -135,10 +129,6 @@ implements IFilterData
 	@Override
 	public FilterAttribute getFilterAttribute(String element) 
 	{
-		if (!isFilterEnabled())
-		{
-			return null;
-		}
 		Object []entries = getEntrySet();
 		
 		// --------------------------------------------------------------------------------
@@ -194,14 +184,20 @@ implements IFilterData
 	 */
 	public boolean isFilterEnabled() 
 	{
-		if (filterStateProvider == null)
-		{
-			IWorkbenchWindow window = Util.getActiveWindow();
-			Assert.isNotNull(window);
-			ISourceProviderService service = (ISourceProviderService) window.getService(ISourceProviderService.class);
-			filterStateProvider   = (FilterStateProvider) service.getSourceProvider(FilterStateProvider.FILTER_REFRESH_PROVIDER);
+		boolean enabled = false;
+		if (data != null) {
+			if (data.size() > 0) {
+				Collection<FilterAttribute> coll = data.values();
+				Iterator<FilterAttribute> iterator = coll.iterator();
+				
+				// iterate through the list if there is at least one pattern enabled
+				while(iterator.hasNext() && !enabled) {
+					FilterAttribute att = iterator.next();
+					enabled = att.enable;
+				}				
+			}
 		}
 		
-		return filterStateProvider.isEnabled();
+		return enabled;
 	}
 }

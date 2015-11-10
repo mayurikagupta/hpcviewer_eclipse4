@@ -45,10 +45,6 @@ public class FilterStateProvider extends AbstractSourceProvider
 		return new String[] {FILTER_REFRESH_PROVIDER, FILTER_ENABLE_PROVIDER};
 	}
 	
-	public boolean isEnabled()
-	{
-		return true;
-	}
 	
 	/*****
 	 * refresh the table as the filter pattern may change

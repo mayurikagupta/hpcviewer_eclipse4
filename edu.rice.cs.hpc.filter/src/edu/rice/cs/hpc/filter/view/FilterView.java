@@ -138,7 +138,7 @@ public class FilterView extends ViewPart implements IFilterView, IPartListener2
 						if (filterMap.update(item.getKey(), dialog.getValue(), attribute))
 						{							
 							// notify the table and others that we need to refresh the content
-							if (serviceProvider.isEnabled())
+							if (filterMap.isFilterEnabled())
 								serviceProvider.refresh();
 							else {
 								tableViewer.setInput(FilterMap.getInstance().getEntrySet());
