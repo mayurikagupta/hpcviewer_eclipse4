@@ -72,7 +72,8 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		setTitle("Filter property");
-		setMessage("A filter consists of three properties: a checkbox to enable/disable, a pattern to match, and a type how the filter to be applied.\n");
+		setMessage("A filter consists of three properties: a checkbox to enable/disable, a pattern to match, and a type how the filter to be applied.\n" +
+					"You can add, modify or remove filters by clicking on the action button.");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		container.setLayout(new GridLayout(2, false));
