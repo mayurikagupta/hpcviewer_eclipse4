@@ -2,8 +2,6 @@ package edu.rice.cs.hpc.filter.view;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Set;
-
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -22,9 +20,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -44,6 +45,7 @@ import edu.rice.cs.hpc.filter.service.FilterMap;
 import edu.rice.cs.hpc.filter.service.FilterStateProvider;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.jface.window.Window;
 
 public class FilterPropertyDialog extends TitleAreaDialog {
@@ -52,7 +54,6 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 	
 	private final FilterMap filterMap;
 	private FilterStateProvider 	 serviceProvider;
-	//final private FilterMap data;
 	
 	/**
 	 * Create the dialog.
@@ -71,28 +72,31 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		setTitle("Filter property");
-		setMessage("Add a new pattern, or select a pattern to edit, or delete a pattern.\nCheck a pattern to enable, uncheck to disable.\n");
+		setMessage("A filter consists of three properties: a checkbox to enable/disable, a pattern to match, and a type how the filter to be applied.\n");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		container.setLayout(new GridLayout(2, false));
 		container.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		CheckboxTableViewer checkboxTableViewer = CheckboxTableViewer.newCheckList(container, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+		CheckboxTableViewer checkboxTableViewer = CheckboxTableViewer.newCheckList(container, 
+				SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+		ColumnViewerToolTipSupport.enableFor(checkboxTableViewer, ToolTip.NO_RECREATE);
+		
 		table = checkboxTableViewer.getTable();
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
-		TableViewerColumn tableViewerColumn = new TableViewerColumn(checkboxTableViewer, SWT.NONE);
-		tableViewerColumn.setLabelProvider(new PatternLabelProvider());
-		TableColumn tblclmnPattern = tableViewerColumn.getColumn();
+		TableViewerColumn columnPattern = new TableViewerColumn(checkboxTableViewer, SWT.NONE);
+		columnPattern.setLabelProvider(new PatternLabelProvider());
+		TableColumn tblclmnPattern = columnPattern.getColumn();
 		tblclmnPattern.setToolTipText("Select a filter to delete or check/uncheck a filter pattern to enable/disable.");
 		tblclmnPattern.setWidth(149);
 		tblclmnPattern.setText("Pattern");
 		
-		TableViewerColumn tableViewerColumn_1 = new TableViewerColumn(checkboxTableViewer, SWT.NONE);
-		tableViewerColumn_1.setLabelProvider(new TypeLabelProvider());
-		TableColumn tblclmnType = tableViewerColumn_1.getColumn();
+		TableViewerColumn columnType = new TableViewerColumn(checkboxTableViewer, SWT.NONE);
+		columnType.setLabelProvider(new TypeLabelProvider());
+		TableColumn tblclmnType = columnType.getColumn();
 		tblclmnType.setToolTipText("Select a type of filtering: 'Self only' means only the filtered scope is elided, 'Children only' means only the children of the matched node are elided, while 'Self and children' means the filtered scope and its descendants are elided.");
 		tblclmnType.setWidth(100);
 		tblclmnType.setText("Type");
@@ -101,6 +105,7 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 		checkboxTableViewer.setCheckStateProvider(new CheckStateProvider());
 		checkboxTableViewer.setComparator(new PatternViewerComparator());
 		checkboxTableViewer.addCheckStateListener(new CheckStateListener(filterMap));
+		checkboxTableViewer.addDoubleClickListener(new DoubleClickListener(getShell(), filterMap));
 		
 		Group grpActions = new Group(container, SWT.NONE);
 		grpActions.setLayout(new FillLayout(SWT.VERTICAL));
@@ -131,6 +136,7 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 	    setInput(checkboxTableViewer, filterMap);
 
 	    setListener(checkboxTableViewer);
+		getShell().setText("Filter property");
 
 		return area;
 	}
@@ -186,6 +192,23 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 		serviceProvider  = (FilterStateProvider) service.getSourceProvider(FilterStateProvider.FILTER_REFRESH_PROVIDER);
 	}
 	
+	
+	static private void edit(Shell shell, CheckboxTableViewer viewer, FilterMap filterMap, 
+							 String pattern, FilterAttribute attribute) {
+		final FilterInputDialog dialog = new FilterInputDialog(shell, "Editing a filter", pattern, attribute);
+		if (dialog.open() == Window.OK)
+		{
+			//final FilterMap filterMap = FilterMap.getInstance();
+			FilterAttribute newattribute = dialog.getAttribute();
+			if (filterMap.update(pattern, dialog.getValue(), newattribute))
+			{
+				FilterPropertyDialog.setInput(viewer, filterMap);
+			} else {
+				MessageDialog.openWarning(shell, "Unable to update", "Failed to update the pattern.");
+			}
+		}
+	}
+	
 	///////////////////////////////////////////////////////////////////////
 	// Helper classes
 	///////////////////////////////////////////////////////////////////////
@@ -202,6 +225,47 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 			Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) cell.getElement();
 			cell.setText(item.getKey());
 		}
+		
+		@Override
+		public String getToolTipText(Object element) {
+			if (element != null && element instanceof Entry<?, ?>) {
+				Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) element;
+				FilterAttribute attr = item.getValue();
+				String enable = attr.enable ? " enabled " : " disabled ";
+				StringBuffer sb = new StringBuffer();
+				sb.append("Filter '");
+				sb.append(item.getKey());
+				sb.append("' is ");
+				sb.append(enable);
+				return sb.toString();
+				
+			}
+			
+			return element.toString();
+		}
+	}
+	
+	static private class DoubleClickListener implements IDoubleClickListener
+	{	
+		final private Shell shell;
+		final private FilterMap filterMap;
+		
+		public DoubleClickListener( Shell shell, FilterMap filterMap ) {
+			this.shell = shell;
+			this.filterMap = filterMap;
+		}
+		
+		@Override
+		public void doubleClick(DoubleClickEvent event) {
+			final ISelection selection = event.getSelection();
+			final StructuredSelection select = (StructuredSelection) selection;
+			if (select != null && !select.isEmpty()) {
+				final Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) select.getFirstElement();
+				if (item != null) {
+					FilterPropertyDialog.edit( shell, (CheckboxTableViewer) event.getViewer(), filterMap, item.getKey(), item.getValue());
+				}
+			}
+		}
 	}
 	
 	static private class TypeLabelProvider extends CellLabelProvider
@@ -210,6 +274,27 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 		public void update(ViewerCell cell) {
 			Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) cell.getElement();
 			cell.setText(item.getValue().getFilterType());
+		}
+		
+		@Override
+		public String getToolTipText(Object element) {
+			if (element != null && element instanceof Entry<?, ?>) {
+				Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) element;
+				FilterAttribute attr = item.getValue();
+				String text;
+				switch(attr.filterType) {
+				case Self_Only:
+						text = "Self only: only the matched nodes will be omitted from the tree"; break;
+				case Children_Only:
+					text = "Children only: all the children of the matched nodes will be omitted from the tree"; break;
+				case Self_And_Children:
+					text = "Self and children: the matched nodes and its children will be omitted from the tree"; break;
+				default:
+						text = element.toString();
+				}
+				return text;
+			}
+			return element.toString();
 		}
 	}
 	

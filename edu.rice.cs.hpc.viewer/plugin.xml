@@ -266,7 +266,7 @@
                tooltip="Menus for excluding certains functions">
             <command
                   commandId="edu.rice.cs.hpc.filter.action.ShowFilterView"
-                  label="Show filter view"
+                  label="Show filter property"
                   mnemonic="S"
                   style="push"
                   tooltip="Display the list of filter patterns">
