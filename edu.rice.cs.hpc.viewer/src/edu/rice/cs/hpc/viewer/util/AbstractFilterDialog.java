@@ -173,8 +173,10 @@ public abstract class AbstractFilterDialog extends TitleAreaDialog
 		this.objCheckBoxTable.addFilter(objFilter);
 		//
 		this.updateContent(); // fill the table
+		
+		getShell().setText(title);
+		
 		return composite;
-
 	}
 
 	//--------------------------------------------------

@@ -1,5 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope.topdown;
 
+import java.util.Properties;
+
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -38,11 +40,21 @@ import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	
 	private ToolItem tiGraph, tiThreadView, tiThreadMap;
+	final private boolean experimental;
+	static final private String PROPERTY_EXP = "Experimental";
 
 	public CallingContextActionsGUI(Shell objShell, IWorkbenchWindow window,
 			Composite parent, ScopeViewActions objActions, boolean affectOtherViews) 
 	{
 		super(objShell, window, parent, objActions, affectOtherViews);
+		
+		Properties p = new Properties();
+		final String s = p.getProperty(PROPERTY_EXP);
+		if (s != null) {
+			experimental = Boolean.getBoolean(s);
+		} else {
+			experimental = false;
+		}
 	}
 
 	/**
@@ -116,33 +128,35 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		});
 		
-		tiThreadMap = new ToolItem(toolbar, SWT.PUSH);
-		final Image imgThreadMap = Icons.getImage(Icons.Image_ThreadMap);
-		tiThreadMap.setImage(imgThreadMap);
-		tiThreadMap.setToolTipText("Show the metric map between CCT nodes and ranks");
-		tiThreadMap.addSelectionListener(new SelectionListener() {
-			
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Rectangle rect = tiThreadMap.getBounds();
-				Point pt = new Point(rect.x, rect.y + rect.height);
-				pt = toolbar.toDisplay(pt);
+		if (experimental) {
+			tiThreadMap = new ToolItem(toolbar, SWT.PUSH);
+			final Image imgThreadMap = Icons.getImage(Icons.Image_ThreadMap);
+			tiThreadMap.setImage(imgThreadMap);
+			tiThreadMap.setToolTipText("Show the metric map between CCT nodes and ranks");
+			tiThreadMap.addSelectionListener(new SelectionListener() {
+				
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					Rectangle rect = tiThreadMap.getBounds();
+					Point pt = new Point(rect.x, rect.y + rect.height);
+					pt = toolbar.toDisplay(pt);
 
-				mgr.removeAll();
-				mgr.createContextMenu(toolbar);
+					mgr.removeAll();
+					mgr.createContextMenu(toolbar);
+					
+					// create the menu
+					ThreadEditorMenu.createAdditionalMenu(objWindow, mgr, database);
+					
+					// make the context menu appears next to tool item
+					final Menu menu = mgr.getMenu();
+					menu.setLocation(pt);
+					menu.setVisible(true);
+				}
 				
-				// create the menu
-				ThreadEditorMenu.createAdditionalMenu(objWindow, mgr, database);
-				
-				// make the context menu appears next to tool item
-				final Menu menu = mgr.getMenu();
-				menu.setLocation(pt);
-				menu.setVisible(true);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {}
-		});
+				@Override
+				public void widgetDefaultSelected(SelectionEvent e) {}
+			});
+		}
 		
 		// associate the tool bar as a cool item
 		createCoolItem(parent, toolbar);
@@ -180,7 +194,8 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 		super.disableNodeButtons();
 		tiGraph.setEnabled(false);
 		tiThreadView.setEnabled(false);
-		tiThreadMap.setEnabled(false);
+		if (experimental)
+			tiThreadMap.setEnabled(false);
 	}
 	
 	public void checkStates(Scope nodeSelected)
@@ -189,7 +204,8 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 				ThreadDataCollectionFactory.isThreadDataAvailable(database.getExperiment());
 
 		tiThreadView.setEnabled(available);
-		tiThreadMap.setEnabled(available);
+		if (experimental)
+			tiThreadMap.setEnabled(available);
 		
 		available = available && (nodeSelected != null);
 		tiGraph.setEnabled(available);
