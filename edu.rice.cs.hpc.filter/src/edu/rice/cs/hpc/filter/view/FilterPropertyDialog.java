@@ -48,7 +48,13 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.window.ToolTip;
 import org.eclipse.jface.window.Window;
 
-public class FilterPropertyDialog extends TitleAreaDialog {
+/*********************************************************
+ * 
+ * Window for displaying the filters' property
+ *
+ *********************************************************/
+public class FilterPropertyDialog extends TitleAreaDialog 
+{
 	private Table table;
 	private Button btnEdit, btnDelete;
 	
@@ -398,12 +404,17 @@ public class FilterPropertyDialog extends TitleAreaDialog {
 			
 			if (dialog.open() == IDialogConstants.OK_ID) {
 				FilterAttribute attribute = dialog.getAttribute();
-				//final FilterMap filterMap = FilterMap.getInstance();
+				final String key = dialog.getValue();
 				
-				// save the new pattern to the registry
-				filterMap.put(dialog.getValue(), attribute);
-				updateView(filterMap);
-				return true;
+				if (filterMap.get(key) == null) {
+					// save the new pattern to the registry
+					filterMap.put(key, attribute);
+					updateView(filterMap);
+					return true;
+				} else {
+					MessageDialog.openError(shell, "Unable to add a new filter", 
+							"The pattern already exists: " + key);
+				}
 			}
 			return false;
 		}
