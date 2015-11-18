@@ -94,8 +94,8 @@ implements IOperationHistoryListener
 			// ------------------------------------------------------------------------
 			if (detailData != null) {
 				rebuffer(detailData);
-				return;
 			}
+			return;
 		}
 		
 		// ------------------------------------------------------------------------
@@ -167,8 +167,9 @@ implements IOperationHistoryListener
 			for (int y = 0; y < detailData.height; ++y)
 			{
 				int pixelValue = detailData.getPixel(x,y);
-				if (sortedColorMap.containsKey(pixelValue))
-					sortedColorMap.put( pixelValue , sortedColorMap.get(pixelValue)+1 );
+				Integer count  = sortedColorMap.get(pixelValue);
+				if (count != null)
+					sortedColorMap.put( pixelValue , count+1 );
 				else
 					sortedColorMap.put( pixelValue , 1);
 			}
@@ -186,7 +187,7 @@ implements IOperationHistoryListener
 				final RGB rgb = detailData.palette.getRGB(pixel);
 				final Color c = new Color(getDisplay(), rgb);
 				final Integer numCounts = sortedColorMap.get(pixel);
-				final int height = Math.round(numCounts * yScale);
+				final int height = (int) Math.ceil(numCounts * yScale);
 				
 				buffer.setBackground(c);
 				
@@ -196,8 +197,9 @@ implements IOperationHistoryListener
 				
 				if (it.hasNext())
 					buffer.fillRectangle(xOffset, yOffset-height, (int) Math.max(1, xScale), height);
-				else
+				else {
 					buffer.fillRectangle(xOffset, 0, (int) Math.max(1, xScale), viewHeight-h);
+				}
 				yOffset -= height;
 				c.dispose();
 				

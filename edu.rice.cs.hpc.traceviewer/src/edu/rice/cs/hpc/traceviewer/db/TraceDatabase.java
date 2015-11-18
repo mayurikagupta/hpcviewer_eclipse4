@@ -4,9 +4,7 @@ import java.util.HashMap;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.jface.action.IStatusLineManager;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -45,19 +43,17 @@ public class TraceDatabase
 	 * @return
 	 */
 	static public TraceDatabase getInstance(IWorkbenchWindow _window) {
+		TraceDatabase data = null;
 		if (listOfDatabases == null) {
 			listOfDatabases = new HashMap<IWorkbenchWindow, TraceDatabase>();
-			TraceDatabase data = new TraceDatabase();
-			listOfDatabases.put(_window, data);
-			return data;
 		} else {
-			TraceDatabase data = listOfDatabases.get(_window);
-			if (data == null) {
-				data = new TraceDatabase();
-				listOfDatabases.put(_window, data);
-			}
-			return data;
+			data = listOfDatabases.get(_window);
 		}
+		if (data == null) {
+			data = new TraceDatabase();
+		}
+		listOfDatabases.put(_window, data);
+		return data;
 	}
 
 	/**
@@ -128,35 +124,18 @@ public class TraceDatabase
 	static public boolean openLocalDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr,
 			final String database)
 	{
-		String directory = database;
-		DirectoryDialog dlg = new DirectoryDialog(window.getShell());
-
-		if (directory == null)
+		DatabaseAccessInfo info = null;
+		if (database == null)
 		{
-			directory = dlg.open();
+			OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, null, true);
+			if (dlg.open() == Window.CANCEL)
+				return false;
+			
+			info = dlg.getDatabaseAccessInfo();
+		} else {
+			info = new DatabaseAccessInfo(database);
 		}
-		
-		while (directory != null)
-		{
-			DatabaseAccessInfo info = new DatabaseAccessInfo(directory);
-			try {
-				AbstractDBOpener opener = getDBOpener(info);
-				SpaceTimeDataController stdc = opener.openDBAndCreateSTDC(window, statusMgr);
-				
-				if (processDatabase(window, statusMgr, stdc)) {
-					return true;
-				}
-				MessageDialog.openError(window.getShell(), "Error", "Fail to process the database:\n"
-						+ directory);
-
-			} catch (Exception e) 
-			{
-				MessageDialog.openError(window.getShell(), "Error opening database", 
-						e.getMessage());
-			}
-			directory = dlg.open();
-		}
-		return false;
+		return openDatabase(window, statusMgr, info, true);
 	}
 
 	/*******
