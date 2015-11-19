@@ -2,7 +2,9 @@ package edu.rice.cs.hpc.traceviewer.painter;
 
 import org.eclipse.swt.widgets.Composite;
 
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+
+
 /******************************************************************
  * An abstract class for the two canvases on the viewer to extend.
  *****************************************************************/

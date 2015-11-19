@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.services;
+package edu.rice.cs.hpc.traceviewer.data.timeline;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -9,9 +9,9 @@ import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
 import edu.rice.cs.hpc.data.experiment.extdata.FileDB2;
 import edu.rice.cs.hpc.data.experiment.extdata.IFileDB;
 import edu.rice.cs.hpc.data.util.Util;
-import edu.rice.cs.hpc.traceviewer.db.AbstractDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.AbstractDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
 import edu.rice.cs.hpc.traceviewer.data.version3.FileDB3;
 
 /*******************************************************************

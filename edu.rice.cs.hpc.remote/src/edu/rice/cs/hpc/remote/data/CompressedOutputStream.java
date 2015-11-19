@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.db.remote;
+package edu.rice.cs.hpc.remote.data;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

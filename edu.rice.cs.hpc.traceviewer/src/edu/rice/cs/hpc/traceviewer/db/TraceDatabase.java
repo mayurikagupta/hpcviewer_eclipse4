@@ -12,18 +12,22 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.common.ui.Util;
+import edu.rice.cs.hpc.remote.data.RemoteDBOpener;
 import edu.rice.cs.hpc.traceviewer.actions.OptionMidpoint;
 import edu.rice.cs.hpc.traceviewer.db.local.LocalDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.remote.RemoteDBOpener;
+
 import edu.rice.cs.hpc.traceviewer.depth.HPCDepthView;
 import edu.rice.cs.hpc.traceviewer.main.HPCTraceView;
 import edu.rice.cs.hpc.traceviewer.misc.HPCCallStackView;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
 import edu.rice.cs.hpc.traceviewer.services.DataService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.summary.HPCSummaryView;
 import edu.rice.cs.hpc.traceviewer.ui.OpenDatabaseDialog;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.AbstractDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
 
 /*************************************************************************************
  * 
