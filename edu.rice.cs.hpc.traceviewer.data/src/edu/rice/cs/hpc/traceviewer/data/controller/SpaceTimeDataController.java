@@ -295,13 +295,16 @@ public abstract class SpaceTimeDataController
 		return enableMidpoint;
 	}
 
-	public void resetCounters() {
+	public void resetCounter() {
 		lineNum.set(0);
-		depthLineNum.set(0);
 	}
 	
 	public int getNumberOfLines() {
 		return lineNum.get();
+	}
+
+	public void resetDepthCounter() {
+		depthLineNum.set(0);
 	}
 	
 	public int getNumberOfDepthLines() {

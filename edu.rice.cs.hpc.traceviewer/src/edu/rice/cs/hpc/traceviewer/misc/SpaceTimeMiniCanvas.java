@@ -21,6 +21,8 @@ import org.eclipse.swt.graphics.Pattern;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+
 import edu.rice.cs.hpc.data.experiment.extdata.IBaseData;
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.Frame;
@@ -308,23 +310,29 @@ public class SpaceTimeMiniCanvas extends SpaceTimeCanvas
     */
 	
 	/**Sets the white box in miniCanvas to correlate to spaceTimeDetailCanvas proportionally.*/
-	private void setBox(Frame frame)
+	private void setBox(final Frame frame)
 	{
 		if (this.stData == null)
 			return;
-		
-		view.x = (int)Math.round(frame.begTime * getScalePixelsPerTime());
-		view.y = (int)Math.round(frame.begProcess * getScalePixelsPerRank());
-		
-		int bottomRightPixelX = (int)Math.round(frame.endTime * getScalePixelsPerTime());
-		int bottomRightPixelY = (int)Math.round(frame.endProcess * getScalePixelsPerRank());
-		
-		view.width  = Math.max(1, bottomRightPixelX-view.x);
-		view.height = Math.max(1, bottomRightPixelY-view.y);
-		
-		Debugger.printDebug(1, "STMC set view: " + view);
-		insideBox = true;
-		redraw();
+		final Display display = Display.getDefault();
+		display.asyncExec( new Runnable() {
+			
+			@Override
+			public void run() {
+				view.x = (int)Math.round(frame.begTime * getScalePixelsPerTime());
+				view.y = (int)Math.round(frame.begProcess * getScalePixelsPerRank());
+				
+				int bottomRightPixelX = (int)Math.round(frame.endTime * getScalePixelsPerTime());
+				int bottomRightPixelY = (int)Math.round(frame.endProcess * getScalePixelsPerRank());
+				
+				view.width  = Math.max(1, bottomRightPixelX-view.x);
+				view.height = Math.max(1, bottomRightPixelY-view.y);
+				
+				Debugger.printDebug(1, "STMC set view: " + view);
+				insideBox = true;
+				redraw();
+			}
+		} );
 	}
 	
 	/**Moves white box to correspond to where mouse has moved to.*/

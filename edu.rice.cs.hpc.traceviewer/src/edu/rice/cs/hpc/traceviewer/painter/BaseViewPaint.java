@@ -15,13 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.progress.UIJob;
-
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
@@ -41,7 +39,7 @@ import edu.rice.cs.hpc.traceviewer.util.Utility;
  * 
  *
  *******************************************************/
-public abstract class BaseViewPaint extends UIJob
+public abstract class BaseViewPaint extends Job
 {
 	protected boolean changedBounds;
 	
@@ -82,10 +80,10 @@ public abstract class BaseViewPaint extends UIJob
 	 * @see org.eclipse.ui.progress.UIJob#runInUIThread(org.eclipse.core.runtime.IProgressMonitor)
 	 */
 	@Override
-	public IStatus runInUIThread(IProgressMonitor monitor) {
+	public IStatus run(IProgressMonitor monitor) {
 		IStatus status = Status.OK_STATUS;
 		
-		BusyIndicator.showWhile(getDisplay(), getThread());
+		//BusyIndicator.showWhile(getDisplay(), getThread());
 		if (!paint(canvas, monitor))
 		{
 			status = Status.CANCEL_STATUS;
@@ -165,7 +163,7 @@ public abstract class BaseViewPaint extends UIJob
 		Debugger.printTimestampDebug("Rendering beginning (" + canvas.toString()+")");
 
 		// reset the line number to paint
-		controller.resetCounters();
+		//controller.resetCounters();
 		
 		//final List<Future<Integer>> threads = new ArrayList<Future<Integer>>();
 		final AtomicInteger timelineDone = new AtomicInteger(linesToPaint);
@@ -244,20 +242,27 @@ public abstract class BaseViewPaint extends UIJob
 	 * @param canvas
 	 * @param paintThread
 	 */
-	private void doSingleThreadPainting(ISpaceTimeCanvas canvas, BasePaintThread paintThread)
+	private void doSingleThreadPainting(final ISpaceTimeCanvas canvas, final BasePaintThread paintThread)
 	{
-		try {
-			// do the data painting, and directly get the generated images
-			List<ImagePosition> listImages = paintThread.call();
+		Display display = Display.getDefault();
+		display.asyncExec(new Runnable() {
 
-			// set the images into the canvas. 
-			for ( ImagePosition image: listImages )
-			{
-				drawPainting(canvas, image);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			@Override
+			public void run() {
+				try {
+					// do the data painting, and directly get the generated images
+					List<ImagePosition> listImages = paintThread.call();
+
+					// set the images into the canvas. 
+					for ( ImagePosition image: listImages )
+					{
+						drawPainting(canvas, image);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}			
+		});
 	}
 	
 	/******
@@ -275,6 +280,7 @@ public abstract class BaseViewPaint extends UIJob
 			try {
 				Integer linenum = ecs.take().get();
 				result.add(linenum);
+				Debugger.printDebug(1, "BVP thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

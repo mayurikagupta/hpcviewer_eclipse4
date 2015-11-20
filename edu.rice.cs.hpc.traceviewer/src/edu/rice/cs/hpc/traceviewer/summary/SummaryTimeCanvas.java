@@ -90,12 +90,10 @@ implements IOperationHistoryListener
 
 	private void refreshWithCondition()
 	{
-		if (imageBuffer == null){
+		if (getBuffer() == null){
 			// ------------------------------------------------------------------------
 			// ------------------------------------------------------------------------
-			if (detailData != null) {
-				rebuffer(detailData);
-			}
+			rebuffer(detailData);
 			return;
 		}
 		
@@ -105,7 +103,7 @@ implements IOperationHistoryListener
 		// it's in hidden state, and then it turns visible. 
 		// this will cause misalignment in the view
 		// ------------------------------------------------------------------------
-		final Rectangle r1 = imageBuffer.getBounds();
+		final Rectangle r1 = getBuffer().getBounds();
 		final Rectangle r2 = getClientArea();
 		
 		if (!(r1.height == r2.height && r1.width == r2.width))
@@ -132,8 +130,8 @@ implements IOperationHistoryListener
 		// ------------------------------------------------------------------------------------------
 		// let use GC instead of ImageData since GC allows us to draw lines and rectangles
 		// ------------------------------------------------------------------------------------------
-		if (imageBuffer != null) {
-			imageBuffer.dispose();
+		if (getBuffer() != null) {
+			getBuffer().dispose();
 		}
 		final int viewWidth = getBounds().width;
 		final int viewHeight = getBounds().height;
@@ -141,7 +139,9 @@ implements IOperationHistoryListener
 		if (viewWidth == 0 || viewHeight == 0)
 			return;
 
-		imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
+		final Image imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
+		setBuffer(imageBuffer);
+		
 		GC buffer = new GC(imageBuffer);
 		buffer.setBackground(Constants.COLOR_WHITE);
 		buffer.fillRectangle(0, 0, viewWidth, viewHeight);

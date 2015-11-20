@@ -78,7 +78,7 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) {
-
+		controller.resetCounter();
 		return true;
 	}
 

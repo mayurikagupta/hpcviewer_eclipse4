@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.BaseDataVisualization;
@@ -95,8 +96,8 @@ public class DetailPaintThread
 	}
 
 	@Override
-	protected void initPaint(Device device, int width, int height) {
-
+	protected void initPaint(/*Device device, */int width, int height) {
+		Display device = Display.getDefault();
 		lineFinal = new Image(device, width, height);
 		lineOriginal = new Image(device, width, 1);
 		

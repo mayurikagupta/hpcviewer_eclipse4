@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
@@ -941,10 +942,10 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 
 	private void donePainting(Image imageOrig, Image imageFinal, boolean refreshData)
 	{		
-		if (imageBuffer != null) {
-			imageBuffer.dispose();
+		if (getBuffer() != null) {
+			getBuffer().dispose();
 		}
-		imageBuffer = imageFinal;
+		setBuffer( imageFinal );
 		
 		// in case of filter, we may need to change the cursor position
 		if (refreshData) {
@@ -957,7 +958,14 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				notifyChangePosition(new_p);
 			}
 		}
-		super.redraw();
+		Display display = Display.getDefault();
+		display.asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+				redraw();
+			}
+		});
 
 		// -----------------------------------------------------------------------
 		// notify to all other views that a new image has been created,
