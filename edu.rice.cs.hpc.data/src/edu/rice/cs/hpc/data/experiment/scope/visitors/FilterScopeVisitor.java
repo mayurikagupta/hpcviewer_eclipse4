@@ -121,7 +121,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 			if (filterAttribute != null)
 			{
 				need_to_continue = (filterAttribute.filterType == FilterAttribute.Type.Self_Only);
-				if (filterAttribute.filterType == FilterAttribute.Type.Children_Only)
+				if (filterAttribute.filterType == FilterAttribute.Type.Descendants_Only)
 				{
 					//-------------------------------------------------------------------
 					// merge with the metrics of the children
