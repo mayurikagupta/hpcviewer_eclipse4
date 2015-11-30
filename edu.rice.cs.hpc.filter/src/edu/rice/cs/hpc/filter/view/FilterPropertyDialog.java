@@ -77,7 +77,7 @@ public class FilterPropertyDialog extends TitleAreaDialog
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		setTitle("Two filter properties");
-		setMessage("A glob pattern and a type how the filter to be applied." +
+		setMessage("A glob pattern to be matched and a type how the filter to be applied." +
 					" If a row is checked, then the filter is enabled. Otherwise it is disabled.");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
@@ -142,7 +142,7 @@ public class FilterPropertyDialog extends TitleAreaDialog
 	    setInput(checkboxTableViewer, filterMap);
 
 	    setListener(checkboxTableViewer);
-		getShell().setText("Filter property");
+		getShell().setText("Filter");
 
 		return area;
 	}
