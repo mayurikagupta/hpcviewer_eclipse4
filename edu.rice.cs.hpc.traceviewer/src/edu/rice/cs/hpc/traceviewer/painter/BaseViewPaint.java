@@ -84,7 +84,7 @@ public abstract class BaseViewPaint extends Job
 		IStatus status = Status.OK_STATUS;
 		
 		//BusyIndicator.showWhile(getDisplay(), getThread());
-		if (!paint(canvas, monitor))
+		if (!paint( monitor))
 		{
 			status = Status.CANCEL_STATUS;
 		}
@@ -100,7 +100,7 @@ public abstract class BaseViewPaint extends Job
 	 *	@param canvas   		 The SpaceTimeDetailCanvas that will be painted on.
 	 *  @return boolean true of the pain is successful, false otherwise
 	 ***********************************************************************************/
-	public boolean paint(ISpaceTimeCanvas canvas, IProgressMonitor monitor)
+	public boolean paint(IProgressMonitor monitor)
 	{	
 		// depending upon how zoomed out you are, the iteration you will be
 		// making will be either the number of pixels or the processors
@@ -202,8 +202,8 @@ public abstract class BaseViewPaint extends Job
 			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
 					Display.getCurrent(), attributes.numPixelsH);
 			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, 1);
-			doSingleThreadPainting(canvas, thread);
+			waitDataPreparationThreads(ecs, result, launch_threads);
+			doSingleThreadPainting(thread, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
@@ -225,7 +225,7 @@ public abstract class BaseViewPaint extends Job
 			// -------------------------------------------------------------------
 			ArrayList<Integer> result = new ArrayList<Integer>();
 			waitDataPreparationThreads(ecs, result, launch_threads);
-			endPainting(canvas, threadsPaint);
+			endPainting(threadsPaint, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
 		monitor.done();
@@ -242,27 +242,15 @@ public abstract class BaseViewPaint extends Job
 	 * @param canvas
 	 * @param paintThread
 	 */
-	private void doSingleThreadPainting(final ISpaceTimeCanvas canvas, final BasePaintThread paintThread)
+	private void doSingleThreadPainting(final BasePaintThread paintThread, IProgressMonitor monitor)
 	{
-		Display display = Display.getDefault();
-		display.asyncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					// do the data painting, and directly get the generated images
-					List<ImagePosition> listImages = paintThread.call();
-
-					// set the images into the canvas. 
-					for ( ImagePosition image: listImages )
-					{
-						drawPainting(canvas, image);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}			
-		});
+		try {
+			// do the data painting, and directly get the generated images
+			List<ImagePosition> listImages = paintThread.call();
+			waitPainting(listImages, monitor);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/******
@@ -293,16 +281,14 @@ public abstract class BaseViewPaint extends Job
 	 * @param canvas
 	 * @param listOfImageThreads
 	 */
-	private void endPainting(ISpaceTimeCanvas canvas, List<Future<List<ImagePosition>>> listOfImageThreads)
+	private void endPainting(List<Future<List<ImagePosition>>> listOfImageThreads,
+			IProgressMonitor monitor)
 	{
 		for( Future<List<ImagePosition>> listFutures : listOfImageThreads ) 
 		{
 			try {
 				List<ImagePosition> listImages = listFutures.get();
-				for (ImagePosition image : listImages) 
-				{
-					drawPainting(canvas, image);
-				}
+				waitPainting(listImages, monitor);
 				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -314,7 +300,35 @@ public abstract class BaseViewPaint extends Job
 		}
 	}
 	
+	private void waitPainting(List<ImagePosition> listImages, IProgressMonitor monitor)
+	{
+		Display display = Display.getDefault();
+		DrawPainting job = new DrawPainting(this, listImages, monitor);
+		display.syncExec(job);
+	}
 	
+	static private class DrawPainting implements Runnable
+	{
+		final private IProgressMonitor monitor;
+		final private List<ImagePosition> listImages;
+		final private BaseViewPaint viewPaint;
+		
+		DrawPainting(BaseViewPaint viewPaint, List<ImagePosition> listImages, IProgressMonitor monitor) {
+			this.monitor 	= monitor;
+			this.listImages = listImages;
+			this.viewPaint	= viewPaint;
+		}
+		
+		@Override
+		public void run() {
+			monitor.subTask("Painting");
+			for (ImagePosition image : listImages) 
+			{
+				viewPaint.drawPainting(viewPaint.canvas, image);
+			}
+			monitor.done();
+		}
+	}
 	//------------------------------------------------------------------------------------------------
 	// abstract methods 
 	//------------------------------------------------------------------------------------------------

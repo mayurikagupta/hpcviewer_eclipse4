@@ -337,6 +337,11 @@ public abstract class SpaceTimeDataController
 		attributes.setProcess(begProcess, endProcess);
 	}
 
+	public boolean isTimelineFilled() {
+		return (ptlService != null && ptlService.isFilled());
+	}
+	
+	
 	////////////////////////////////////////////////////////////////////////////////
 	// Abstract methods
 	////////////////////////////////////////////////////////////////////////////////

@@ -235,6 +235,7 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 	 */
 	static private Scope getScopeOfCombineMetrics(Scope source) {
 		Scope copy = source.duplicate();
+		// TODO: combined values can be null for verison 3
 		copy.setMetricValues( source.getCombinedValues() );
 		return copy;
 	}

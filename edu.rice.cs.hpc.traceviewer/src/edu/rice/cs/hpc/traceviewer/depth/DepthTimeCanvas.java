@@ -89,10 +89,10 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 	 */
 	public void paintControl(PaintEvent event)
 	{
-		if (this.stData == null)
-			return;
-		
 		bound = getClientArea();
+
+		if (stData == null || !stData.isTimelineFilled())
+			return;
 		
 		if (needToRedraw) {
 			refreshWithCondition();

@@ -28,7 +28,7 @@ public abstract class BufferedCanvas extends Canvas
 {
 	
 	/*** buffer image for displaying the canvas ****/
-	private Image imageBuffer;
+	protected Image imageBuffer;
 
 	public BufferedCanvas(Composite parent) 
 	{

@@ -51,4 +51,15 @@ public class ProcessTimelineService extends AbstractSourceProvider {
 			return 0;
 		return traces.length;
 	}
+	
+	public boolean isFilled() {
+		if (traces != null) {
+			for (ProcessTimeline trace: traces) {
+				if (trace == null)
+					return false;
+			}
+			return true;
+		}
+		return false;
+	}
 }
