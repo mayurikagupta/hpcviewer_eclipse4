@@ -108,7 +108,8 @@ Check out the external libraries
 
     com.graphbuilder
     org.swtchart
-
+    org.swtchart.ext
+    
 Now, change the perspective into Plug-in or Java perspective to see the source code and launch the application.
 
 Testing hpcviewer
