@@ -92,8 +92,10 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 				queue.add(dataSet);				
 			}
 			numTimelines.decrementAndGet();
-			if (!monitor.isCanceled())
-				monitor.worked(1);
+			if (monitor.isCanceled())
+				return null;
+			
+			monitor.worked(1);
 			
 			trace = getNextTrace();
 			numTraces++;

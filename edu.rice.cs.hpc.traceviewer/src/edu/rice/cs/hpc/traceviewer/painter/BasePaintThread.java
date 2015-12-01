@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Device;
@@ -29,6 +30,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 
 	//final protected Device device;
 	final protected int width;
+	final private IProgressMonitor monitor;
 
 	final private Queue<TimelineDataSet> list;
 	final private List<ImagePosition> listOfImages;
@@ -52,19 +54,17 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 */
 	public BasePaintThread( SpaceTimeDataController stData, Queue<TimelineDataSet> list, 
 			int numberOfTotalLines, AtomicInteger paintDone,
-			Device device, int width) {
+			Device device, int width, IProgressMonitor monitor) {
 		
-		//Assert.isNotNull(device);
 		Assert.isNotNull(list);
 		
-		this.list = list;
+		this.stData 			= stData;		
+		this.width   			= width;
+		this.monitor 			= monitor;
+		this.list 				= list;
 		this.numberOfTotalLines = numberOfTotalLines;
-		this.timelineDone = paintDone;
+		this.timelineDone 		= paintDone;
 		
-		//this.device = device;
-		this.stData = stData;
-		
-		this.width = width;
 		listOfImages = new ArrayList<ImagePosition>(list.size());
 	}
 	
@@ -81,6 +81,9 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 				|| 											  // or	
 				timelineDone.get()>0 ) 					  	  // the data preparation threads haven't finished the job
 		{
+			if (monitor.isCanceled()) {
+				return listOfImages;
+			}
 			// ------------------------------------------------------------------
 			// get the task to do from the list and compute the height and the position
 			// if the list is empty, it means the data collection threads haven't finished 

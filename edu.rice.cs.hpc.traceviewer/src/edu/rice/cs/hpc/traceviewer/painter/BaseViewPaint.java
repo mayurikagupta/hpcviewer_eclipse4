@@ -3,9 +3,9 @@ package edu.rice.cs.hpc.traceviewer.painter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -116,7 +116,7 @@ public abstract class BaseViewPaint extends Job
 			return false;
 		
 		// -------------------------------------------------------------------
-		// initialize the painting (to be implemented by the instance
+		// initialize the painting (to be implemented by the instance)
 		// -------------------------------------------------------------------
 		int launch_threads = Utility.getNumThreads(linesToPaint);
 		if (!startPainting(linesToPaint, launch_threads, changedBounds))
@@ -161,11 +161,7 @@ public abstract class BaseViewPaint extends Job
 		// -------------------------------------------------------------------
 		
 		Debugger.printTimestampDebug("Rendering beginning (" + canvas.toString()+")");
-
-		// reset the line number to paint
-		//controller.resetCounters();
 		
-		//final List<Future<Integer>> threads = new ArrayList<Future<Integer>>();
 		final AtomicInteger timelineDone = new AtomicInteger(linesToPaint);
 
 		final double xscale = canvas.getScalePixelsPerTime();
@@ -199,33 +195,15 @@ public abstract class BaseViewPaint extends Job
 			// -------------------------------------------------------------------
 			// sequential painting for Unix/Linux platform
 			// -------------------------------------------------------------------
-			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
-					Display.getCurrent(), attributes.numPixelsH);
-			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, launch_threads);
-			doSingleThreadPainting(thread, monitor);
+			final ExecutorService es = Executors.newSingleThreadScheduledExecutor();
+			executePaint(es, ecs, launch_threads, 1, queue, linesToPaint, timelineDone, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
 			// painting to the buffer "concurrently" if numPaintThreads > 1
 			// -------------------------------------------------------------------
-			final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
-
-			for (int threadNum=0; threadNum < launch_threads; threadNum++) 
-			{
-				final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
-						Display.getCurrent(), attributes.numPixelsH);
-				if (thread != null) {
-					final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
-					threadsPaint.add(submit);
-				}
-			}
-			// -------------------------------------------------------------------
-			// Finalize the painting (to be implemented by the instance)
-			// -------------------------------------------------------------------
-			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, launch_threads);
-			endPainting(threadsPaint, monitor);
+			executePaint(threadExecutor, ecs, launch_threads, launch_threads, 
+					queue, linesToPaint, timelineDone, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
 		monitor.done();
@@ -235,22 +213,40 @@ public abstract class BaseViewPaint extends Job
 	}
 	
 	/****
-	 * perform a data painting with only a single thread.
-	 * this method doesn't need collection or painting finalization since only one
-	 * thread is involved.
+	 * run jobs for collecting data and painting the image
 	 * 
-	 * @param canvas
-	 * @param paintThread
+	 * @param es : executor service for painting the image
+	 * @param ecs : completion service from data collection job
+	 * @param num_threads : number of threads for collecting data (see ecs)
+	 * @param num_paint_threads : number of threads for paiting
+	 * @param queue : the data to be collected
+	 * @param linesToPaint : number of lines to paint
+	 * @param timelineDone : atomic integer for number of lines collected
+	 * @param monitor : UI progress monitor 
 	 */
-	private void doSingleThreadPainting(final BasePaintThread paintThread, IProgressMonitor monitor)
+	private void executePaint(ExecutorService es, ExecutorCompletionService<Integer> ecs,
+			int num_threads, int num_paint_threads, Queue<TimelineDataSet> queue, 
+			int linesToPaint, AtomicInteger timelineDone, IProgressMonitor monitor) 
 	{
-		try {
-			// do the data painting, and directly get the generated images
-			List<ImagePosition> listImages = paintThread.call();
-			waitPainting(listImages, monitor);
-		} catch (Exception e) {
-			e.printStackTrace();
+		final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
+		final ImageTraceAttributes attributes = controller.getAttributes();
+
+		// for threads as many as the number of paint threads (specified by the caller)
+		for (int threadNum=0; threadNum < num_paint_threads; threadNum++) 
+		{
+			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
+					Display.getCurrent(), attributes.numPixelsH, monitor);
+			if (thread != null) {
+				final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
+				threadsPaint.add(submit);
+			}
 		}
+		// -------------------------------------------------------------------
+		// Finalize the painting (to be implemented by the instance)
+		// -------------------------------------------------------------------
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		waitDataPreparationThreads(ecs, result, num_threads);
+		endPainting(threadsPaint, monitor);
 	}
 	
 	/******
@@ -260,19 +256,23 @@ public abstract class BaseViewPaint extends Job
 	 * @param result : the list of the result
 	 * @param launch_threads : number of launched threads
 	 */
-	private void waitDataPreparationThreads(ExecutorCompletionService<Integer> ecs, 
+	private boolean waitDataPreparationThreads(ExecutorCompletionService<Integer> ecs, 
 			ArrayList<Integer> result, int launch_threads)
 	{
 		for (int i=0; i<launch_threads; i++)
 		{
 			try {
 				Integer linenum = ecs.take().get();
+				if (linenum == null)
+					return false;
+				
 				result.add(linenum);
 				Debugger.printDebug(1, "BVP thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		return true;
 	}
 
 	/******
@@ -281,32 +281,33 @@ public abstract class BaseViewPaint extends Job
 	 * @param canvas
 	 * @param listOfImageThreads
 	 */
-	private void endPainting(List<Future<List<ImagePosition>>> listOfImageThreads,
+	private boolean endPainting(List<Future<List<ImagePosition>>> listOfImageThreads,
 			IProgressMonitor monitor)
 	{
 		for( Future<List<ImagePosition>> listFutures : listOfImageThreads ) 
 		{
 			try {
 				List<ImagePosition> listImages = listFutures.get();
-				waitPainting(listImages, monitor);
+				if (listImages == null)
+					return false;
 				
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
+				Display display = Display.getDefault();
+				DrawPainting job = new DrawPainting(this, listImages, monitor);
+				display.syncExec(job);
+				
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		return true;
 	}
 	
-	private void waitPainting(List<ImagePosition> listImages, IProgressMonitor monitor)
-	{
-		Display display = Display.getDefault();
-		DrawPainting job = new DrawPainting(this, listImages, monitor);
-		display.syncExec(job);
-	}
-	
+
+	/*****************************************************
+	 * 
+	 * class to paint images
+	 *
+	 *****************************************************/
 	static private class DrawPainting implements Runnable
 	{
 		final private IProgressMonitor monitor;
@@ -334,8 +335,10 @@ public abstract class BaseViewPaint extends Job
 	//------------------------------------------------------------------------------------------------
 	
 	/**
-	 * Initialize the paint, before creating the threads to paint
-	 * The method return false to exit the paint, true to paint
+	 * Initialize the paint, before creating the threads to paint.
+	 * The method return false to exit the paint, true to paint.
+	 * 
+	 * The implementer is also responsible to reset its counter (yikes!)
 	 * 
 	 * @param linesToPaint
 	 * @param changedBounds
@@ -389,5 +392,5 @@ public abstract class BaseViewPaint extends Job
 	 * @return
 	 */
 	abstract protected BasePaintThread getPaintThread( Queue<TimelineDataSet> queue, int numLines, 
-			AtomicInteger timelineDone, Device device, int width);
+			AtomicInteger timelineDone, Device device, int width, IProgressMonitor monitor);
 }

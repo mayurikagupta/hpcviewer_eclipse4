@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.traceviewer.depth;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -22,9 +23,9 @@ public class DepthPaintThread extends BasePaintThread {
 
 	public DepthPaintThread(SpaceTimeDataController stData, Queue<TimelineDataSet> list, int linesToPaint, 
 			AtomicInteger paintDone, Device device, 
-			int width) {
+			int width, IProgressMonitor monitor) {
 
-		super(stData, list, linesToPaint, paintDone, device, width);
+		super(stData, list, linesToPaint, paintDone, device, width, monitor);
 	}
 
 	@Override

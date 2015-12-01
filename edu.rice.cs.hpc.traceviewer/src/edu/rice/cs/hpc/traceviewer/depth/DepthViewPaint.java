@@ -83,9 +83,11 @@ public class DepthViewPaint extends BaseViewPaint {
 
 	@Override
 	protected BasePaintThread getPaintThread(
-			Queue<TimelineDataSet> queue, int linesToPaint, AtomicInteger timelineDone, Device device, int width) {
+			Queue<TimelineDataSet> queue, int linesToPaint, AtomicInteger timelineDone, 
+			Device device, int width, IProgressMonitor monitor) {
 
-		return new DepthPaintThread(controller, queue, linesToPaint, timelineDone, device, width);
+		return new DepthPaintThread(controller, queue, linesToPaint, timelineDone, 
+				device, width, monitor);
 	}
 
 	@Override
