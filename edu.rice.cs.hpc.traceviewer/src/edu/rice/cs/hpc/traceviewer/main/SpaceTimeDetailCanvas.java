@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
@@ -37,13 +38,13 @@ import edu.rice.cs.hpc.traceviewer.operation.ZoomOperation;
 import edu.rice.cs.hpc.traceviewer.painter.AbstractTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.BufferPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.painter.ResizeListener;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Frame;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Position;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.Frame;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
+import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 import edu.rice.cs.hpc.traceviewer.util.Utility;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
@@ -941,10 +942,10 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 
 	private void donePainting(Image imageOrig, Image imageFinal, boolean refreshData)
 	{		
-		if (imageBuffer != null) {
-			imageBuffer.dispose();
+		if (getBuffer() != null) {
+			getBuffer().dispose();
 		}
-		imageBuffer = imageFinal;
+		setBuffer( imageFinal );
 		
 		// in case of filter, we may need to change the cursor position
 		if (refreshData) {
@@ -957,7 +958,14 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				notifyChangePosition(new_p);
 			}
 		}
-		super.redraw();
+		Display display = Display.getDefault();
+		display.asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+				redraw();
+			}
+		});
 
 		// -----------------------------------------------------------------------
 		// notify to all other views that a new image has been created,

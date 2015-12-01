@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.filter.action;
+package edu.rice.cs.hpc.filter.view;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -72,9 +72,9 @@ public class FilterInputDialog extends InputDialog
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(attArea);
 		
 		final Label lblAttribute  = new Label(attArea, SWT.WRAP);
-		lblAttribute.setText("A 'Self only' will exclude only the matched functions.\n" +
-							 "A 'Children only' will exclude the children of the matched functions.\n"  +
-							 "A 'Self and children' will exclude both the matched functions and their children.\n");
+		lblAttribute.setText("A 'Self only' will exclude only the matched nodes.\n" +
+							 "A 'Descendants only' will exclude the subtree of the matched nodes.\n"  +
+							 "A 'Self and descendants' will exclude both the matched nodes and all the descendants.\n");
 		
 		cbAttribute   = new Combo(attArea, SWT.DROP_DOWN | SWT.READ_ONLY);
 		final String []names_attr   = FilterAttribute.getFilterNames();

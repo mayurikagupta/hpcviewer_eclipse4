@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import edu.rice.cs.hpc.common.util.UserInputHistory;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo.DatabaseField;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo.DatabaseField;
 import edu.rice.cs.hpc.traceviewer.framework.Activator;
 
 /*******************************************************

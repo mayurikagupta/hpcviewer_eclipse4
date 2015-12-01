@@ -6,7 +6,8 @@ import java.util.Map;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+
 
 public class DataService extends AbstractSourceProvider {
 

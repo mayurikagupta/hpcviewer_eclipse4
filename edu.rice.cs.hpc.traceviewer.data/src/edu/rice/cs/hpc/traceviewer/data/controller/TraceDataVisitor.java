@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.spaceTimeData;
+package edu.rice.cs.hpc.traceviewer.data.controller;
 
 import java.util.HashMap;
 

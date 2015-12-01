@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.db;
+package edu.rice.cs.hpc.traceviewer.data.db;
 
 import java.io.IOException;
 
@@ -6,9 +6,8 @@ import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
-import edu.rice.cs.hpc.traceviewer.db.local.LocalDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.remote.RemoteDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+
 
 /**
  * An interface for the DBOpeners. Specifically, it is implemented by

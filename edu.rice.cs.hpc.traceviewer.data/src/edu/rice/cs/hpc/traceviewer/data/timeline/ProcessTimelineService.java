@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.services;
+package edu.rice.cs.hpc.traceviewer.data.timeline;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,5 +50,16 @@ public class ProcessTimelineService extends AbstractSourceProvider {
 		if (traces == null)
 			return 0;
 		return traces.length;
+	}
+	
+	public boolean isFilled() {
+		if (traces != null) {
+			for (ProcessTimeline trace: traces) {
+				if (trace == null)
+					return false;
+			}
+			return true;
+		}
+		return false;
 	}
 }

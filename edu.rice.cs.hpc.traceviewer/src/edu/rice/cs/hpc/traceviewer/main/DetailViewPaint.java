@@ -17,14 +17,14 @@ import org.eclipse.ui.handlers.RegistryToggleState;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.traceviewer.actions.OptionRecordsDisplay;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.BaseViewPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 
 /******************************************************
@@ -78,7 +78,7 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) {
-
+		controller.resetCounter();
 		return true;
 	}
 

@@ -10,10 +10,12 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Device;
+
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.BaseDataVisualization;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 
 /*****************************************************************
  *
@@ -25,7 +27,7 @@ import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
  *****************************************************************/
 public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 
-	final protected Device device;
+	//final protected Device device;
 	final protected int width;
 
 	final private Queue<TimelineDataSet> list;
@@ -52,14 +54,14 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 			int numberOfTotalLines, AtomicInteger paintDone,
 			Device device, int width) {
 		
-		Assert.isNotNull(device);
+		//Assert.isNotNull(device);
 		Assert.isNotNull(list);
 		
 		this.list = list;
 		this.numberOfTotalLines = numberOfTotalLines;
 		this.timelineDone = paintDone;
 		
-		this.device = device;
+		//this.device = device;
 		this.stData = stData;
 		
 		this.width = width;
@@ -96,7 +98,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 			// ------------------------------------------------------------------
 			// initialize the painting, the derived class has to create image ready
 			// ------------------------------------------------------------------
-			initPaint(device, width, height);
+			initPaint(/*device,*/ width, height);
 
 			// ------------------------------------------------------------------
 			// a line can contains many trace data (one trace data equals one rectangle)
@@ -129,7 +131,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @param width : the width of the image
 	 * @param height : the height of the image
 	 */
-	abstract protected void initPaint(Device device, int width, int height);
+	abstract protected void initPaint(/*Device device, */int width, int height);
 	
 	/*****
 	 * the actual method to paint a trace image

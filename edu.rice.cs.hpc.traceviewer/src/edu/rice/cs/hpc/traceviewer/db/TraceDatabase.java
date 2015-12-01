@@ -12,18 +12,22 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.common.ui.Util;
+import edu.rice.cs.hpc.remote.data.RemoteDBOpener;
 import edu.rice.cs.hpc.traceviewer.actions.OptionMidpoint;
 import edu.rice.cs.hpc.traceviewer.db.local.LocalDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.remote.RemoteDBOpener;
+
 import edu.rice.cs.hpc.traceviewer.depth.HPCDepthView;
 import edu.rice.cs.hpc.traceviewer.main.HPCTraceView;
 import edu.rice.cs.hpc.traceviewer.misc.HPCCallStackView;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
 import edu.rice.cs.hpc.traceviewer.services.DataService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.summary.HPCSummaryView;
 import edu.rice.cs.hpc.traceviewer.ui.OpenDatabaseDialog;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.AbstractDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
 
 /*************************************************************************************
  * 
@@ -63,15 +67,19 @@ public class TraceDatabase
 
 		if (listOfDatabases != null) {
 			final TraceDatabase data = listOfDatabases.get(_window);
-			if (data == null) return;
-			if (data.dataTraces != null) {
-				data.dataTraces.closeDB();
-				data.dataTraces.dispose();
-			}
+			removeDatabase(data);
 			listOfDatabases.remove(_window);
 		}
 	}
 
+	static private void removeDatabase(TraceDatabase data) {
+		if (data != null) {
+			if (data.dataTraces != null) {
+				data.dataTraces.closeDB();
+				data.dataTraces.dispose();
+			}
+		}
+	}
 	
 	
 	/******
@@ -151,27 +159,25 @@ public class TraceDatabase
 			DatabaseAccessInfo info, boolean useLocalDatbaase)
 	{
 		SpaceTimeDataController stdc = null;
-		String message = null;
 		DatabaseAccessInfo database_info = info;
 		
 		do {
-			
 			try {
 				AbstractDBOpener opener = getDBOpener(database_info);
 				stdc = opener.openDBAndCreateSTDC(window, statusMgr);
 			} catch (Exception e) 
 			{
-				stdc    = null;
-				message = e.getMessage();
-				
+				// in case of error while opening the database, we should display again
+				// the open database window with the error message
 				OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, 
-						message, useLocalDatbaase);
+						e.getMessage(), useLocalDatbaase);
 				if (dlg.open() == Window.CANCEL)
+					// user gives up
 					return false;
 				
+				stdc    	  = null; // just to mark we need to go back to the loop
 				database_info = dlg.getDatabaseAccessInfo();
 			}
-
 		} while (stdc == null);
 		
 		return processDatabase(window, statusMgr, stdc);
@@ -181,9 +187,8 @@ public class TraceDatabase
 			SpaceTimeDataController stdc)
 	{
 		TraceDatabase database = TraceDatabase.getInstance(window);
+		removeDatabase(database);
 		// remove old resources
-		if (database.dataTraces != null)
-			database.dataTraces.dispose();
 		 
 		database.dataTraces = stdc;
 		

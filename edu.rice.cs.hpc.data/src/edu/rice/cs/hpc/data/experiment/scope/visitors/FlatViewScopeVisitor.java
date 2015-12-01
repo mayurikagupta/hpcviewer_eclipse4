@@ -448,7 +448,7 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		if ( s1.getClass() != s2.getClass() )
 			return false;
 		
-		return (s1.hashCode() == s2.hashCode());
+		return (s1.getCCTIndex() == s2.getCCTIndex());
 	}
 	
 	

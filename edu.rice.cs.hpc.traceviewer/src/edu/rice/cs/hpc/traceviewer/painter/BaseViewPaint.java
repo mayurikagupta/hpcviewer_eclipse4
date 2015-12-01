@@ -15,18 +15,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.progress.UIJob;
-
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 import edu.rice.cs.hpc.traceviewer.util.Utility;
@@ -40,7 +39,7 @@ import edu.rice.cs.hpc.traceviewer.util.Utility;
  * 
  *
  *******************************************************/
-public abstract class BaseViewPaint extends UIJob
+public abstract class BaseViewPaint extends Job
 {
 	protected boolean changedBounds;
 	
@@ -81,11 +80,11 @@ public abstract class BaseViewPaint extends UIJob
 	 * @see org.eclipse.ui.progress.UIJob#runInUIThread(org.eclipse.core.runtime.IProgressMonitor)
 	 */
 	@Override
-	public IStatus runInUIThread(IProgressMonitor monitor) {
+	public IStatus run(IProgressMonitor monitor) {
 		IStatus status = Status.OK_STATUS;
 		
-		BusyIndicator.showWhile(getDisplay(), getThread());
-		if (!paint(canvas, monitor))
+		//BusyIndicator.showWhile(getDisplay(), getThread());
+		if (!paint( monitor))
 		{
 			status = Status.CANCEL_STATUS;
 		}
@@ -101,7 +100,7 @@ public abstract class BaseViewPaint extends UIJob
 	 *	@param canvas   		 The SpaceTimeDetailCanvas that will be painted on.
 	 *  @return boolean true of the pain is successful, false otherwise
 	 ***********************************************************************************/
-	public boolean paint(ISpaceTimeCanvas canvas, IProgressMonitor monitor)
+	public boolean paint(IProgressMonitor monitor)
 	{	
 		// depending upon how zoomed out you are, the iteration you will be
 		// making will be either the number of pixels or the processors
@@ -164,7 +163,7 @@ public abstract class BaseViewPaint extends UIJob
 		Debugger.printTimestampDebug("Rendering beginning (" + canvas.toString()+")");
 
 		// reset the line number to paint
-		controller.resetCounters();
+		//controller.resetCounters();
 		
 		//final List<Future<Integer>> threads = new ArrayList<Future<Integer>>();
 		final AtomicInteger timelineDone = new AtomicInteger(linesToPaint);
@@ -203,8 +202,8 @@ public abstract class BaseViewPaint extends UIJob
 			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
 					Display.getCurrent(), attributes.numPixelsH);
 			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, 1);
-			doSingleThreadPainting(canvas, thread);
+			waitDataPreparationThreads(ecs, result, launch_threads);
+			doSingleThreadPainting(thread, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
@@ -226,7 +225,7 @@ public abstract class BaseViewPaint extends UIJob
 			// -------------------------------------------------------------------
 			ArrayList<Integer> result = new ArrayList<Integer>();
 			waitDataPreparationThreads(ecs, result, launch_threads);
-			endPainting(canvas, threadsPaint);
+			endPainting(threadsPaint, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
 		monitor.done();
@@ -243,17 +242,12 @@ public abstract class BaseViewPaint extends UIJob
 	 * @param canvas
 	 * @param paintThread
 	 */
-	private void doSingleThreadPainting(ISpaceTimeCanvas canvas, BasePaintThread paintThread)
+	private void doSingleThreadPainting(final BasePaintThread paintThread, IProgressMonitor monitor)
 	{
 		try {
 			// do the data painting, and directly get the generated images
 			List<ImagePosition> listImages = paintThread.call();
-
-			// set the images into the canvas. 
-			for ( ImagePosition image: listImages )
-			{
-				drawPainting(canvas, image);
-			}
+			waitPainting(listImages, monitor);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -274,6 +268,7 @@ public abstract class BaseViewPaint extends UIJob
 			try {
 				Integer linenum = ecs.take().get();
 				result.add(linenum);
+				Debugger.printDebug(1, "BVP thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -286,16 +281,14 @@ public abstract class BaseViewPaint extends UIJob
 	 * @param canvas
 	 * @param listOfImageThreads
 	 */
-	private void endPainting(ISpaceTimeCanvas canvas, List<Future<List<ImagePosition>>> listOfImageThreads)
+	private void endPainting(List<Future<List<ImagePosition>>> listOfImageThreads,
+			IProgressMonitor monitor)
 	{
 		for( Future<List<ImagePosition>> listFutures : listOfImageThreads ) 
 		{
 			try {
 				List<ImagePosition> listImages = listFutures.get();
-				for (ImagePosition image : listImages) 
-				{
-					drawPainting(canvas, image);
-				}
+				waitPainting(listImages, monitor);
 				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -307,7 +300,35 @@ public abstract class BaseViewPaint extends UIJob
 		}
 	}
 	
+	private void waitPainting(List<ImagePosition> listImages, IProgressMonitor monitor)
+	{
+		Display display = Display.getDefault();
+		DrawPainting job = new DrawPainting(this, listImages, monitor);
+		display.syncExec(job);
+	}
 	
+	static private class DrawPainting implements Runnable
+	{
+		final private IProgressMonitor monitor;
+		final private List<ImagePosition> listImages;
+		final private BaseViewPaint viewPaint;
+		
+		DrawPainting(BaseViewPaint viewPaint, List<ImagePosition> listImages, IProgressMonitor monitor) {
+			this.monitor 	= monitor;
+			this.listImages = listImages;
+			this.viewPaint	= viewPaint;
+		}
+		
+		@Override
+		public void run() {
+			monitor.subTask("Painting");
+			for (ImagePosition image : listImages) 
+			{
+				viewPaint.drawPainting(viewPaint.canvas, image);
+			}
+			monitor.done();
+		}
+	}
 	//------------------------------------------------------------------------------------------------
 	// abstract methods 
 	//------------------------------------------------------------------------------------------------

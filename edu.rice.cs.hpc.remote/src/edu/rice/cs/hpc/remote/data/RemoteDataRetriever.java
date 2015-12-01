@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.db.remote;
+package edu.rice.cs.hpc.remote.data;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -14,11 +14,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Shell;
+
+import edu.rice.cs.hpc.remote.data.DecompressionThread.DecompressionItemToDo;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.graph.CallPath;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
-import edu.rice.cs.hpc.traceviewer.db.remote.DecompressionThread.DecompressionItemToDo;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
+
 
 /**
  * Handles communication with the remote server, including asking for data and

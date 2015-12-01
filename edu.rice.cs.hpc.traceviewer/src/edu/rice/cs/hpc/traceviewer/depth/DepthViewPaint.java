@@ -9,13 +9,14 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.BaseViewPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 
 /******************************************************
@@ -39,6 +40,8 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) 
 	{
+		controller.resetDepthCounter();
+		
 		final ImageTraceAttributes attributes = controller.getAttributes();
 		
 		int process = attributes.getPosition().process;

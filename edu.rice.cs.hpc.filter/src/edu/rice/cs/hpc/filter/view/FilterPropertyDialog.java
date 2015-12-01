@@ -40,7 +40,6 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.filter.FilterAttribute;
-import edu.rice.cs.hpc.filter.action.FilterInputDialog;
 import edu.rice.cs.hpc.filter.service.FilterMap;
 import edu.rice.cs.hpc.filter.service.FilterStateProvider;
 
@@ -77,9 +76,9 @@ public class FilterPropertyDialog extends TitleAreaDialog
 	 */
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		setTitle("Filter property");
-		setMessage("A filter consists of three properties: a checkbox to enable/disable, a pattern to match, and a type how the filter to be applied.\n" +
-					"You can add, modify or remove filters by clicking on the action button.");
+		setTitle("Two filter properties");
+		setMessage("A glob pattern to be matched and a type how the filter to be applied." +
+					" If a row is checked, then the filter is enabled. Otherwise it is disabled.");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		container.setLayout(new GridLayout(2, false));
@@ -143,7 +142,7 @@ public class FilterPropertyDialog extends TitleAreaDialog
 	    setInput(checkboxTableViewer, filterMap);
 
 	    setListener(checkboxTableViewer);
-		getShell().setText("Filter property");
+		getShell().setText("Filter");
 
 		return area;
 	}
@@ -200,12 +199,20 @@ public class FilterPropertyDialog extends TitleAreaDialog
 	}
 	
 	
+	/***
+	 * edit the current selected row
+	 * 
+	 * @param shell : the current dialog shell
+	 * @param viewer : the table
+	 * @param filterMap : filter map
+	 * @param pattern : the pattern to be modified
+	 * @param attribute : attribute
+	 */
 	static private void edit(Shell shell, CheckboxTableViewer viewer, FilterMap filterMap, 
 							 String pattern, FilterAttribute attribute) {
 		final FilterInputDialog dialog = new FilterInputDialog(shell, "Editing a filter", pattern, attribute);
 		if (dialog.open() == Window.OK)
 		{
-			//final FilterMap filterMap = FilterMap.getInstance();
 			FilterAttribute newattribute = dialog.getAttribute();
 			if (filterMap.update(pattern, dialog.getValue(), newattribute))
 			{
@@ -252,6 +259,11 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		}
 	}
 	
+	/******************************************************************
+	 * 
+	 * action class for double click
+	 *
+	 *******************************************************************/
 	static private class DoubleClickListener implements IDoubleClickListener
 	{	
 		final private Shell shell;
@@ -275,6 +287,11 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		}
 	}
 	
+	/******************************************************************
+	 * 
+	 * a label provider class for the filter table
+	 *
+	 *******************************************************************/
 	static private class TypeLabelProvider extends CellLabelProvider
 	{
 		@Override
@@ -286,25 +303,20 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		@Override
 		public String getToolTipText(Object element) {
 			if (element != null && element instanceof Entry<?, ?>) {
-				Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) element;
-				FilterAttribute attr = item.getValue();
-				String text;
-				switch(attr.filterType) {
-				case Self_Only:
-						text = "Self only: only the matched nodes will be omitted from the tree"; break;
-				case Children_Only:
-					text = "Children only: all the children of the matched nodes will be omitted from the tree"; break;
-				case Self_And_Children:
-					text = "Self and children: the matched nodes and its children will be omitted from the tree"; break;
-				default:
-						text = element.toString();
-				}
+				final Entry<String, FilterAttribute> item = (Entry<String, FilterAttribute>) element;
+				final FilterAttribute attr = item.getValue();
+				final String text = attr.getDescription();
 				return text;
 			}
 			return element.toString();
 		}
 	}
 	
+	/******************************************************************
+	 * 
+	 * class to fill the value of a check box
+	 *
+	 *******************************************************************/
 	static private class CheckStateProvider implements ICheckStateProvider
 	{
 		
@@ -324,6 +336,11 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		}
 	}
 	
+	/*******************************************************************
+	 * 
+	 * class for event when a check box state is updated
+	 *
+	 ********************************************************************/
 	static private class CheckStateListener implements ICheckStateListener
 	{
 		final private FilterMap filterMap;
@@ -334,18 +351,22 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		public void checkStateChanged(CheckStateChangedEvent event) {
 			final Entry<String, FilterAttribute> element = (Entry<String, FilterAttribute>) event.getElement();
 			final String key = element.getKey();
-			//FilterMap map    = FilterMap.getInstance();
 			
 			// get the original attribute to be modified
 			FilterAttribute attribute = element.getValue();
 			attribute.enable = event.getChecked();
 			
-			// save to the registry
+			// change the filter.
+			// now, it's up to caller to save to the registry
 			filterMap.put(key, attribute);
-			//map.save();
 		}	    	
 	}
 	
+	/*******************************************************************
+	 * 
+	 * class for a row comparison  
+	 *
+	 ********************************************************************/
 	static private class PatternViewerComparator extends ViewerComparator
 	{
     	@Override
@@ -357,6 +378,11 @@ public class FilterPropertyDialog extends TitleAreaDialog
     	}
 	}
 	
+	/********************************************************************
+	 * 
+	 * class for a selection event on the table
+	 *
+	 ********************************************************************/
 	private static class SelectionChangedListener implements ISelectionChangedListener
 	{
 		final private Button []btnSelections;
@@ -374,7 +400,11 @@ public class FilterPropertyDialog extends TitleAreaDialog
 		}	
 	}
 	
-	
+	/********************************************************************
+	 * 
+	 * class for buttons' action (add, delete and edit)
+	 *
+	 ********************************************************************/
 	private static class ButtonSelectionListener extends SelectionAdapter
 	{
 		static enum ButtonType {Add, Delete, Edit};

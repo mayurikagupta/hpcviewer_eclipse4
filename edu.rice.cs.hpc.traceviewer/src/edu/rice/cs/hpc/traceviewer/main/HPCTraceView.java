@@ -33,11 +33,11 @@ import org.eclipse.ui.services.ISourceProviderService;
 import edu.rice.cs.hpc.common.util.SleakManager;
 import edu.rice.cs.hpc.traceviewer.actions.OptionMidpoint;
 import edu.rice.cs.hpc.traceviewer.actions.OptionRecordsDisplay;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.Frame;
 import edu.rice.cs.hpc.traceviewer.operation.RefreshOperation;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
 import edu.rice.cs.hpc.traceviewer.services.DataService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Frame;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
 
 
 /*************************************************************************

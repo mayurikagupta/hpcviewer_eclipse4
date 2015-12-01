@@ -1,4 +1,4 @@
-package edu.rice.cs.hpc.traceviewer.db.remote;
+package edu.rice.cs.hpc.remote.data;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,13 +22,14 @@ import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
 import edu.rice.cs.hpc.data.experiment.extdata.TraceName;
 import edu.rice.cs.hpc.remote.tunnel.LocalTunneling;
 import edu.rice.cs.hpc.remote.tunnel.RemoteUserInfo;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.AbstractDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo.DatabaseField;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
-import edu.rice.cs.hpc.traceviewer.db.AbstractDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo.DatabaseField;
-import edu.rice.cs.hpc.traceviewer.db.TraceDatabase;
+
 /**
  * Handles the protocol and commands to set up the session with the server.
  * 
@@ -356,7 +357,7 @@ public class RemoteDBOpener extends AbstractDBOpener
 				return;
 			} else {
 				//Connecting to a different server
-				TraceDatabase.removeInstance(window);
+				//TraceDatabase.removeInstance(window);
 			}
 		}
 		serverConnection = new Socket(serverURL, port);
