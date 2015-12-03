@@ -37,6 +37,7 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 {
 	// constants
 	static public double fTHRESHOLD = PreferenceConstants.P_THRESHOLD_DEFAULT; 
+	static final private int MESSAGE_TIMEOUT = 8000; // time out when showing a message
 
 	//-------------- DATA
     protected ScopeTreeViewer 	treeViewer;		  	// tree 
@@ -48,10 +49,8 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
     public interface IActionType {};
     public enum ActionType implements IActionType {ZoomIn, ZoomOut} ;
 	
-	protected IWorkbenchWindow objWindow;
-
-	// public preference
-	protected IScopeActionsGUI objActionsGUI;
+	protected IWorkbenchWindow 	objWindow;
+	protected IScopeActionsGUI 	objActionsGUI;
     protected Shell				objShell;
 	
     /**
@@ -202,7 +201,7 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 		}
          public void run() {
              try{
-            	 sleep(8000);
+            	 sleep(MESSAGE_TIMEOUT);
              } catch(InterruptedException e) {
             	 e.printStackTrace();
              }

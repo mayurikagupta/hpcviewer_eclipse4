@@ -237,7 +237,6 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 				BaseViewPaint depthPaint = new DepthViewPaint(Util.getActiveWindow(), bufferGC, 
 						stData, attributes, true, DepthTimeCanvas.this, threadExecutor);
 				
-				depthPaint.setUser(true);
 				depthPaint.addJobChangeListener(new DepthJobListener(bufferGC));
 				depthPaint.schedule();
 			}

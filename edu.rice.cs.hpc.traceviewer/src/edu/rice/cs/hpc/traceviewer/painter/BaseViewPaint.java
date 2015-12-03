@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Device;
@@ -72,6 +73,8 @@ public abstract class BaseViewPaint extends Job
 		this.window 		= (window == null ? Util.getActiveWindow() : window);
 		this.canvas 		= canvas;
 		this.threadExecutor = threadExecutor;
+		
+		setRule(new MutexRule(this));
 	}
 	
 
@@ -330,6 +333,42 @@ public abstract class BaseViewPaint extends Job
 			monitor.done();
 		}
 	}
+	
+	
+	/*********************************
+	 * 
+	 * Rule for avoiding two jobs execute simultaneously
+	 *
+	 *********************************/
+	static private class MutexRule implements ISchedulingRule
+	{
+		final private BaseViewPaint paint;
+		
+		public MutexRule(BaseViewPaint paint) {
+			this.paint = paint;
+		}
+		
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return theSame(rule);
+		}
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return theSame(rule);
+		}
+		
+		private boolean theSame(ISchedulingRule rule) {
+			if (rule instanceof MutexRule) {
+				// we try to avoid conflict between painting with the same class:
+				// main trace job shouldn't be run simultaneously with other main trace job
+				boolean ret = paint.getName().equals( ((MutexRule)rule).paint.getName() );
+				return ret;
+			}
+			return false;
+		}
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	// abstract methods 
 	//------------------------------------------------------------------------------------------------

@@ -48,13 +48,18 @@ public class RedoOperationAction extends OperationHistoryAction {
 	protected void execute() {
 
 		IUndoableOperation[] undos = TraceOperation.getUndoHistory();
-		
+
 		if (undos.length == 0) {
 			// hack: when there's no undo, we need to remove the current
 			// history into the undo stack. To do this properly, we
 			// should perform an extra redo before the real redo
 
-			doRedo();
+			//doRedo();
+			IUndoableOperation[] operations = getHistory();
+			if (operations != null && operations.length-2>=0) {
+				execute(operations[operations.length-2]);
+				return;
+			}
 		}
 		doRedo();
 	}
