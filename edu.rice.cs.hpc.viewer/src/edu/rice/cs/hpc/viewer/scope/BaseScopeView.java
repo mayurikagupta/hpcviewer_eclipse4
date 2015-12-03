@@ -7,7 +7,8 @@ import org.eclipse.swt.widgets.TreeItem;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
-import edu.rice.cs.hpc.filter.service.FilterMap;
+import edu.rice.cs.hpc.data.experiment.scope.visitors.FilterScopeVisitor;
+
 
 /**
  * 
@@ -38,6 +39,9 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     		return;
     	
     	Experiment experiment = getExperiment();
+    	if (experiment == null || myRootScope == null)
+    		return;
+    	
 		RootScopeType rootType = myRootScope.getType();
 		
 		// reassign root scope
@@ -69,7 +73,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         this.updateDatabase(myExperiment);
 
         // Update root scope
-        if (myRootScope.getChildCount() > 0) {
+        if (myRootScope != null && myRootScope.getChildCount() > 0) {
             treeViewer.setInput(myRootScope);
             
             this.objViewActions.updateContent(getExperiment(), myRootScope);
@@ -83,6 +87,24 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             this.treeViewer.getTree().setSelection(objItem);
             // reset the button
             this.objViewActions.checkNodeButtons();
+            
+            // ------------------------------------------------------------
+        	// check the status of filter. 
+            // if the filter may incur misleading information, we should warn users
+            // ------------------------------------------------------------
+        	if (myExperiment != null) {
+        		int filterStatus = myExperiment.getFilterStatus();
+        		switch (filterStatus) {
+        			case FilterScopeVisitor.STATUS_FAKE_PROCEDURE:
+        				objViewActions.showWarningMessage("Warning: the result of filter may incur incorrect information in Callers View and Flat View.");
+        				break;
+        			case FilterScopeVisitor.STATUS_OK:
+        	    		int filtered = myExperiment.getNumberOfFilteredScopes();
+    	    			objViewActions.showInfoMessage("At least there are " + filtered + " scopes omitted with the filter.");
+    	    			break;
+        		}
+        	}
+
         } else {
         	// empty experiment data (it should be a warning instead of an error. The error should be on the profile side).
         	this.objViewActions.showErrorMessage("Warning: empty database.");
@@ -99,10 +121,6 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         	Tree tree = treeViewer.getTree();
         	if (tree != null && !tree.isDisposed())
         	{
-        		AbstractContentProvider provider = (AbstractContentProvider) treeViewer.getContentProvider();
-        		FilterMap filter = FilterMap.getInstance();
-        		provider.setEnableFilter(filter.isFilterEnabled());
-        		
         		initTableColumns(tree, keepColumnStatus);
         	}
         }

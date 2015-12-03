@@ -20,7 +20,6 @@ import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 
 /**
  * View class for caller view. At the moment, the caller view is the same as calling context view
- * @author laksonoadhianto
  *
  */
 public class CallerScopeView extends BaseScopeView {
@@ -29,21 +28,21 @@ public class CallerScopeView extends BaseScopeView {
 	/* (non-Javadoc)
 	 * @see edu.rice.cs.hpc.viewer.scope.BaseScopeView#createActions(org.eclipse.swt.widgets.Composite, org.eclipse.swt.widgets.CoolBar)
 	 */
-	//@Override
+	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
     	IWorkbenchWindow window = this.getSite().getWorkbenchWindow();
         return new BaseScopeViewActions(this.getViewSite().getShell(), window, parent, coolbar); 
 	}
 
-	//@Override
+	@Override
 	protected CellLabelProvider getLabelProvider() {
 		return new StyledScopeLabelProvider(this.getSite().getWorkbenchWindow());
 	}
 
-	//@Override
+	@Override
 	protected void createAdditionalContextMenu(IMenuManager mgr, Scope scope) {}
 
-	//@Override
+	@Override
 	protected void mouseDownEvent(Event event) {}
 
 	@Override
@@ -51,7 +50,7 @@ public class CallerScopeView extends BaseScopeView {
 		return new CallerViewContentProvider();
 	}
 
-	//@Override
+	@Override
 	protected void updateDatabase(Experiment newDatabase) {
 		
 		// ---------------------------------------------------------------------------

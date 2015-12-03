@@ -202,7 +202,7 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 		}
          public void run() {
              try{
-            	 sleep(5000);
+            	 sleep(8000);
              } catch(InterruptedException e) {
             	 e.printStackTrace();
              }
@@ -238,7 +238,13 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 		// remove the msg in 5 secs
 		RestoreMessageThread thrRestoreMessage = new RestoreMessageThread();
 		thrRestoreMessage.start();
-
+	}
+	
+	public void showWarningMessage(String strMsg) {
+		objActionsGUI.showWarningMessagge(strMsg);
+		// remove the msg in 5 secs
+		RestoreMessageThread thrRestoreMessage = new RestoreMessageThread();
+		thrRestoreMessage.start();
 	}
 	
 	/**

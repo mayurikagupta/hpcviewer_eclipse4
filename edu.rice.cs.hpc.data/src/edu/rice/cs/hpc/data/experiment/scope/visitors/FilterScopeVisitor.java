@@ -36,6 +36,8 @@ import edu.rice.cs.hpc.data.filter.IFilterData;
  ******************************************************************/
 public class FilterScopeVisitor implements IScopeVisitor 
 {
+	static public final int STATUS_INIT=0, STATUS_OK = 1, STATUS_FAKE_PROCEDURE = 2; 
+	
 	private final IFilterData filter;
 	private final IMetricValueCollection rootMetricValues;
 	private final BaseExperiment experiment;
@@ -46,7 +48,9 @@ public class FilterScopeVisitor implements IScopeVisitor
 	/**** flag to allow the dfs to continue to go deeper or not.  
 	      For inclusive filter, we should stop going deeper      *****/
 	private boolean need_to_continue;
-	private boolean scope_has_changed;
+
+	private int num_scope_filtered = 0;
+	private int filterStatus 	   = STATUS_INIT;
 	
 	/***********
 	 * Constructor to filter a cct
@@ -61,7 +65,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 		this.rootMetricValues = rootOriginalCCT.getMetricValues();
 		this.rootOriginalCCT  = rootOriginalCCT;
 		need_to_continue 	  = true;
-		scope_has_changed 	  = false;
 		
 		experiment = rootOriginalCCT.getExperiment();
 		if (experiment instanceof Experiment)
@@ -80,9 +83,14 @@ public class FilterScopeVisitor implements IScopeVisitor
 		return need_to_continue;
 	}
 	
-	public boolean scopeHasChanged()
+	public int numberOfFilteredScopes() 
 	{
-		return scope_has_changed;
+		return num_scope_filtered;
+	}
+	
+	public int getFilterStatus() 
+	{
+		return filterStatus;
 	}
 	
 	//----------------------------------------------------
@@ -112,7 +120,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 	 * @return boolean true if the scope itself has been removed, false otherwise
 	 */
 	private boolean mergeInsert(Scope scope, ScopeVisitType vt) {
-		scope_has_changed = false;
+
 		if (vt == ScopeVisitType.PreVisit) {
 			// Previsit
 			Scope parent = scope.getParentScope();
@@ -120,7 +128,12 @@ public class FilterScopeVisitor implements IScopeVisitor
 			FilterAttribute filterAttribute = filter.getFilterAttribute(scope.getName());
 			if (filterAttribute != null)
 			{
+				if (filterStatus == STATUS_INIT) {
+					filterStatus = STATUS_OK;
+				}
+				num_scope_filtered++;
 				need_to_continue = (filterAttribute.filterType == FilterAttribute.Type.Self_Only);
+
 				if (filterAttribute.filterType == FilterAttribute.Type.Descendants_Only)
 				{
 					//-------------------------------------------------------------------
@@ -135,7 +148,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 							{
 								Scope child_scope = (Scope) child;
 								mergeMetrics(scope, child_scope, false);
-								
 							}
 						}
 					}
@@ -162,7 +174,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 						}
 					}
 					removeChild(scope, vt, filterAttribute.filterType);
-					scope_has_changed = true;
 				}
 			} else 
 			{
@@ -172,7 +183,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 		} else 
 		{ // PostVisit
 		}
-		return scope_has_changed;
+		return need_to_continue;
 	}
 	
 	/********
@@ -234,6 +245,11 @@ public class FilterScopeVisitor implements IScopeVisitor
 	 */
 	private void mergeMetrics(Scope parent, Scope child, boolean exclusive_filter)
 	{
+		if (parent instanceof ProcedureScope) {
+			if (((ProcedureScope)parent).isFalseProcedure() ) {
+				filterStatus = STATUS_FAKE_PROCEDURE;
+			}
+		}
 		// we need to merge the metric values
 		IMetricValueCollection values = child.getMetricValues();
 		for (int i=0; i<metrics.length; i++)

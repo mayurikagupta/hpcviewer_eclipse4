@@ -105,6 +105,7 @@ public class ViewerWindow {
 					e.printStackTrace();
 				}
 			}
+			
 			final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);
 			DatabaseState databaseState = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
 			databaseState.refreshDatabase(filter);
