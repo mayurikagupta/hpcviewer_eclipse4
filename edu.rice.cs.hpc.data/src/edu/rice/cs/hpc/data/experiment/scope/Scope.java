@@ -58,7 +58,7 @@ static public final int SOURCE_CODE_AVAILABLE = 1;
 static public final int SOURCE_CODE_NOT_AVAILABLE= 2;
 
 /** The current maximum number of ID for all scopes	 */
-static protected int idMax = 0;
+//static protected int idMax = 0;
 
 protected RootScope root;
 /** The experiment owning this scope. */

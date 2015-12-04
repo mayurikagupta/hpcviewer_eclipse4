@@ -59,11 +59,6 @@ public FileScope(RootScope root, SourceFile sourceFile, int idFile)
 //	this.id = "FileScope";
 }
 
-public FileScope(RootScope root, SourceFile sourceFile)
-{
-	super(root, sourceFile, Scope.idMax++);
-//	this.id = "FileScope";
-}
 
 public Scope duplicate() {
     return new FileScope(this.root, sourceFile, this.flat_node_index);

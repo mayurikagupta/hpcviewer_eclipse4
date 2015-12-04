@@ -59,11 +59,6 @@ public LoadModuleScope(RootScope root, String lmname, SourceFile file, int id)
 	this.loadModuleName = lmname;
 }
 
-public LoadModuleScope(RootScope root, String lmname, SourceFile file)
-{
-	super(root, file, Scope.idMax++);
-	this.loadModuleName = lmname;
-}
 
 
 public Scope duplicate() {

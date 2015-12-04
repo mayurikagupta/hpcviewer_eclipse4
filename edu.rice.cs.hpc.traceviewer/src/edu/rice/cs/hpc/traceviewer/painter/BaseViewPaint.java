@@ -212,7 +212,7 @@ public abstract class BaseViewPaint extends Job
 		monitor.done();
 		changedBounds = false;
 
-		return true;
+		return !monitor.isCanceled();
 	}
 	
 	/****
