@@ -95,11 +95,14 @@ public class DepthViewPaint extends BaseViewPaint {
 			ImagePosition img) {
 		if (masterGC != null && !masterGC.isDisposed())
 		{
-			masterGC.drawImage(img.image, 0, 0, img.image.getBounds().width, 
+			try {
+				masterGC.drawImage(img.image, 0, 0, img.image.getBounds().width, 
 					img.image.getBounds().height, 0, 
 					Math.round(img.position*numPixels), 
 					img.image.getBounds().width, img.image.getBounds().height);
-			
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			img.image.dispose();
 		}
 	}

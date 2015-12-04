@@ -923,6 +923,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				{
 					// we don't need this "new image" since the paint fails
 					imageFinal.dispose();	
+					asyncRedraw();
 				}
 				// free resources 
 				bufferGC.dispose();
@@ -938,7 +939,18 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		});
 		detailPaint.schedule();
 	}
-	
+
+	private void asyncRedraw() 
+	{
+		Display display = Display.getDefault();
+		display.asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+				redraw();
+			}
+		});
+	}
 
 	private void donePainting(Image imageOrig, Image imageFinal, boolean refreshData)
 	{		
@@ -958,14 +970,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				notifyChangePosition(new_p);
 			}
 		}
-		Display display = Display.getDefault();
-		display.asyncExec(new Runnable() {
-			
-			@Override
-			public void run() {
-				redraw();
-			}
-		});
+		asyncRedraw();
 
 		// -----------------------------------------------------------------------
 		// notify to all other views that a new image has been created,

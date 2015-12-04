@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
+import org.eclipse.jface.dialogs.MessageDialog;
 
 import edu.rice.cs.hpc.common.util.ProcedureAliasMap;
 import edu.rice.cs.hpc.data.experiment.ExperimentWithoutMetrics;
@@ -85,8 +86,15 @@ public abstract class SpaceTimeDataController
 			throws InvalExperimentException, Exception 
 	{			
 		exp = new ExperimentWithoutMetrics();
-		exp.open(expFile, new ProcedureAliasMap());
-		
+		try {
+			// possible java.lang.OutOfMemoryError exception here
+			exp.open(expFile, new ProcedureAliasMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+			MessageDialog.openError(_window.getShell(), "Error: unable to parse the database", 
+					"Unable to read the file: " + expFile.getAbsolutePath() + "\n" +
+					e.getMessage());
+		}
 		init(_window);
 	}
 	
