@@ -108,8 +108,8 @@ public class Experiment extends BaseExperimentWithMetrics
 	{
 		RootScope callersViewRootScope = new RootScope(this, "Callers View", RootScopeType.CallerTree);
 		beginScope(callersViewRootScope);
-		
-		return createCallersView(callingContextViewRootScope, callersViewRootScope);
+		return null;
+		//return createCallersView(callingContextViewRootScope, callersViewRootScope);
 	}
 	
 	/***
