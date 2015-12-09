@@ -42,7 +42,6 @@ import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.Metric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricType;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
-import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
@@ -371,7 +370,9 @@ public class MetricPropertyDialog extends TitleAreaDialog
 			return;
 		
 		if (metric instanceof DerivedMetric) {
-			RootScope root = experiment.getRootScope(RootScopeType.CallingContextTree);
+			// TODO: hack fix: we need to get any scope in the tree.
+			// to get the first root if the safest we can have.
+			RootScope root = (RootScope) experiment.getRootScopeChildren()[0];
 			ExtDerivedMetricDlg dialog = new ExtDerivedMetricDlg( getShell(), 
 					experiment,	root );
 			
