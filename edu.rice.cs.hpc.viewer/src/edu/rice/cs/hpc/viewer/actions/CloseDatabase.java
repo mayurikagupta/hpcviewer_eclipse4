@@ -10,6 +10,7 @@ import java.util.List;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -81,13 +82,16 @@ public class CloseDatabase extends AbstractHandler {
 			ListSelectionDialog dlg = new ListSelectionDialog(window.getShell(), dbList, 
 				new ArrayContentProvider(), new LabelProvider(), "Select the databases to close:");
 			dlg.setTitle("Select Databases");
-			dlg.open();
-			Object[] selectedDatabases = dlg.getResult();
+			if (dlg.open() == Dialog.OK) {
+				Object[] selectedDatabases = dlg.getResult();
 
-			if ((selectedDatabases == null) || (selectedDatabases.length <= 0)) {
+				if ((selectedDatabases == null) || (selectedDatabases.length <= 0)) {
+					return null;
+				}
+				databasesToClose = selectedDatabases;
+			} else {
 				return null;
 			}
-			databasesToClose = selectedDatabases;
 		}
 
 		

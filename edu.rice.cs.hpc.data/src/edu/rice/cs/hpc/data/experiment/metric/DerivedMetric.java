@@ -143,8 +143,12 @@ public class DerivedMetric extends BaseMetric {
 
 	@Override
 	public BaseMetric duplicate() {
-		return new DerivedMetric(root, experiment, expression.toString(), displayName, 
+		final DerivedMetric copy = new DerivedMetric(root, experiment, expression.toString(), displayName, 
 				shortName, index, annotationType, metricType);
+		
+		// TODO: hack, we need to conserve the format of the metric.
+		copy.displayFormat = displayFormat;
+		return copy;
 	}
 	
 	/****

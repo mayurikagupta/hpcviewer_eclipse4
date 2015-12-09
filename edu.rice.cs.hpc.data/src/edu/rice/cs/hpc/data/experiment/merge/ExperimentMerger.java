@@ -112,6 +112,8 @@ public class ExperimentMerger
 		if (root1 == null) {
 			throw new Exception("Unable to find root type " + type + " in " + exp1.getDefaultDirectory());
 		}
+		createFlatTree(exp1, type, root1);
+		
 		root1.dfsVisitScopeTree(new DuplicateScopeTreesVisitor(rootScope));
 		
 		RootScope rootMerged = (RootScope) merged.getRootScopeChildren()[0];	
@@ -124,12 +126,33 @@ public class ExperimentMerger
 		if (root2 == null) {
 			throw new Exception("Unable to find root type " + type + " in " + exp2.getDefaultDirectory());
 		}
+		createFlatTree(exp2, type, root2);
+
 		final int metricCount = exp1.getMetricCount();
 		new TreeSimilarity(metricCount, rootMerged, root2, verbose);
 		
 		return merged;
 	}
-	
+
+	/*******
+	 * create flat tree if needed. <br/>
+	 * The latest version of hpcviewer, flat tree is generated dynamically when needed.
+	 * For merging, we need to force to create the flat trees and then merge them.
+	 * 
+	 * @param exp
+	 * @param type
+	 * @param rootFlat
+	 * @return
+	 */
+	private static RootScope createFlatTree(Experiment exp, RootScopeType type, RootScope rootFlat)
+	{
+		if (!rootFlat.hasChildren() && type == RootScopeType.Flat) {
+			// create flat tree if it is not created yet
+			final RootScope callingContextViewRootScope = exp.getRootScope(RootScopeType.CallingContextTree);
+			rootFlat = exp.createFlatView(callingContextViewRootScope, rootFlat);
+		}
+		return rootFlat;
+	}
 	
 	/***
 	 * combine metrics from exp 1 and exp 2
