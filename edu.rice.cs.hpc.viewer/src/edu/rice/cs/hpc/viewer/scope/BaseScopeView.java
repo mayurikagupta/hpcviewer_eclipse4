@@ -107,7 +107,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 
         } else {
         	// empty experiment data (it should be a warning instead of an error. The error should be on the profile side).
-        	this.objViewActions.showErrorMessage("Warning: empty database.");
+        	// this.objViewActions.showErrorMessage("Warning: empty database.");
         }
    	}
 

@@ -84,7 +84,9 @@ public class CallerScopeView extends BaseScopeView {
 		}
 
 		@Override
-		public void partActivated(IWorkbenchPartReference partRef) {}
+		public void partActivated(IWorkbenchPartReference partRef) {
+			partVisible(partRef);
+		}
 
 		@Override
 		public void partBroughtToTop(IWorkbenchPartReference partRef) {}
@@ -115,9 +117,11 @@ public class CallerScopeView extends BaseScopeView {
 				
 				if (database != null && !rootClt.hasChildren()) {
 					Experiment experiment = database.getExperiment();
-					RootScope rootCCT = experiment.getRootScope(RootScopeType.CallingContextTree);
-					rootClt = experiment.createCallersView(rootCCT, rootClt);
-					view.setInput(database, rootClt, true);
+					if (experiment.getRootScope() != null) {
+						RootScope rootCCT = experiment.getRootScope(RootScopeType.CallingContextTree);
+						rootClt = experiment.createCallersView(rootCCT, rootClt);
+						view.setInput(database, rootClt, true);
+					}
 				}
 			}
 		}

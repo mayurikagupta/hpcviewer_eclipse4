@@ -301,10 +301,9 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     
     /**
      * Actions/menus for Scope view tree.
-     * @author laksono
      *
      */
-    protected class ScopeViewTreeAction extends Action {
+    static protected class ScopeViewTreeAction extends Action {
     	protected Scope scope;
     	public ScopeViewTreeAction(String sTitle, Scope scopeCurrent) {
     		super(sTitle);

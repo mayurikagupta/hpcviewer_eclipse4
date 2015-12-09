@@ -10,15 +10,19 @@ import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
+import edu.rice.cs.hpc.viewer.window.Database;
 
 /**
  * Class for flat view scope. 
@@ -39,9 +43,7 @@ public class FlatScopeView extends BaseScopeView {
     	
     	final IWorkbenchPage page = getSite().getPage();
     	if (page != null) {
-        	final String myID = getViewSite().getId();
-    		final PartListener listener = new PartListener(myID);
-    		page.addPartListener(listener);
+        	page.addPartListener(new PartListener(getViewSite().getSecondaryId()));
     	}
     }
     
@@ -70,51 +72,74 @@ public class FlatScopeView extends BaseScopeView {
 	@Override
 	protected void updateDatabase(Experiment newDatabase) {}
 	
-	//////////////////////////////////////////////////////////////////
-	// Private class
-	//////////////////////////////////////////////////////////////////
-
-	
-	static private class PartListener implements IPartListener2
+	//////////////////////////////////////////////////////////////////////////////
+	// Private classes
+	//////////////////////////////////////////////////////////////////////////////
+	static private final class PartListener implements IPartListener2
 	{
-		final private String myID;
+		final String secondaryID;
 		
-		PartListener(String ID) {
-			this.myID = ID;
+		public PartListener(String secondaryID) {
+			this.secondaryID = secondaryID;
 		}
-		
+
 		@Override
-		public void partVisible(IWorkbenchPartReference partRef) {
-			if (partRef.getId().equals(myID)) {
-				//System.out.println("FSV visible");
-			}
+		public void partActivated(IWorkbenchPartReference partRef) {
+			partVisible(partRef);
 		}
-		
+
 		@Override
-		public void partOpened(IWorkbenchPartReference partRef) {}
-		
-		@Override
-		public void partInputChanged(IWorkbenchPartReference partRef) {}
-		
-		@Override
-		public void partHidden(IWorkbenchPartReference partRef) {}
-		
-		@Override
-		public void partDeactivated(IWorkbenchPartReference partRef) {}
-		
+		public void partBroughtToTop(IWorkbenchPartReference partRef) {}
+
 		@Override
 		public void partClosed(IWorkbenchPartReference partRef) {
-			if (partRef.getId().equals(myID)) {
-				//System.out.println("FSV closed");
+			if (isMyView(partRef)) {
 				partRef.getPage().removePartListener(this);
 			}
 		}
-		
+
 		@Override
-		public void partBroughtToTop(IWorkbenchPartReference partRef) {}
-		
+		public void partDeactivated(IWorkbenchPartReference partRef) {}
+
 		@Override
-		public void partActivated(IWorkbenchPartReference partRef) {}
+		public void partOpened(IWorkbenchPartReference partRef) {}
+
+		@Override
+		public void partHidden(IWorkbenchPartReference partRef) {}
+
+		@Override
+		public void partVisible(IWorkbenchPartReference partRef) {
+			if (isMyView(partRef)) {
+				// i am visible now
+				FlatScopeView view = (FlatScopeView) partRef.getPart(false);
+				Database database  = view.getDatabase();
+				RootScope rootFlat = view.getRootScope();
+				
+				if (database != null && !rootFlat.hasChildren()) {
+					// do not recreate the children if it's already created
+					// unless if we are in filtering mode
+					Experiment experiment = database.getExperiment();
+					if (experiment.getRootScope() != null) {
+						RootScope rootCCT 	  = experiment.getRootScope(RootScopeType.CallingContextTree);
+						rootFlat 			  = experiment.createFlatView(rootCCT, rootFlat);
+						view.setInput(database, rootFlat, true);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void partInputChanged(IWorkbenchPartReference partRef) {}
+
+		private boolean isMyView(IWorkbenchPartReference partRef) {
+			IWorkbenchPart part = partRef.getPart(false);
+			if (part instanceof FlatScopeView) {
+				FlatScopeView view = (FlatScopeView) part;
+				final String secID = view.getViewSite().getSecondaryId();
+				return (secondaryID.equals(secID));
+			}
+			return false;
+		}
 	}
 
 }
