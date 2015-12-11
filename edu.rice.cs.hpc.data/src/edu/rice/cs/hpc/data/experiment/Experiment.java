@@ -343,13 +343,18 @@ public class Experiment extends BaseExperimentWithMetrics
 	@Override
 	protected void filter_finalize(RootScope rootCCT, IFilterData filter) 
 	{
+		//------------------------------------------------------------------------------------------
 		// removing the original root for caller tree and flat tree
+		//------------------------------------------------------------------------------------------
 		Scope root = getRootScope();
-		while (root.getChildCount() > 0)
+		int index = 0;
+		while (root.getChildCount() > index)
 		{
-			RootScopeType type = ((RootScope)root.getChildAt(1)).getType();
+			RootScopeType type = ((RootScope)root.getChildAt(index)).getType();
 			if (type != RootScopeType.CallingContextTree)
-				root.remove(1);
+				root.remove(index);
+			else
+				index++;
 		}
 		
 		//------------------------------------------------------------------------------------------

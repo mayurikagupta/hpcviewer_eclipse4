@@ -100,7 +100,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 				{
 					if (sourceValue instanceof Boolean)
 					{
-						Boolean state = (Boolean) sourceValue;
+						boolean state = ((Boolean) sourceValue).booleanValue();
 						enableFilter(state);
 					}
 				}

@@ -57,12 +57,12 @@ static public final int SOURCE_CODE_UNKNOWN = 0;
 static public final int SOURCE_CODE_AVAILABLE = 1;
 static public final int SOURCE_CODE_NOT_AVAILABLE= 2;
 
-/** The current maximum number of ID for all scopes	 */
-//static protected int idMax = 0;
+//////////////////////////////////////////////////////////////////////////
+// ATTRIBUTES
+//////////////////////////////////////////////////////////////////////////
+
 
 protected RootScope root;
-/** The experiment owning this scope. */
-//protected BaseExperiment experiment;
 
 /** The source file containing this scope. */
 protected SourceFile sourceFile;
@@ -78,21 +78,15 @@ protected int lastLineNumber;
 
 /** The metric values associated with this scope. */
 private IMetricValueCollection metrics;
-//private IMetricValueCollection combinedMetrics;
-
-/** source citation */
-//private String srcCitation;
 
 /**
  * FIXME: this variable is only used for the creation of callers view to count
  * 			the number of instances. To be removed in the future
  */
 private int iCounter;
-// --------------------------
 
 //the cpid is removed in hpcviewer, but hpctraceview still requires it in order to dfs
 protected int cpid;
-//--------------------------
 
 public int iSourceCodeAvailability = Scope.SOURCE_CODE_UNKNOWN;
 
@@ -143,13 +137,22 @@ public Scope(RootScope root, SourceFile file, int scopeID)
 	this(root, file, Scope.NO_LINE_NUMBER, Scope.NO_LINE_NUMBER, scopeID, scopeID);
 }
 
-
+/***
+ * get the flat (static) index of the scope. Some scopes may have the same
+ * flat index if they are from the same address range. 
+ * @return
+ */
 public int getFlatIndex() {
 	return this.flat_node_index;
 }
 
+/***
+ * retrieve the CCT index of this scope.<br/>
+ * The index is theoretically unique, so it can be used as an ID.
+ * @return
+ */
 public int getCCTIndex() {
-	return (Integer) getValue(); //this.cct_node_index;
+	return (Integer) getValue();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -292,12 +295,6 @@ public int hashCode() {
 protected String getSourceCitation()
 {
 	return getSourceCitation(sourceFile, firstLineNumber, lastLineNumber);
-/*	if (this.srcCitation == null)  {
-		
-		srcCitation = this.getSourceCitation(sourceFile, firstLineNumber, lastLineNumber);
-	}
-
-	return srcCitation;*/
 }
 
 
@@ -629,46 +626,7 @@ private void accumulateMetricValue(int index, double value)
 	}
 }
 
-/**************************************************************************
- * copy metric values into the backup 
- **************************************************************************/
-/*public void backupMetricValues() {
-	if (this.metrics == null)
-		return;
-	
-	BaseExperiment experiment = getExperiment();
-	if (!(experiment instanceof BaseExperimentWithMetrics))
-		return;
-	
-	try {
-		combinedMetrics = root.getMetricValueCollection(this);
-				//new MetricValueCollection2(metrics.size());
-				
-		for(int i=0; i<metrics.size(); i++) {
-			MetricValue value = metrics.getValue(this, i);
-			BaseMetric metric = ((BaseExperimentWithMetrics)experiment).getMetric(i);
-			
-			//------------------------------------------------------------------
-			// if the value is not availabe we do NOT store it but instead we
-			//    assign to MetricValue.NONE
-			//------------------------------------------------------------------
-			if (MetricValue.isAvailable(value)) {
-				//----------------------------------------------------------------------
-				// derived incremental metric type needs special treatment: 
-				//	their value changes in finalization phase, while others don't
-				//----------------------------------------------------------------------
-				if (metric instanceof AggregateMetric) {
-					combinedMetrics.setValue(i, value.duplicate());
-				} else {
-					combinedMetrics.setValue(i, value);
-				}
-			}
-		}
 
-	} catch (IOException e) {
-		e.printStackTrace();
-	}
-}*/
 
 /***************************************************************************
  * retrieve the default metrics
@@ -686,36 +644,6 @@ public void setMetricValues(IMetricValueCollection values) {
 	this.metrics = values;
 }
 
-
-/***************************************************************************
- * retrieve the backup metrics
- * @return
- ***************************************************************************/
-/*public IMetricValueCollection getCombinedValues() {
-	
-	final BaseExperimentWithMetrics exp = (BaseExperimentWithMetrics) getExperiment();
-	IMetricValueCollection values = null;
-	try {
-		values = root.getMetricValueCollection(this);
-		
-		for (int i=0; i<exp.getMetricCount(); i++) {
-			BaseMetric m = exp.getMetric(i);
-			if (m instanceof AggregateMetric) {
-				if (this.combinedMetrics == null) {
-					values.setValue(i, metrics.getValue(this, i));
-				} else {
-					values.setValue(i, combinedMetrics.getValue(this, i));
-				}
-			} else {
-				values.setValue(i, metrics.getValue(this, i));
-			}
-		}
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	return values;
-}*/
 
 
 /**************************************************************************
@@ -745,16 +673,6 @@ public void combine(Scope source, MetricValuePropagationFilter filter) {
 	}
 }
 
-/*public void finalize(MetricValuePropagationFilter filter) {
-	final BaseExperimentWithMetrics exp = (BaseExperimentWithMetrics) getExperiment();
-	final BaseMetric []metrics = exp.getMetrics();
-	
-	for(BaseMetric metric : metrics) {
-		if (metric instanceof AggregateMetric) {
-			((AggregateMetric)metric).finalize(this);
-		}
-	}
-}*/
 
 /**********************************************************************************
  * Safely combining metrics from another scope. 
