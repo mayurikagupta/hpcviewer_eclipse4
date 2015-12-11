@@ -192,6 +192,10 @@ public class MetricRaw  extends BaseMetric {
 		return value;
 	}
 	
+	public MetricValue getRawValue(Scope s)
+	{
+		return getValue(s);
+	}
 	/*****
 	 * compute the average value of a scope for certain threads.
 	 * The number of threads cannot be null.

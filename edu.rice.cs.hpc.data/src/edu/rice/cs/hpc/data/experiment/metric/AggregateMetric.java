@@ -6,6 +6,7 @@ import com.graphbuilder.math.ExpressionTree;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import com.graphbuilder.math.FuncMap;
 
@@ -84,19 +85,6 @@ public class AggregateMetric extends BaseMetric {
 	}
 	
 	
-	/********
-	 * Assign the value of a scope based on the formula of a given type
-	 * @param type
-	 * @param scope
-	 *******/
-	public void finalize(Scope scope) {
-		Expression exp = this.formulaFinalize;
-		
-		if (exp != null) {
-			this.finalizeVarMap.setScope(scope);
-			this.setScopeValue(exp, this.finalizeVarMap, scope);
-		}
-	}
 	
 	/******
 	 * combining the metric from another view (typically cct) to this view
@@ -156,11 +144,36 @@ public class AggregateMetric extends BaseMetric {
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.data.experiment.metric.BaseMetric#getValue(edu.rice.cs.hpc.data.experiment.scope.Scope)
 	 */
-	public MetricValue getValue(Scope s) {
+	public MetricValue getValue(Scope scope) {
+		MetricValue value = MetricValue.NONE;
+		if (formulaFinalize != null) {
+			this.finalizeVarMap.setScope(scope);
+			try {
+				double dValue = formulaFinalize.eval(finalizeVarMap, fctMap);
+				// ugly checking if the value is zero or not. There is no zero comparison in
+				// Java double, so we assume we can compare it with 0.0d
+				if (Double.compare(dValue, 0.0d) != 0) {
+					value = new MetricValue(dValue);
+					if (getAnnotationType() == AnnotationType.PERCENT) {
+						RootScope root = scope.getRootScope();
+						MetricValue mvRoot = root.getMetricValue(this);
+						if (mvRoot != MetricValue.NONE) {
+							float percent = (float) (dValue / mvRoot.getValue());
+							MetricValue.setAnnotationValue(value, percent);
+						}
+					}
+				}
+			} catch(java.lang.Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return value;
+	}
+
+	public MetricValue getRawValue(Scope s) {
 		MetricValue mv = s.getMetricValue(this.index);
 		return mv;
 	}
-
 	@Override
 	/*
 	 * (non-Javadoc)

@@ -326,6 +326,8 @@ public abstract class BaseMetric {
 	 * @return a metric value
 	 *************************************************************************/
 	abstract public MetricValue getValue(Scope s);
+	
+	abstract public MetricValue getRawValue(Scope s);
 
 	/***
 	 * Method to duplicate itself (cloning)

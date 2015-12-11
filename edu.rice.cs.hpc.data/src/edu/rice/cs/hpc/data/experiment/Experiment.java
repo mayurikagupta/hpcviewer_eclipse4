@@ -139,11 +139,11 @@ public class Experiment extends BaseExperimentWithMetrics
 		//	This will solve the problem where there is only nested loops in the programs
 		callersViewRootScope.accumulateMetrics(callingContextViewRootScope, filter, this.getMetricCount());
 		
-		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
-		this.finalizeAggregateMetrics(callersViewRootScope, diVisitor);
+		//AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
+		//this.finalizeAggregateMetrics(callersViewRootScope, diVisitor);
 		
 		// bug fix 2010.06.17: move the percent after finalization
-		addPercents(callersViewRootScope, callersViewRootScope);
+		//addPercents(callersViewRootScope, callersViewRootScope);
 
 		return callersViewRootScope;
 	}
@@ -174,10 +174,10 @@ public class Experiment extends BaseExperimentWithMetrics
 		//----------------------------------------------------------------------------------------------
 		// FINALIZATION
 		//----------------------------------------------------------------------------------------------
-		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitor(this.getMetrics());
+/*		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitor(this.getMetrics());
 		finalizeAggregateMetrics(flatViewRootScope, diVisitor);	// flat view
 		
-		addPercents(flatViewRootScope, (RootScope) callingContextViewRootScope);
+		addPercents(flatViewRootScope, (RootScope) callingContextViewRootScope);*/
 
 		return flatViewRootScope;
 	}
@@ -300,51 +300,19 @@ public class Experiment extends BaseExperimentWithMetrics
 			//----------------------------------------------------------------------------------------------
 			// finalization
 			//----------------------------------------------------------------------------------------------
-			FinalizeMetricVisitorWithBackup diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
-			finalizeAggregateMetrics(callingContextViewRootScope, diVisitor);		// cct
+			//FinalizeMetricVisitorWithBackup diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
+			//finalizeAggregateMetrics(callingContextViewRootScope, diVisitor);		// cct
 
 			//----------------------------------------------------------------------------------------------
 			// Laks 2008.06.16: adjusting the percent based on the aggregate value in the calling context
 			//----------------------------------------------------------------------------------------------
-			addPercents(callingContextViewRootScope, (RootScope) callingContextViewRootScope);
+			//addPercents(callingContextViewRootScope, (RootScope) callingContextViewRootScope);
 
 		} else if (firstRootType.equals(RootScopeType.Flat)) {
 			addPercents(firstSubTree, (RootScope) firstSubTree);
 		} else {
 			// ignore; do no nothing
 		}
-	}
-
-	/**
-	 * check the existence of an aggregate metric. <br/>
-	 * If the metric is an aggregate, we need to initialize them !
-	 * @return true if the database contains a derived incremental (or aggregate) metric
-	 */
-	private boolean checkExistenceOfDerivedIncr() {
-		boolean isAggregate = false;
-		for (int i=0; i<this.getMetricCount(); i++) {
-			BaseMetric metric = this.getMetric(i);
-			boolean is_aggregate = (metric instanceof AggregateMetric); 
-			if (is_aggregate) {
-				isAggregate |= is_aggregate;
-				AggregateMetric aggMetric = (AggregateMetric) metric;
-				// TODO hack: initialize the metric here
-				aggMetric.init(this);
-			}
-		}
-		return isAggregate;
-	}
-
-
-	/**
-	 * finalizing metric values (only for aggregate metric from hpcprof-mpi)
-	 * @param root
-	 * @param diVisitor
-	 */
-	private void finalizeAggregateMetrics(Scope root, AbstractFinalizeMetricVisitor diVisitor) {
-		if (! checkExistenceOfDerivedIncr())
-			return;
-		root.dfsVisitScopeTree(diVisitor);
 	}
 
 

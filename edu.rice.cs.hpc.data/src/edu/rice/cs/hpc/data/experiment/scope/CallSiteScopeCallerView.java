@@ -6,9 +6,7 @@ import java.util.LinkedList;
 
 import edu.rice.cs.hpc.data.experiment.metric.AbstractCombineMetric;
 import edu.rice.cs.hpc.data.experiment.scope.filters.MetricValuePropagationFilter;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.AbstractFinalizeMetricVisitor;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.CallersViewScopeVisitor;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
 
 
 /**************************
@@ -112,11 +110,12 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 	 * @param inclusiveOnly: filter for inclusive metrics
 	 * @param exclusiveOnly: filter for exclusive metrics 
 	 */
-	public Object[] getAllChildren(AbstractFinalizeMetricVisitor finalizeVisitor, PercentScopeVisitor percentVisitor, 
+	@Override
+	public Object[] getAllChildren(
 			MetricValuePropagationFilter inclusiveOnly, 
 			MetricValuePropagationFilter exclusiveOnly ) {
 
-		boolean percent_need_recompute = false;
+		//boolean percent_need_recompute = false;
 		Object children[] = this.getChildren();
 
 		if (children != null && children.length>0) {
@@ -139,7 +138,7 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 			{
 				CallSiteScopeCallerView first = listOfChain.removeFirst();
 				CallersViewScopeVisitor.addNewPathIntoTree(this, first, listOfChain);
-				percent_need_recompute = true;
+				//percent_need_recompute = true;
 			}
 		}
 		
@@ -176,7 +175,7 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 					CallersViewScopeVisitor.mergeCallerPath(IMergedScope.MergingStatus.INCREMENTAL, counter_to_assign,
 							this, listOfChain, combine_with_dupl, inclusiveOnly, exclusiveOnly);
 
-					percent_need_recompute = true;
+					//percent_need_recompute = true;
 
 				} catch (java.lang.ClassCastException e) {
 					
@@ -196,18 +195,18 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 		//-------------------------------------------------------------------------
 		// set the percent
 		//-------------------------------------------------------------------------
-		children = getChildren();
+/*		children = getChildren();
 		if (percent_need_recompute && children != null) {
 			// there were some reconstruction of children. Let's finalize the metrics, and recompute the percent
 			for(Object child: children) {
 				if (child instanceof CallSiteScopeCallerView) {
-					CallSiteScopeCallerView csChild = (CallSiteScopeCallerView) child;
-					
-					csChild.dfsVisitScopeTree(finalizeVisitor);
-					csChild.dfsVisitScopeTree(percentVisitor);
+					//CallSiteScopeCallerView csChild = (CallSiteScopeCallerView) child;
+					//csChild.finalize(null);
+					//csChild.dfsVisitScopeTree(finalizeVisitor);
+					//csChild.dfsVisitScopeTree(percentVisitor);
 				}
 			}
-		}
+		}*/
 		
 		return this.getChildren();
 	}
@@ -236,7 +235,8 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 	static private Scope getScopeOfCombineMetrics(Scope source) {
 		Scope copy = source.duplicate();
 		// TODO: combined values can be null for verison 3
-		copy.setMetricValues( source.getCombinedValues() );
+		//copy.setMetricValues( source.getCombinedValues() );
+		copy.setMetricValues( source.getMetricValues() );
 		return copy;
 	}
 	

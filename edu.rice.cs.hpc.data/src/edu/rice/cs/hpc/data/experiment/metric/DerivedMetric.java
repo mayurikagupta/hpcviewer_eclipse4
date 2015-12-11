@@ -131,6 +131,11 @@ public class DerivedMetric extends BaseMetric {
 			return new MetricValue(dVal);
 		}
 	}
+	
+	public MetricValue getRawValue(Scope s)
+	{
+		return getValue(s);
+	}
 
 	/****
 	 * return the current expression formula

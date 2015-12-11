@@ -80,7 +80,10 @@ public MetricValue getValue(Scope s)
 	return s.getMetricValue(this);
 }
 
-
+public MetricValue getRawValue(Scope s)
+{
+	return getValue(s);
+}
 
 //@Override
 public BaseMetric duplicate() {

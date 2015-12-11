@@ -82,7 +82,7 @@ public class MetricVarMap extends VarMap {
 			if (metric == null) 
 				throw new RuntimeException("metric doesn't exist: " + sIndex);
 			if (scope != null) {
-				MetricValue value = metric.getValue(scope);
+				MetricValue value = metric.getRawValue(scope);
 				if(MetricValue.isAvailable(value))
 					return MetricValue.getValue(value);
 			}
@@ -100,7 +100,7 @@ public class MetricVarMap extends VarMap {
 				if (metric == null)
 					throw new RuntimeException("Unrecognize metric ID: " + varName);
 
-				return MetricValue.getValue(metric.getValue(root));
+				return MetricValue.getValue(metric.getRawValue(root));
 
 			} catch (java.lang.Exception e) {
 				throw new RuntimeException("Unrecognize variable: " + varName);

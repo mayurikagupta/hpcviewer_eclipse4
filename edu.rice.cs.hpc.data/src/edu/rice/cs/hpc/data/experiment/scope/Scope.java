@@ -78,7 +78,7 @@ protected int lastLineNumber;
 
 /** The metric values associated with this scope. */
 private IMetricValueCollection metrics;
-private IMetricValueCollection combinedMetrics;
+//private IMetricValueCollection combinedMetrics;
 
 /** source citation */
 //private String srcCitation;
@@ -632,7 +632,7 @@ private void accumulateMetricValue(int index, double value)
 /**************************************************************************
  * copy metric values into the backup 
  **************************************************************************/
-public void backupMetricValues() {
+/*public void backupMetricValues() {
 	if (this.metrics == null)
 		return;
 	
@@ -668,7 +668,7 @@ public void backupMetricValues() {
 	} catch (IOException e) {
 		e.printStackTrace();
 	}
-}
+}*/
 
 /***************************************************************************
  * retrieve the default metrics
@@ -691,7 +691,7 @@ public void setMetricValues(IMetricValueCollection values) {
  * retrieve the backup metrics
  * @return
  ***************************************************************************/
-public IMetricValueCollection getCombinedValues() {
+/*public IMetricValueCollection getCombinedValues() {
 	
 	final BaseExperimentWithMetrics exp = (BaseExperimentWithMetrics) getExperiment();
 	IMetricValueCollection values = null;
@@ -715,7 +715,7 @@ public IMetricValueCollection getCombinedValues() {
 		e.printStackTrace();
 	}
 	return values;
-}
+}*/
 
 
 /**************************************************************************
@@ -745,6 +745,16 @@ public void combine(Scope source, MetricValuePropagationFilter filter) {
 	}
 }
 
+/*public void finalize(MetricValuePropagationFilter filter) {
+	final BaseExperimentWithMetrics exp = (BaseExperimentWithMetrics) getExperiment();
+	final BaseMetric []metrics = exp.getMetrics();
+	
+	for(BaseMetric metric : metrics) {
+		if (metric instanceof AggregateMetric) {
+			((AggregateMetric)metric).finalize(this);
+		}
+	}
+}*/
 
 /**********************************************************************************
  * Safely combining metrics from another scope. 
@@ -865,9 +875,10 @@ public void dispose()
 {
 	super.dispose();
 	root 		= null;
-	metrics 		= null;
+	metrics 	= null;
+	sourceFile  = null;
 	//srcCitation		= null;
-	combinedMetrics = null;
+	//combinedMetrics = null;
 }
 
 }
