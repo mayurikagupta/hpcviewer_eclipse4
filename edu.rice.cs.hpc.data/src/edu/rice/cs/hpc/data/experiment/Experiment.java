@@ -108,8 +108,7 @@ public class Experiment extends BaseExperimentWithMetrics
 	{
 		RootScope callersViewRootScope = new RootScope(this, "Callers View", RootScopeType.CallerTree);
 		beginScope(callersViewRootScope);
-		//return callersViewRootScope;
-		return createCallersView(callingContextViewRootScope, callersViewRootScope);
+		return callersViewRootScope;
 	}
 	
 	/***
@@ -125,37 +124,28 @@ public class Experiment extends BaseExperimentWithMetrics
 					getMetricCount(), false, filter);
 		callingContextViewRootScope.dfsVisitScopeTree(csv);
 
-		// --------------------------------
-		// compute the aggregate metrics
-		// --------------------------------
-
-		// first, reset the values for the root in callers tree. 
-		// Callers tree is special since we can have the root, but its children are created dynamically.
-		// For the case of derived metric, the root may already have the value, so we need to reset it again
-		//	before we "accumulate" from the CCT
-		//callersViewRootScope.resetMetricValues();
-		
 		// bug fix 2008.10.21 : we don't need to recompute the aggregate metrics here. Just copy it from the CCT
 		//	This will solve the problem where there is only nested loops in the programs
 		callersViewRootScope.accumulateMetrics(callingContextViewRootScope, filter, this.getMetricCount());
 		
-		//AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
-		//this.finalizeAggregateMetrics(callersViewRootScope, diVisitor);
-		
-		// bug fix 2010.06.17: move the percent after finalization
-		//addPercents(callersViewRootScope, callersViewRootScope);
-
 		return callersViewRootScope;
 	}
 
+	/******
+	 * Preparing the tree of the flat view. This method will create just the root.
+	 * <br/>The caller is responsible to call {@link createFlatView} method to generate
+	 * the real tree.
+	 * 
+	 * @param cctRootScope : CCT root
+	 * @return the root of flat tree
+	 */
 	private RootScope prepareFlatView(Scope cctRootScope) 
 	{
 		RootScope flatRootScope = new RootScope(this, "Flat View", RootScopeType.Flat);
 		beginScope(flatRootScope);
-		//return flatRootScope;
-		return createFlatView(cctRootScope, flatRootScope);
-
+		return flatRootScope;
 	}
+	
 	/***
 	 * Create a flat tree
 	 * 
@@ -170,21 +160,12 @@ public class Experiment extends BaseExperimentWithMetrics
 
 		EmptyMetricValuePropagationFilter filter = new EmptyMetricValuePropagationFilter();
 		flatViewRootScope.accumulateMetrics(callingContextViewRootScope, filter	, getMetricCount());
-
-		//----------------------------------------------------------------------------------------------
-		// FINALIZATION
-		//----------------------------------------------------------------------------------------------
-/*		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitor(this.getMetrics());
-		finalizeAggregateMetrics(flatViewRootScope, diVisitor);	// flat view
-		
-		addPercents(flatViewRootScope, (RootScope) callingContextViewRootScope);*/
-
 		return flatViewRootScope;
 	}
 
 
 
-	protected void addInclusiveMetrics(Scope scope, MetricValuePropagationFilter filter)
+	private void addInclusiveMetrics(Scope scope, MetricValuePropagationFilter filter)
 	{
 		InclusiveMetricsScopeVisitor isv = new InclusiveMetricsScopeVisitor(this, filter);
 		scope.dfsVisitScopeTree(isv);
@@ -269,18 +250,17 @@ public class Experiment extends BaseExperimentWithMetrics
 			// accumulate, create views, percents, etc
 			Scope callingContextViewRootScope = firstSubTree;
 
-			EmptyMetricValuePropagationFilter emptyFilter = new EmptyMetricValuePropagationFilter();
-			InclusiveOnlyMetricPropagationFilter rootInclProp = new InclusiveOnlyMetricPropagationFilter(this);
-
 			//----------------------------------------------------------------------------------------------
 			// Inclusive metrics
 			//----------------------------------------------------------------------------------------------
-			if (this.inclusiveNeeded()) {
+			if (inclusiveNeeded()) {
 				// TODO: if the metric is a derived metric then DO NOT do this process !
+				InclusiveOnlyMetricPropagationFilter rootInclProp = new InclusiveOnlyMetricPropagationFilter(this);
 				addInclusiveMetrics(callingContextViewRootScope, rootInclProp);
-				this.computeExclusiveMetrics(callingContextViewRootScope);
+				computeExclusiveMetrics(callingContextViewRootScope);
 			}
 
+			EmptyMetricValuePropagationFilter emptyFilter = new EmptyMetricValuePropagationFilter();
 			copyMetricsToPartner(callingContextViewRootScope, MetricType.INCLUSIVE, emptyFilter);
 
 			//----------------------------------------------------------------------------------------------
@@ -296,17 +276,6 @@ public class Experiment extends BaseExperimentWithMetrics
 			// While creating the flat tree, we attribute the cost for procedure scopes
 			// One the tree has been created, we compute the inclusive cost for other scopes
 			prepareFlatView(callingContextViewRootScope);
-
-			//----------------------------------------------------------------------------------------------
-			// finalization
-			//----------------------------------------------------------------------------------------------
-			//FinalizeMetricVisitorWithBackup diVisitor = new FinalizeMetricVisitorWithBackup(this.getMetrics());
-			//finalizeAggregateMetrics(callingContextViewRootScope, diVisitor);		// cct
-
-			//----------------------------------------------------------------------------------------------
-			// Laks 2008.06.16: adjusting the percent based on the aggregate value in the calling context
-			//----------------------------------------------------------------------------------------------
-			//addPercents(callingContextViewRootScope, (RootScope) callingContextViewRootScope);
 
 		} else if (firstRootType.equals(RootScopeType.Flat)) {
 			addPercents(firstSubTree, (RootScope) firstSubTree);
@@ -324,8 +293,8 @@ public class Experiment extends BaseExperimentWithMetrics
 	private boolean inclusiveNeeded() {
 		boolean isNeeded = false;
 		for (int i=0; !isNeeded && i<this.getMetricCount(); i++) {
-			BaseMetric m = this.getMetric(i);
-			isNeeded = !( (m instanceof FinalMetric) || (m instanceof AggregateMetric) );//.getMetricType() != MetricType.PREAGGREGATE;
+			BaseMetric m = getMetric(i);
+			isNeeded = !( (m instanceof FinalMetric) || (m instanceof AggregateMetric) );
 		}
 		return isNeeded;
 	}
@@ -376,9 +345,11 @@ public class Experiment extends BaseExperimentWithMetrics
 	{
 		// removing the original root for caller tree and flat tree
 		Scope root = getRootScope();
-		while (root.getChildCount() > 1)
+		while (root.getChildCount() > 0)
 		{
-			root.remove(1);
+			RootScopeType type = ((RootScope)root.getChildAt(1)).getType();
+			if (type != RootScopeType.CallingContextTree)
+				root.remove(1);
 		}
 		
 		//------------------------------------------------------------------------------------------
@@ -394,15 +365,7 @@ public class Experiment extends BaseExperimentWithMetrics
 		//------------------------------------------------------------------------------------------
 		// While creating the flat tree, we attribute the cost for procedure scopes
 		// One the tree has been created, we compute the inclusive cost for other scopes
-		/*Scope flatViewRootScope =*/ prepareFlatView(rootCCT);
-/*
-		//------------------------------------------------------------------------------------------
-		// FINALIZATION
-		//------------------------------------------------------------------------------------------
-		AbstractFinalizeMetricVisitor diVisitor = new FinalizeMetricVisitor(this.getMetrics());
-
-		this.finalizeAggregateMetrics(flatViewRootScope, diVisitor);	// flat view
-		addPercents(flatViewRootScope, rootCCT);*/
+		prepareFlatView(rootCCT);
 	}
 
 	@Override
