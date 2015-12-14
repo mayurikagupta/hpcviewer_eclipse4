@@ -88,19 +88,19 @@ implements IDynamicRootTree
 				// i am visible now
 				DynamicScopeView view = (DynamicScopeView) partRef.getPart(false);
 				Database database  = view.getDatabase();
-				RootScope rootFlat = view.getRootScope();
+				RootScope root = view.getRootScope();
 				
 				if (database != null) {
-					if (!rootFlat.hasChildren()) {
+					if (!root.hasChildren()) {
 						// do not recreate the children if it's already created
 						// unless if we are in filtering mode
 						Experiment experiment = database.getExperiment();
 						if (experiment.getRootScope() != null) {
-							RootScope root = dynamicTree.createTree(experiment);
+							root = dynamicTree.createTree(experiment);
 							view.setInput(database, root, true);
 						}
 					} else {
-						// check whether the flat view has the new created flat tree.
+						// check whether the view has the new created tree.
 						// this special case happens when we "merge" two uncreated flat trees.
 						// the merge method will force to create a flat tree WITHIN the experiment,
 						//  but the view doesn't detect it.
@@ -109,7 +109,7 @@ implements IDynamicRootTree
 						if (tree.getItemCount() < 2) {
 							// the tree is created, but the view doesn't know it.
 							// let's force to reset the input
-							view.setInput(database, rootFlat, true);
+							view.setInput(database, root, true);
 						}
 					}
 				}
@@ -132,5 +132,4 @@ implements IDynamicRootTree
 			return false;
 		}
 	}
-
 }
