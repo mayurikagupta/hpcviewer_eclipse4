@@ -297,6 +297,11 @@ public class FilterScopeVisitor implements IScopeVisitor
 	private void mergeMetricToParent(Scope target, 
 			int metric_exclusive_index, MetricValue mvChild)
 	{
+		// corner case: we shouldn't modify the value of the root.
+		// they are supposed to be constant, unless it's a derived metric :-(
+		if (target instanceof RootScope)
+			return;
+		
 		MetricValue mvParentExc = target.getMetricValue(metric_exclusive_index);
 		float value = 0;
 		if (mvParentExc.getValue() >= 0) {
