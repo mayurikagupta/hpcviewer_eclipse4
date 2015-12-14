@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
@@ -87,4 +88,9 @@ public class ScopeView extends BaseScopeView
     	int iPos = cell.getColumnIndex();
     	return iPos;
     }
+
+	@Override
+	protected void refreshTree(RootScope root) {
+		updateDisplay();
+	}
 }

@@ -42,7 +42,30 @@ implements IDynamicRootTree
     	}
     }
 
-    
+    protected void refreshTree(RootScope root)
+    {
+		if (!root.hasChildren()) {
+			// do not recreate the children if it's already created
+			// unless if we are in filtering mode
+			Experiment experiment = database.getExperiment();
+			if (experiment.getRootScope() != null) {
+				root = createTree(experiment);
+				setInput(database, root, true);
+			}
+		} else {
+			// check whether the view has the new created tree.
+			// this special case happens when we "merge" two uncreated flat trees.
+			// the merge method will force to create a flat tree WITHIN the experiment,
+			//  but the view doesn't detect it.
+			ScopeTreeViewer viewer = getTreeViewer();
+			final Tree tree		   = viewer.getTree();
+			if (tree.getItemCount() < 2) {
+				// the tree is created, but the view doesn't know it.
+				// let's force to reset the input
+				setInput(database, root, true);
+			}
+		}
+    }
 	
 	//////////////////////////////////////////////////////////////////////////////
 	// Private classes
@@ -91,27 +114,7 @@ implements IDynamicRootTree
 				RootScope root = view.getRootScope();
 				
 				if (database != null) {
-					if (!root.hasChildren()) {
-						// do not recreate the children if it's already created
-						// unless if we are in filtering mode
-						Experiment experiment = database.getExperiment();
-						if (experiment.getRootScope() != null) {
-							root = dynamicTree.createTree(experiment);
-							view.setInput(database, root, true);
-						}
-					} else {
-						// check whether the view has the new created tree.
-						// this special case happens when we "merge" two uncreated flat trees.
-						// the merge method will force to create a flat tree WITHIN the experiment,
-						//  but the view doesn't detect it.
-						ScopeTreeViewer viewer = view.getTreeViewer();
-						final Tree tree		   = viewer.getTree();
-						if (tree.getItemCount() < 2) {
-							// the tree is created, but the view doesn't know it.
-							// let's force to reset the input
-							view.setInput(database, root, true);
-						}
-					}
+					view.refreshTree(root);
 				}
 			}
 		}
