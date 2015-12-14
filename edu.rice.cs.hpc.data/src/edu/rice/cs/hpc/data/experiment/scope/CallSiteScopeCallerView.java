@@ -9,12 +9,11 @@ import edu.rice.cs.hpc.data.experiment.scope.filters.MetricValuePropagationFilte
 import edu.rice.cs.hpc.data.experiment.scope.visitors.CallersViewScopeVisitor;
 
 
-/**************************
+/****************************************************************************
  * special class for caller view's call site scope
  * 
- * @author laksonoadhianto
  *
- */
+ ****************************************************************************/
 public class CallSiteScopeCallerView extends CallSiteScope implements IMergedScope {
 
 	private boolean flag_scope_has_child;
@@ -80,8 +79,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 			scope.setCounter(counter_to_assign);
 			break;
 		}
-//		System.out.println("CSSCV merge this: " + this.getShortName() + " [" + this.scopeCCT.getCCTIndex()+"] " + this.iCounter +
-//			" --> ["+ scope.scopeCCT.getCCTIndex() +	"] " + scope.iCounter);
 		listOfmerged.add(scope);	// include the new scope to merge
 	}
 	
@@ -115,7 +112,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 			MetricValuePropagationFilter inclusiveOnly, 
 			MetricValuePropagationFilter exclusiveOnly ) {
 
-		//boolean percent_need_recompute = false;
 		Object children[] = this.getChildren();
 
 		if (children != null && children.length>0) {
@@ -138,7 +134,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 			{
 				CallSiteScopeCallerView first = listOfChain.removeFirst();
 				CallersViewScopeVisitor.addNewPathIntoTree(this, first, listOfChain);
-				//percent_need_recompute = true;
 			}
 		}
 		
@@ -175,8 +170,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 					CallersViewScopeVisitor.mergeCallerPath(IMergedScope.MergingStatus.INCREMENTAL, counter_to_assign,
 							this, listOfChain, combine_with_dupl, inclusiveOnly, exclusiveOnly);
 
-					//percent_need_recompute = true;
-
 				} catch (java.lang.ClassCastException e) {
 					
 					//-------------------------------------------------------------------------
@@ -187,27 +180,8 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 					System.err.println("Warning: dynamically merging procedure scope: " + scope.scopeCCT +
 							" ["+scope.scopeCCT.flat_node_index+"]");
 				}
-
-				
 			}
 		}
-
-		//-------------------------------------------------------------------------
-		// set the percent
-		//-------------------------------------------------------------------------
-/*		children = getChildren();
-		if (percent_need_recompute && children != null) {
-			// there were some reconstruction of children. Let's finalize the metrics, and recompute the percent
-			for(Object child: children) {
-				if (child instanceof CallSiteScopeCallerView) {
-					//CallSiteScopeCallerView csChild = (CallSiteScopeCallerView) child;
-					//csChild.finalize(null);
-					//csChild.dfsVisitScopeTree(finalizeVisitor);
-					//csChild.dfsVisitScopeTree(percentVisitor);
-				}
-			}
-		}*/
-		
 		return this.getChildren();
 	}
 	
@@ -223,9 +197,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 	}
 
 
-	public Scope getScopeCost() {
-		return scopeCost;
-	}
 	
 	/**
 	 * get the scope with the combined metrics 

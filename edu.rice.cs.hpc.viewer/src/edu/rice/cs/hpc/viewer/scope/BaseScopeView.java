@@ -47,9 +47,8 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 		
 		// reassign root scope
 		myRootScope = experiment.getRootScope(rootType);
+		
 		// update the content of the view
-		// updateDisplay();
-		//setInput(database, myRootScope, true);
 		refreshTree(myRootScope);
 		
         // ------------------------------------------------------------
@@ -123,6 +122,11 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         }
 	}
 
+	/***
+	 * check if the filter incurs omitted scopes or not
+	 * 
+	 * @param myExperiment : the current experiment
+	 */
 	private void checkFilterStatus(Experiment myExperiment) 
 	{
     	if (myExperiment != null) {
@@ -207,6 +211,14 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
      * @param new_database
      */
     abstract protected void updateDatabase(Experiment new_database);
+    
+    /***
+     * Method to be implemented by the child class.<br/>
+     * This method is called when a filter is applied, and the view needs
+     * to be refreshed with the new root tree.
+     * 
+     * @param root : the new root tree
+     */
     abstract protected void refreshTree(RootScope root);
 
 }

@@ -37,11 +37,16 @@ implements IDynamicRootTree
     	if (page != null) {
     		final String firstID	    = getViewSite().getId();
     		final String secondID		= getViewSite().getSecondaryId();
-    		final PartListener listener = new PartListener(this, firstID, secondID);
+    		final PartListener listener = new PartListener(firstID, secondID);
         	page.addPartListener(listener);
     	}
     }
 
+    /*
+     * (non-Javadoc)
+     * @see edu.rice.cs.hpc.viewer.scope.BaseScopeView#refreshTree(edu.rice.cs.hpc.data.experiment.scope.RootScope)
+     */
+    @Override
     protected void refreshTree(RootScope root)
     {
 		if (!root.hasChildren()) {
@@ -73,12 +78,9 @@ implements IDynamicRootTree
 	static private final class PartListener implements IPartListener2
 	{
 		final private String firstID, secondaryID;
-		final private IDynamicRootTree dynamicTree;
-		
-		public PartListener(IDynamicRootTree dynamicTree, String firstID, String secondaryID) {
+		public PartListener(String firstID, String secondaryID) {
 			this.secondaryID = secondaryID;
 			this.firstID	 = firstID;
-			this.dynamicTree = dynamicTree;
 		}
 
 		@Override
