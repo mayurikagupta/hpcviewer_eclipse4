@@ -198,19 +198,6 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 
 
 	
-	/**
-	 * get the scope with the combined metrics 
-	 * @param source
-	 * @return
-	 */
-	static private Scope getScopeOfCombineMetrics(Scope source) {
-		Scope copy = source.duplicate();
-		// TODO: combined values can be null for verison 3
-		//copy.setMetricValues( source.getCombinedValues() );
-		copy.setMetricValues( source.getMetricValues() );
-		return copy;
-	}
-	
 	/************************
 	 * combination class to combine two metrics
 	 * This class is specifically designed for combining merged nodes in incremental caller view
@@ -230,17 +217,17 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 			
 			if (target instanceof CallSiteScopeCallerView) {
 
-				Scope copy = getScopeOfCombineMetrics(source);
+				//Scope copy = getScopeOfCombineMetrics(source);
 				
 				//-----------------------------------------------------------
 				// only combine the outermost "node" of incremental callsite
 				//-----------------------------------------------------------
 				if (inclusiveOnly != null && source.isCounterZero()) {
-					target.safeCombine(copy, inclusiveOnly);
+					target.safeCombine(source, inclusiveOnly);
 				} 
 										
 				if (exclusiveOnly != null)
-					target.combine(copy, exclusiveOnly);
+					target.combine(source, exclusiveOnly);
 				
 			} else {
 				System.err.println("ERROR-ICMUC: the target combine is incorrect: " + target + " -> " + target.getClass() );
@@ -269,13 +256,13 @@ public class CallSiteScopeCallerView extends CallSiteScope implements IMergedSco
 				MetricValuePropagationFilter exclusiveOnly) {
 
 			if (target instanceof CallSiteScopeCallerView) {
-				Scope copy = getScopeOfCombineMetrics(source);
+				//Scope copy = getScopeOfCombineMetrics(source);
 				
 				if (inclusiveOnly != null) {
-					target.safeCombine(copy, inclusiveOnly);
+					target.safeCombine(source, inclusiveOnly);
 				}
 				if (exclusiveOnly != null)
-					target.combine(copy, exclusiveOnly);
+					target.combine(source, exclusiveOnly);
 				
 				target.setCounter(source.getCounter());
 				
