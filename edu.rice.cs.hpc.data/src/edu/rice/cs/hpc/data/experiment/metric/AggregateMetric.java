@@ -6,7 +6,7 @@ import com.graphbuilder.math.ExpressionTree;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.Experiment;
-import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import com.graphbuilder.math.FuncMap;
 
@@ -34,7 +34,6 @@ public class AggregateMetric extends BaseMetric {
 	// map variable 
 	private MetricVarMap finalizeVarMap;
 	private CombineAggregateMetricVarMap combineVarMap;
-
 	
 	/**
 	 * @see BaseMetric
@@ -144,7 +143,7 @@ public class AggregateMetric extends BaseMetric {
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.data.experiment.metric.BaseMetric#getValue(edu.rice.cs.hpc.data.experiment.scope.Scope)
 	 */
-	public MetricValue getValue(Scope scope) {
+	public MetricValue getValue(IMetricScope scope) {
 		MetricValue value = MetricValue.NONE;
 		if (formulaFinalize != null) {
 			this.finalizeVarMap.setScope(scope);
@@ -155,10 +154,10 @@ public class AggregateMetric extends BaseMetric {
 				if (Double.compare(dValue, 0.0d) != 0) {
 					value = new MetricValue(dValue);
 					if (getAnnotationType() == AnnotationType.PERCENT) {
-						RootScope root = scope.getRootScope();
-						MetricValue mvRoot = root.getMetricValue(this);
-						if (mvRoot != MetricValue.NONE) {
-							float percent = (float) (dValue / mvRoot.getValue());
+						if (rootValue == null)
+							rootValue = scope.getRootMetricValue(this);
+						if (rootValue != MetricValue.NONE) {
+							float percent = (float) (dValue / rootValue.getValue());
 							MetricValue.setAnnotationValue(value, percent);
 						}
 					}
@@ -170,7 +169,7 @@ public class AggregateMetric extends BaseMetric {
 		return value;
 	}
 
-	public MetricValue getRawValue(Scope s) {
+	public MetricValue getRawValue(IMetricScope s) {
 		MetricValue mv = s.getMetricValue(this.index);
 		return mv;
 	}

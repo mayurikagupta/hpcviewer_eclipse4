@@ -54,7 +54,7 @@ public class MetricValueCollection3 implements IMetricValueCollection
 					{
 						if (values[i] != MetricValue.NONE)
 						{
-							MetricValue mv = root.getMetricValue(i);
+							MetricValue mv = getValue(root, index); //root.getMetricValue(i);
 							if (mv != MetricValue.NONE)
 							{
 								float percent = 100 * (values[i].getValue()/mv.getValue());

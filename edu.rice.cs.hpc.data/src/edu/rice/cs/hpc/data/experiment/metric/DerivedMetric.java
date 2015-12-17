@@ -102,7 +102,7 @@ public class DerivedMetric extends BaseMetric {
 	 * @param scope: the current scope
 	 * @return the object Double if there is a value, null otherwise
 	 */
-	public double getDoubleValue(Scope scope) {
+	public double getDoubleValue(IMetricScope scope) {
 		this.varMap.setScope(scope);
 		return expression.eval(this.varMap, this.fctMap);
 	}
@@ -112,7 +112,7 @@ public class DerivedMetric extends BaseMetric {
 	 * Return a MetricValue
 	 */
 	@Override
-	public MetricValue getValue(Scope scope) {
+	public MetricValue getValue(IMetricScope scope) {
 		double dVal;
 		// if the scope is a root scope, then we return the aggregate value
 		if(scope instanceof RootScope) {
@@ -132,7 +132,7 @@ public class DerivedMetric extends BaseMetric {
 		}
 	}
 	
-	public MetricValue getRawValue(Scope s)
+	public MetricValue getRawValue(IMetricScope s)
 	{
 		return getValue(s);
 	}

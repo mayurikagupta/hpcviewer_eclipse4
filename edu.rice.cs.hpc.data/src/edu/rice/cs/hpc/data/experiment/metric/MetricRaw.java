@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
@@ -28,7 +29,7 @@ public class MetricRaw  extends BaseMetric {
 	private double []thread_values = null;
 	
 	/*** we need to initialize it as null to differentiate with the default value NONE **/
-	private MetricValue	rootValue  = null;
+	//private MetricValue	rootValue  = null;
 	
 	/*** similar to partner index, but this partner refers directly to the metric partner.**/
 	private MetricRaw partner;
@@ -115,7 +116,7 @@ public class MetricRaw  extends BaseMetric {
 	}
 	
 	@Override
-	public MetricValue getValue(Scope s) {
+	public MetricValue getValue(IMetricScope s) {
 		MetricValue value = MetricValue.NONE;
 		if (threadData != null)
 		{
@@ -128,18 +129,15 @@ public class MetricRaw  extends BaseMetric {
 					// If the root has no value, we have to recompute it only for one time
 					// Once we have the root's value, we don't have to recompute it
 					if (rootValue == null) {
-						if (s instanceof RootScope && value != MetricValue.NONE)
-							rootValue = value;
-						else if (metricType != MetricType.EXCLUSIVE){
-							rootValue = getValue(s.getRootScope(), threads);
-						}
-						else if (partner != null) {
-							// dereference the value from the partner
-							if (s instanceof RootScope)
-								rootValue = partner.getValue(s, threads);
-							else {
-								rootValue = partner.getValue(s.getRootScope(), threads);
-							}
+						if (s instanceof RootScope) {
+							if (value != MetricValue.NONE)
+								rootValue = value;
+							else if (metricType != MetricType.EXCLUSIVE)
+								rootValue = getValue((RootScope)s, threads);
+							else if (partner != null)
+								rootValue = partner.getValue((RootScope)s, threads);
+						} else {
+							rootValue = s.getRootMetricValue(this);
 						}
 					}
 					if (rootValue != null && rootValue != MetricValue.NONE) {
@@ -173,7 +171,7 @@ public class MetricRaw  extends BaseMetric {
 	 * @return a metric value
 	 * @throws IOException
 	 */
-	private MetricValue getValue(Scope s, List<Integer> threads) throws IOException  {
+	private MetricValue getValue(IMetricScope s, List<Integer> threads) throws IOException  {
 		MetricValue value = MetricValue.NONE;
 		if (threads != null)
 		{
@@ -192,7 +190,7 @@ public class MetricRaw  extends BaseMetric {
 		return value;
 	}
 	
-	public MetricValue getRawValue(Scope s)
+	public MetricValue getRawValue(IMetricScope s)
 	{
 		return getValue(s);
 	}
@@ -203,11 +201,11 @@ public class MetricRaw  extends BaseMetric {
 	 * @return
 	 * @throws IOException
 	 */
-	private MetricValue getAverageValue(Scope s, List<Integer> threads) throws IOException
+	private MetricValue getAverageValue(IMetricScope s, List<Integer> threads) throws IOException
 	{
 		double val_mean = 0.0;
 		final double divider  = 1.0d / threads.size();
-		double []values = threadData.getMetrics(s.getCCTIndex(), getIndex(), num_metrics);
+		double []values = threadData.getMetrics(((Scope)s).getCCTIndex(), getIndex(), num_metrics);
 		for(Integer thread : threads)
 		{
 			val_mean += (values[thread] * divider);
@@ -224,16 +222,17 @@ public class MetricRaw  extends BaseMetric {
 	 * @return a metric value
 	 * @throws IOException
 	 */
-	private MetricValue getSpecificValue(Scope s, int thread_id) throws IOException
+	private MetricValue getSpecificValue(IMetricScope s, int thread_id) throws IOException
 	{
 		checkValues(thread_id);
 		MetricValue mv = MetricValue.NONE;
+		Scope scope = (Scope)s;
 		if (thread_values != null) {
-			mv = setValue(thread_values[s.getCCTIndex()-1]);
+			mv = setValue(thread_values[scope.getCCTIndex()-1]);
 		} else {
 			// there is no API implementation for reading the whold CCT metrics
 			// TODO: using the old get metric for the new database
-			double []values = threadData.getMetrics(s.getCCTIndex(), getIndex(), num_metrics);
+			double []values = threadData.getMetrics(scope.getCCTIndex(), getIndex(), num_metrics);
 			double value    = values[thread_id];
 			mv  = setValue(value);
 		}

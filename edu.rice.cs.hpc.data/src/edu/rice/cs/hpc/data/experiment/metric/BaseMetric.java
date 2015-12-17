@@ -3,6 +3,7 @@
  */
 package edu.rice.cs.hpc.data.experiment.metric;
 
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
 /**
@@ -11,13 +12,29 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  */
 public abstract class BaseMetric {
 
+	//-------------------------------------------------------------------------------
+	// CONSTANTS
+	//-------------------------------------------------------------------------------
+
 	static final public int PARTNER_UNKNOWN = -1;
+	
+	final static private MetricValueFormat FormatDefault = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
+	final static private MetricValueFormat FormatPercent = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
+	final static private MetricValueFormat FormatProcess = new 
+			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
+
+	//-------------------------------------------------------------------------------
+	// DATA STRUCTURE
+	//-------------------------------------------------------------------------------
+
+	/** Valid types of Annotations to be used with metric values */
+	static public enum AnnotationType { NONE, PERCENT, PROCESS };
 	
 	//-------------------------------------------------------------------------------
 	// DATA
 	//-------------------------------------------------------------------------------
-	/** Valid types of Annotations to be used with metric values */
-	public enum AnnotationType { NONE, PERCENT, PROCESS };
 
 	/** The short name of this metric, used within an experiment's XML file. 
 	 *  We shouldn't change the short name as it's assigned by hpcprof to compute
@@ -48,16 +65,11 @@ public abstract class BaseMetric {
 
 	protected double  sampleperiod;
 
+	protected MetricValue rootValue;
+
 	private char unit;
 
 	final private String EMPTY_SUFFIX = "   ";
-	
-	final static private MetricValueFormat FormatDefault = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
-	final static private MetricValueFormat FormatPercent = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
-	final static private MetricValueFormat FormatProcess = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
 	
 	//-------------------------------------------------------------------------------
 	// CONSTRUCTOR
@@ -325,9 +337,9 @@ public abstract class BaseMetric {
 	 * @param s : scope of the metric value
 	 * @return a metric value
 	 *************************************************************************/
-	abstract public MetricValue getValue(Scope s);
+	abstract public MetricValue getValue(IMetricScope s);
 	
-	abstract public MetricValue getRawValue(Scope s);
+	abstract public MetricValue getRawValue(IMetricScope s);
 
 	/***
 	 * Method to duplicate itself (cloning)

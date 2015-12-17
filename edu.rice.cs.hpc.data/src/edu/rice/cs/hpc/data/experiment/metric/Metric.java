@@ -15,7 +15,7 @@
 package edu.rice.cs.hpc.data.experiment.metric;
 
 
-import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 
 
 
@@ -75,12 +75,12 @@ public Metric(String shortName, String nativeName, String displayName, boolean d
 /*************************************************************************
  *	Returns the value of this metric at a given scope.
  ************************************************************************/	
-public MetricValue getValue(Scope s)
+public MetricValue getValue(IMetricScope s)
 {
 	return s.getMetricValue(this);
 }
 
-public MetricValue getRawValue(Scope s)
+public MetricValue getRawValue(IMetricScope s)
 {
 	return getValue(s);
 }

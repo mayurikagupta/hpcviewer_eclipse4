@@ -9,6 +9,7 @@ import com.graphbuilder.math.FuncMap;
 import com.graphbuilder.math.VarMap;
 import com.graphbuilder.math.func.Function;
 
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
@@ -19,8 +20,8 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 public class MetricVarMap extends VarMap {
 
 	private IMetricManager metricManager;
-	private Scope scope;
-	private RootScope root;
+	private IMetricScope scope;
+	private IMetricScope root;
 	
 	/**
 	 * 
@@ -34,7 +35,7 @@ public class MetricVarMap extends VarMap {
 		this(root, null, metricManager);
 	}
 	
-	public MetricVarMap(RootScope root, Scope s, IMetricManager metricManager) {
+	public MetricVarMap(RootScope root, IMetricScope s, IMetricManager metricManager) {
 		super(false);
 		this.scope = s;
 		this.root  = root;
@@ -59,7 +60,7 @@ public class MetricVarMap extends VarMap {
 	 * set the current scope which contains metric values
 	 * @param s: the scope of node
 	 */
-	public void setScope(Scope s) {
+	public void setScope(IMetricScope s) {
 		this.scope = s;
 	}
 	

@@ -44,6 +44,7 @@ import edu.rice.cs.hpc.data.experiment.source.SourceFile;
 
 
 public abstract class Scope extends TreeNode
+	implements IMetricScope
 {
 //////////////////////////////////////////////////////////////////////////
 //PUBLIC CONSTANTS						//
@@ -574,6 +575,10 @@ public MetricValue getMetricValue(int index)
     return value;
 }
 
+public MetricValue getRootMetricValue(BaseMetric metric)
+{
+	return getRootScope().getMetricValue(metric);
+}
 
 /*************************************************************************
  *	Sets the value of a given metric at this scope.
