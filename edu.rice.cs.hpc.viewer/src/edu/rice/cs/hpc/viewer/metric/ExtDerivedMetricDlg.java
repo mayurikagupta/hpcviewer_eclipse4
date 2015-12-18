@@ -31,6 +31,8 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.SelectionEvent;
+
+import com.graphbuilder.math.ExpressionParseException;
 // hpcviewer
 import edu.rice.cs.hpc.common.util.UserInputHistory;
 import edu.rice.cs.hpc.data.experiment.metric.*;
@@ -433,7 +435,11 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 		  boolean bResult = false;
 		  	expFormula = this.cbExpression.getText();
 			if(expFormula.length() > 0) {
-				bResult = DerivedMetric.evaluateExpression(expFormula, varMap, fctMap);
+				try {
+					bResult = DerivedMetric.evaluateExpression(expFormula, varMap, fctMap);
+				} catch (ExpressionParseException e) {
+					MessageDialog.openError(getShell(), "Error: incorrect expression", e.getDescription());
+				}
 			} else {
 				MessageDialog.openError(this.getShell(), "Error: empty expression", 
 					"An expression can not be empty.");

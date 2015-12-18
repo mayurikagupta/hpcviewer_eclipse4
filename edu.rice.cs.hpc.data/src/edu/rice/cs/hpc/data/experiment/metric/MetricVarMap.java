@@ -11,7 +11,7 @@ import com.graphbuilder.math.func.Function;
 
 import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
-import edu.rice.cs.hpc.data.experiment.scope.Scope;
+
 
 /**
  * @author la5

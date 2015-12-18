@@ -21,7 +21,7 @@ public class DerivedMetric extends BaseMetric {
 	// formula expression
 	private Expression expression;
 	// the total aggregate value
-	private double dRootValue = 0.0;
+	//private double dRootValue = 0.0;
 	// map function
 	private ExtFuncMap fctMap;
 	// map variable 
@@ -70,8 +70,8 @@ public class DerivedMetric extends BaseMetric {
 		setExpression(expression);
 
 		// Bug fix: always compute the aggregate value 
-		if(Double.compare(dRootValue, 0.0d) == 0)
-			this.annotationType = AnnotationType.NONE ;
+		/*if(Double.compare(dRootValue, 0.0d) == 0)
+			this.annotationType = AnnotationType.NONE ;*/
 	}
 	
 	/****
@@ -81,9 +81,9 @@ public class DerivedMetric extends BaseMetric {
 	 */
 	public void setExpression( String expr ) {
 		expression = ExpressionTree.parse(expr);
-		
+		rootValue  = getValue(root);
 		// new formula has been set, refresh the root value used for computing percent
-		dRootValue = getDoubleValue(root);
+		//dRootValue = getDoubleValue(root);
 	}
 
 	static public boolean evaluateExpression(String expression, 
@@ -114,9 +114,15 @@ public class DerivedMetric extends BaseMetric {
 	@Override
 	public MetricValue getValue(IMetricScope scope) {
 		double dVal;
+		// corner case
 		// if the scope is a root scope, then we return the aggregate value
 		if(scope instanceof RootScope) {
-			dVal = dRootValue;
+			if (rootValue == null) {
+				double rootVal = getDoubleValue(scope);
+				double rootAnn = 1.0d;
+				rootValue 	   = new MetricValue(rootVal, rootAnn);
+			}
+			return rootValue;
 		} else {
 			// otherwise, we need to recompute the value again via the equation
 			dVal = getDoubleValue(scope);
@@ -126,7 +132,8 @@ public class DerivedMetric extends BaseMetric {
 				return MetricValue.NONE;	// the value is not available !
 		}
 		if(this.getAnnotationType() == AnnotationType.PERCENT){
-			return new MetricValue(dVal, ((float) dVal/this.dRootValue));
+			MetricValue myrootValue = getValue(root);
+			return new MetricValue(dVal, ((float) dVal/myrootValue.getValue()));
 		} else {
 			return new MetricValue(dVal);
 		}
