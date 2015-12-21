@@ -165,6 +165,10 @@ public class AggregateMetric extends BaseMetric {
 			} catch(java.lang.Exception e) {
 				e.printStackTrace();
 			}
+		} else {
+			// metric has no finalize formula
+			// get whatever the combine formula has ?
+			value = getRawValue(scope);
 		}
 		return value;
 	}

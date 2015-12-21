@@ -35,7 +35,7 @@ public abstract class BaseMetric {
 	//-------------------------------------------------------------------------------
 	// DATA
 	//-------------------------------------------------------------------------------
-
+ 
 	/** The short name of this metric, used within an experiment's XML file. 
 	 *  We shouldn't change the short name as it's assigned by hpcprof to compute
 	 *  derived incremental metric */
