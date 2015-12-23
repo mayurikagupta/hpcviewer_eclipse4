@@ -168,7 +168,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         	// Hence, we have to retrieve the information of column width before the dispose action
         	for(int i=1;i<iColCount;i++) {        		
         		// bug fix: for callers view activation, we have to reserve the current status
-        		if (keepColumnStatus) {
+        		if (keepColumnStatus && i-1<status.length) {
         			int width = columns[i].getWidth();
         			status[i-1] = (width > 0);
         		}

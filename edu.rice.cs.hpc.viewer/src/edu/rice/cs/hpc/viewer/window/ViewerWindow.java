@@ -14,6 +14,8 @@ import org.eclipse.ui.handlers.RegistryToggleState;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.filter.service.FilterMap;
 import edu.rice.cs.hpc.filter.service.FilterStateProvider;
 import edu.rice.cs.hpc.viewer.actions.DebugShowCCT;
@@ -98,9 +100,21 @@ public class ViewerWindow {
 			for (Experiment experiment : experiments)
 			{
 				try {
+					// conserve the added metrics
+					ArrayList<DerivedMetric> metrics = new ArrayList<>(1);
+					for (BaseMetric metric : experiment.getMetrics()) {
+						if (metric instanceof DerivedMetric) {
+							metrics.add((DerivedMetric) metric);
+						}
+					}
 					experiment.reopen();
 					// filtering is needed
 					experiment.filter(FilterMap.getInstance());
+					
+					// put the derived metrics back
+					for (DerivedMetric metric: metrics) {
+						experiment.addDerivedMetric(metric);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

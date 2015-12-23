@@ -298,22 +298,6 @@ public class Experiment extends BaseExperimentWithMetrics
 		}
 		return isNeeded;
 	}
-	//////////////////////////////////////////////////////////////////////////
-	//Compute Derived Metrics												//
-	//////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Create a derived metric based on formula expression
-	 * @param objMetric : a new derived metric
-	 * @return 
-	 */
-	@Override
-	public void addDerivedMetric(DerivedMetric objMetric) {
-
-		this.metrics.add(objMetric);
-	}
-
-
 
 	public Experiment duplicate() {
 
