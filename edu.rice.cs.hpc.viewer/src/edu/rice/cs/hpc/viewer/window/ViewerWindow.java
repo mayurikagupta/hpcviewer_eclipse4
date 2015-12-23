@@ -100,18 +100,24 @@ public class ViewerWindow {
 			for (Experiment experiment : experiments)
 			{
 				try {
+					// ---------------------------------------
 					// conserve the added metrics
-					ArrayList<DerivedMetric> metrics = new ArrayList<>(1);
+					// ---------------------------------------
+					ArrayList<DerivedMetric> metrics = new ArrayList<DerivedMetric>(1);
 					for (BaseMetric metric : experiment.getMetrics()) {
 						if (metric instanceof DerivedMetric) {
 							metrics.add((DerivedMetric) metric);
 						}
 					}
+					// ---------------------------------------
+					// filtering 
+					// ---------------------------------------
 					experiment.reopen();
-					// filtering is needed
 					experiment.filter(FilterMap.getInstance());
 					
+					// ---------------------------------------
 					// put the derived metrics back
+					// ---------------------------------------
 					for (DerivedMetric metric: metrics) {
 						experiment.addDerivedMetric(metric);
 					}
