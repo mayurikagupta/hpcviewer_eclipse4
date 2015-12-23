@@ -12,9 +12,10 @@
 
 
 
-package edu.rice.cs.hpc.data.experiment.metric;
+package edu.rice.cs.hpc.data.experiment.metric.format;
 
 
+import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.util.*;
 
 import java.text.DecimalFormat;
@@ -34,43 +35,17 @@ import java.text.DecimalFormat;
 
 public class MetricValueFormat implements IMetricValueFormat
 {
-
-	protected static class Style
-	{
-		/** The kind of numeric display to be used, either FIXED or FLOAT. */
-		public int kind;
-
-		/** The number of characters to be ysed for the number. */
-		public int fieldWidth;
-
-		/** The number of digits to be used for the fractional part. */
-		public int fractionDigits;
-	};
-
-
-/** Whether to show the actual value. */
-protected boolean showValue;
-
-/** Whether to show the annotation value. */
-protected boolean showAnnotation;
-
 /** The number format to be used for the actual value. */
-protected Style valueStyle;
+protected FormatStyle valueStyle;
 
 /** The number format to be used for the annotation value. */
-protected Style annotationStyle;
+protected FormatStyle annotationStyle;
 
 /** The pattern to use when formatting annotation values. */
 protected String annotationFormatPattern;
 
 /** How many space characters separate the metric value and its annotation. */
 protected int separatorWidth;
-
-/** A Java formatter implementing the format specified for actual values. */
-protected DecimalFormat valueFormatter;
-
-/** A Java formatter implementing the format specified for the metrics annotation. */
-protected DecimalFormat annotationFormatter;
 
 /** A sequence of spaces used to separate the metric value and its annotation. */
 protected String separator;
@@ -117,14 +92,14 @@ public MetricValueFormat(boolean showValue,
 						 int separatorWidth)
 {
 	// creation arguments
-	this.showValue = showValue;
-	this.valueStyle = new MetricValueFormat.Style();
+	this.valueStyle = new FormatStyle();
+	this.valueStyle.show = showValue;
 	this.valueStyle.kind = valueKind;
 	this.valueStyle.fieldWidth = valueFieldWidth;
 	this.valueStyle.fractionDigits = valueFractionDigits;
 	
-	this.showAnnotation = showAnnotation;
-	this.annotationStyle = new MetricValueFormat.Style();
+	this.annotationStyle = new FormatStyle();
+	this.annotationStyle.show = showAnnotation;
 	this.annotationStyle.kind = annotationKind;
 	this.annotationStyle.fieldWidth = annotationFieldWidth;
 	this.annotationStyle.fractionDigits = annotationFractionDigits;
@@ -155,7 +130,7 @@ public MetricValueFormat(boolean showValue,
 	
 public void setShowValue(boolean showValue)
 {
-	this.showValue = showValue;
+	this.valueStyle.show = showValue;
 	this.clearFormatters();
 }
 
@@ -168,7 +143,7 @@ public void setShowValue(boolean showValue)
 	
 public boolean getShowValue()
 {
-	return this.showValue;
+	return this.valueStyle.show;
 }
 
 
@@ -265,7 +240,7 @@ public int getValueFractionDigits()
 	
 public void setShowAnnotation(boolean showAnnotation)
 {
-	this.showAnnotation = showAnnotation;
+	this.annotationStyle.show = showAnnotation;
 	this.clearFormatters();
 }
 
@@ -278,7 +253,7 @@ public void setShowAnnotation(boolean showAnnotation)
 	
 public boolean getShowAnnotation()
 {
-	return this.showAnnotation;
+	return this.annotationStyle.show;
 }
 
 
@@ -409,9 +384,9 @@ public int getSeparatorWidth()
 	
 public int getFormattedLength()
 {
-	int width1 = (this.showValue ? this.valueStyle.fieldWidth : 0);
-	int width2 = (this.showAnnotation ? this.annotationStyle.fieldWidth : 0);
-	int width3 = (this.showValue && this.showAnnotation ? this.separatorWidth : 0);
+	int width1 = (this.valueStyle.show ? this.valueStyle.fieldWidth : 0);
+	int width2 = (this.annotationStyle.show ? this.annotationStyle.fieldWidth : 0);
+	int width3 = (this.valueStyle.show && this.annotationStyle.show ? this.separatorWidth : 0);
 	return width1 + width2 + width3 + 1;	// +1 for trailing space
 }
 
@@ -442,19 +417,19 @@ public String format(MetricValue value)
 	StringBuffer formatted = new StringBuffer();
 	
 	// append formatted actual value if wanted
-	if( this.showValue )
+	if( this.valueStyle.show )
 	{
 		double number = MetricValue.getValue(value);
-		String string = this.formatDouble(number, this.valueFormatter, this.valueStyle);
+		String string = this.formatDouble(number, this.valueStyle.formatter, this.valueStyle);
 		formatted.append(string);
 	}
 	
 	// append separating spaces if needed
-	if( this.showValue && this.showAnnotation )
+	if( this.valueStyle.show && this.annotationStyle.show )
 		formatted.append(this.separator);
 	
 	// append formatted annotation if wanted
-	if( this.showAnnotation )
+	if( this.annotationStyle.show )
 	{
 		if( MetricValue.isAnnotationAvailable(value) )
 		{
@@ -480,7 +455,7 @@ public String format(MetricValue value)
 			}
 
 			// not a value that needs special treatment, just format with the specified pattern
-			String string = this.formatDouble(number, this.annotationFormatter, this.annotationStyle);
+			String string = this.formatDouble(number, this.annotationStyle.formatter, this.annotationStyle);
 			formatted.append(string);
 			return formatted.toString();
 		}
@@ -499,7 +474,7 @@ public String format(MetricValue value)
  *	according to this format.
  ************************************************************************/
 	
-protected String formatDouble(double d, DecimalFormat formatter, Style style)
+protected String formatDouble(double d, DecimalFormat formatter, FormatStyle style)
 {
 	int kind = style.kind;
 	int fieldWidth = style.fieldWidth;
@@ -555,8 +530,8 @@ protected String formatDouble(double d, DecimalFormat formatter, Style style)
 	
 protected void clearFormatters()
 {
-	this.valueFormatter   = null;
-	this.annotationFormatter = null;
+	this.valueStyle.formatter   = null;
+	this.annotationStyle.formatter = null;
 	this.separator        = null;
 }
 
@@ -570,7 +545,7 @@ protected void clearFormatters()
 protected void ensureFormatters()
 {
 	// value formatter
-	if( this.valueFormatter == null )
+	if( this.valueStyle.formatter == null )
 	{
 		String pattern = "0.";
 
@@ -580,13 +555,13 @@ protected void ensureFormatters()
 		    pattern = pattern + "0";
 		}
 
-		this.valueFormatter = Util.makeDecimalFormatter(pattern);
+		this.valueStyle.formatter = Util.makeDecimalFormatter(pattern);
 	}
 	
 	// annotation formatter
-	if( this.annotationFormatter == null )
+	if( this.annotationStyle.formatter == null )
 	{
-		this.annotationFormatter = Util.makeDecimalFormatter(this.annotationFormatPattern);
+		this.annotationStyle.formatter = Util.makeDecimalFormatter(this.annotationFormatPattern);
 	}
 	
 	// separation between values

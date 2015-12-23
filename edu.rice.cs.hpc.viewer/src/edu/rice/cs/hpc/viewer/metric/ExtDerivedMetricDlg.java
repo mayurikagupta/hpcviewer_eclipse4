@@ -37,6 +37,8 @@ import com.graphbuilder.math.ExpressionParseException;
 import edu.rice.cs.hpc.common.util.UserInputHistory;
 import edu.rice.cs.hpc.data.experiment.metric.*;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric.AnnotationType;
+import edu.rice.cs.hpc.data.experiment.metric.format.IMetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValuePredefinedFormat;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 

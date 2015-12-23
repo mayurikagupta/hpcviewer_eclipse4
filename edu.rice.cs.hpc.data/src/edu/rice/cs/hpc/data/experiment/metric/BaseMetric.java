@@ -3,6 +3,9 @@
  */
 package edu.rice.cs.hpc.data.experiment.metric;
 
+import edu.rice.cs.hpc.data.experiment.metric.format.IMetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValuePredefinedFormat;
 import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 

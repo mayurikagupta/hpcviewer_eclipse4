@@ -1,6 +1,8 @@
-package edu.rice.cs.hpc.data.experiment.metric;
+package edu.rice.cs.hpc.data.experiment.metric.format;
 
 import java.util.Formatter;
+
+import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 
 
 /**********************************************************
