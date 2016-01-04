@@ -28,17 +28,26 @@ public class MetricRaw  extends BaseMetric {
 	/*** list of scope metric values of a certain threads. The length of the array is the number of cct nodes*/
 	private double []thread_values = null;
 	
-	/*** we need to initialize it as null to differentiate with the default value NONE **/
-	//private MetricValue	rootValue  = null;
-	
 	/*** similar to partner index, but this partner refers directly to the metric partner.**/
 	private MetricRaw partner;
 	
 
+	/******
+	 * creation of a new raw metric
+	 * @param id
+	 * @param title
+	 * @param db_pattern
+	 * @param db_num
+	 * @param partner_index
+	 * @param type
+	 * @param metrics
+	 */
 	public MetricRaw(int id, String title, String db_pattern, int db_num, int partner_index, 
 			MetricType type, int metrics) {
 		// raw metric has no partner
-		super( String.valueOf(id), title, true, null, AnnotationType.NONE, db_num, partner_index, type);
+		// default annotation: percentage, although some metrics may have no percent due to missing value
+		// on its root (such as exclusive metric)
+		super( String.valueOf(id), title, true, null, AnnotationType.PERCENT, db_num, partner_index, type);
 		this.ID 	 = id;
 		this.db_glob = db_pattern;
 		this.db_id 	 = db_num;
@@ -137,12 +146,13 @@ public class MetricRaw  extends BaseMetric {
 							else if (partner != null)
 								rootValue = partner.getValue((RootScope)s, threads);
 						} else {
-							rootValue = s.getRootMetricValue(this);
+							RootScope root = ((Scope)s).getRootScope();
+							rootValue = getValue(root);//s.getRootMetricValue(this);
 						}
 					}
 					if (rootValue != null && rootValue != MetricValue.NONE) {
 						// if the value exist, we compute the percentage
-						setAnnotationType(AnnotationType.PERCENT);
+						//setAnnotationType(AnnotationType.PERCENT);
 						MetricValue.setAnnotationValue(value, value.getValue() / rootValue.getValue());
 					}
 				}

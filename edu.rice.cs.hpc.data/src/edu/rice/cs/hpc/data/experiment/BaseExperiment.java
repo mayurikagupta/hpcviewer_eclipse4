@@ -264,7 +264,7 @@ public abstract class BaseExperiment implements IExperiment
 	/*************************************************************************
 	 * Filter the cct 
 	 * <p>caller needs to call postprocess to ensure the callers tree and flat
-	 * tree are alsi filtered </p>
+	 * tree are also filtered </p>
 	 * @param filter
 	 *************************************************************************/
 	public int filter(IFilterData filter)

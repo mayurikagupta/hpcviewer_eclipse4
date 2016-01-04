@@ -53,21 +53,6 @@ protected String separator;
 
 
 
-//////////////////////////////////////////////////////////////////////////
-//	PUBLIC CONSTANTS						//
-//////////////////////////////////////////////////////////////////////////
-
-
-
-
-/** Indicates that a number should be displayed in fixed point format. */
-public static int FIXED = 1;
-
-/** Indicates that a number should be displayed in floating point ("scientific") format. */
-public static int FLOAT = 2;
-
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //	INITIALIZATION														//
@@ -480,7 +465,7 @@ protected String formatDouble(double d, DecimalFormat formatter, FormatStyle sty
 	int fieldWidth = style.fieldWidth;
 	String s;
 	
-	if( kind == FLOAT )
+	if( kind == FormatStyle.FLOAT )
 	{
 		// hpcrun can generate incorrect metrics which are incredibly huge 
 		// converted in Java it becomes infinity

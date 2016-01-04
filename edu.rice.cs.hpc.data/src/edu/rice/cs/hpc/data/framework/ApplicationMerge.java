@@ -51,7 +51,7 @@ public class ApplicationMerge {
 		}
 	
 		try {
-			Experiment merge = ExperimentMerger.merge(exp1, exp2, RootScopeType.CallingContextTree, true);
+			ExperimentMerger.merge(exp1, exp2, RootScopeType.CallingContextTree, true);
 		} catch (Exception e) {
 			System.err.println("Fail to merge");
 			e.printStackTrace();

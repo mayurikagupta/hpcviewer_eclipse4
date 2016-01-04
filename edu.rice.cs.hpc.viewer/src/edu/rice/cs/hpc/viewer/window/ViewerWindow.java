@@ -93,11 +93,12 @@ public class ViewerWindow {
 
 	private void filterAllDatabases(boolean filter)
 	{
-		// filter the experiment
-		Experiment []experiments = getExperiments();
-		if (experiments != null)
-		{
-			for (Experiment experiment : experiments)
+		for (Database db: dbObj) {
+			if (db == null)
+				continue;
+			Experiment experiment = db.getExperiment();
+			// filter the experiment
+			if (experiment != null) 
 			{
 				try {
 					// ---------------------------------------
@@ -121,15 +122,20 @@ public class ViewerWindow {
 					for (DerivedMetric metric: metrics) {
 						experiment.addDerivedMetric(metric);
 					}
+					
+					// ---------------------------------------
+					// reset experiment
+					// ---------------------------------------
+					db.setExperiment(experiment);
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			
-			final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);
-			DatabaseState databaseState = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
-			databaseState.refreshDatabase(filter);
 		}
+		final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);
+		DatabaseState databaseState = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
+		databaseState.refreshDatabase(filter);
 	}
 	
 	/**

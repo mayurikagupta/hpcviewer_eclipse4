@@ -4,15 +4,15 @@
 package edu.rice.cs.hpc.data.experiment.metric;
 
 import edu.rice.cs.hpc.data.experiment.metric.format.IMetricValueFormat;
-import edu.rice.cs.hpc.data.experiment.metric.format.MetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValueFormatFactory;
 import edu.rice.cs.hpc.data.experiment.metric.format.MetricValuePredefinedFormat;
 import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
-/**
- * @author laksonoadhianto
+/********************************************************************
+ * Basic class for metric description
  *
- */
+ ********************************************************************/
 public abstract class BaseMetric {
 
 	//-------------------------------------------------------------------------------
@@ -21,13 +21,6 @@ public abstract class BaseMetric {
 
 	static final public int PARTNER_UNKNOWN = -1;
 	
-	final static private MetricValueFormat FormatDefault = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
-	final static private MetricValueFormat FormatPercent = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
-	final static private MetricValueFormat FormatProcess = new 
-			MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
-
 	//-------------------------------------------------------------------------------
 	// DATA STRUCTURE
 	//-------------------------------------------------------------------------------
@@ -367,11 +360,11 @@ public abstract class BaseMetric {
 		
 		IMetricValueFormat displayFormat;
 		if (annotationType == AnnotationType.PERCENT) {
-			displayFormat = FormatPercent;
+			displayFormat = MetricValueFormatFactory.createFormatPercent();
 		} else if (annotationType == AnnotationType.PROCESS) {
-			displayFormat = FormatProcess; 
+			displayFormat = MetricValueFormatFactory.createFormatProcess(); 
 		} else {
-			displayFormat = FormatDefault; 
+			displayFormat = MetricValueFormatFactory.createFormatDefault(); 
 		}
 		return displayFormat;
 	}
