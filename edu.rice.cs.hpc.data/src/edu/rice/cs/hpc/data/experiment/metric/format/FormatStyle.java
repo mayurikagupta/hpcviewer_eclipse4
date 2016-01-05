@@ -38,4 +38,7 @@ public class FormatStyle
 
 	/** A Java formatter implementing the format specified for actual values. */
 	public DecimalFormat formatter;
+	
+	/** A user-defined pattern **/
+	public String pattern;
 }

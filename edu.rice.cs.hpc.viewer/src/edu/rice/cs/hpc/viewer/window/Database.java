@@ -9,7 +9,8 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.metric.ThreadDataCollectionFactory;
 
-public class Database {
+public class Database 
+{
 	private int winIndex;
 	private Experiment experiment;
 	private ExperimentView view;
@@ -47,7 +48,6 @@ public class Database {
 	 */
 	public void setWindowIndex (int index) {
 		winIndex = index;
-		return; 
 	}
 
 
@@ -82,7 +82,6 @@ public class Database {
 	 */
 	public void setExperimentView (ExperimentView experView) {
 		view = experView;
-		return;
 	}
 	
 	public void dispose() {

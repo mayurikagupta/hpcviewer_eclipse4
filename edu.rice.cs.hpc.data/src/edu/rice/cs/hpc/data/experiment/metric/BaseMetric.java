@@ -20,7 +20,9 @@ public abstract class BaseMetric {
 	//-------------------------------------------------------------------------------
 
 	static final public int PARTNER_UNKNOWN = -1;
-	
+
+	final private String EMPTY_SUFFIX = "   ";
+
 	//-------------------------------------------------------------------------------
 	// DATA STRUCTURE
 	//-------------------------------------------------------------------------------
@@ -64,8 +66,6 @@ public abstract class BaseMetric {
 	protected MetricValue rootValue;
 
 	private char unit;
-
-	final private String EMPTY_SUFFIX = "   ";
 	
 	//-------------------------------------------------------------------------------
 	// CONSTRUCTOR

@@ -1,7 +1,5 @@
 package edu.rice.cs.hpc.viewer.scope.topdown;
 
-import java.util.Properties;
-
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -48,13 +46,7 @@ public class CallingContextActionsGUI extends ScopeViewActionsGUI {
 	{
 		super(objShell, window, parent, objActions, affectOtherViews);
 		
-		Properties p = new Properties();
-		final String s = p.getProperty(PROPERTY_EXP);
-		if (s != null) {
-			experimental = Boolean.getBoolean(s);
-		} else {
-			experimental = false;
-		}
+		experimental = Boolean.getBoolean(PROPERTY_EXP);
 	}
 
 	/**

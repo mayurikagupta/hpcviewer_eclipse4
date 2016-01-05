@@ -638,6 +638,9 @@ private void accumulateMetricValue(int index, double value)
  * @return
  ***************************************************************************/
 public IMetricValueCollection getMetricValues() {
+	// bug fix: we need to ensure that the metrics exist before giving
+	// to the outside world
+	ensureMetricStorage();
 	return this.metrics;
 }
 
