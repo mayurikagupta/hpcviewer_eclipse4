@@ -48,12 +48,12 @@ public class ExperimentMerger
 	 * @return
 	 * @throws Exception 
 	 */
-	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type, boolean verbose) throws Exception {
+	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type) throws Exception {
 		
 		File file1 = exp1.getXMLExperimentFile();
 		String parent_dir = file1.getParentFile().getParent() + File.separator + "merged" + File.separator;
 
-		return merge(exp1, exp2, type, parent_dir, verbose);
+		return merge(exp1, exp2, type, parent_dir);
 	}
 	
 	/******
@@ -68,7 +68,7 @@ public class ExperimentMerger
 	 * @throws Exception 
 	 */
 	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type, 
-			String parent_dir, boolean verbose) throws Exception {
+			String parent_dir) throws Exception {
 		
 		// -----------------------------------------------
 		// step 1: create new base Experiment
@@ -129,7 +129,7 @@ public class ExperimentMerger
 		createFlatTree(exp2, type, root2);
 
 		final int metricCount = exp1.getMetricCount();
-		new TreeSimilarity(metricCount, rootMerged, root2, verbose);
+		new TreeSimilarity(metricCount, rootMerged, root2);
 		
 		return merged;
 	}

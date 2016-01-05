@@ -111,7 +111,7 @@ public abstract class MergeDatabase extends AbstractHandler
 					
 					Experiment expMerged;
 					try {
-						expMerged = ExperimentMerger.merge(db1, db2, type, path + IPath.SEPARATOR, false);
+						expMerged = ExperimentMerger.merge(db1, db2, type, path + IPath.SEPARATOR);
 
 						ExperimentView ev = new ExperimentView(window.getActivePage());
 						ev.generateView(expMerged);
