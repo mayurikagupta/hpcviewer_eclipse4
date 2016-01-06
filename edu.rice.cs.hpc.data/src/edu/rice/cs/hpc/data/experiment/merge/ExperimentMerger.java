@@ -50,8 +50,7 @@ public class ExperimentMerger
 	 */
 	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type) throws Exception {
 		
-		File file1 = exp1.getXMLExperimentFile();
-		String parent_dir = file1.getParentFile().getParent() + File.separator + "merged" + File.separator;
+		final String parent_dir = generateMergeName(exp1, exp2);
 
 		return merge(exp1, exp2, type, parent_dir);
 	}
@@ -131,9 +130,38 @@ public class ExperimentMerger
 		final int metricCount = exp1.getMetricCount();
 		new TreeSimilarity(metricCount, rootMerged, root2);
 		
+		merged.setMergedDatabase(true);
+		
 		return merged;
 	}
 
+	/****
+	 * generate a "virtual" merge experiment name
+	 * 
+	 * @param exp1
+	 * @param exp2
+	 * @return
+	 */
+	public static String generateMergeName(Experiment exp1, Experiment exp2)  
+	{
+		boolean need_to_find_name = true;
+		File dir  = exp1.getXMLExperimentFile().getParentFile();
+		File path;
+
+		// find a unique name for the merged file
+		do {
+			String tmpDir = Long.toString(System.nanoTime());
+			path = new File(dir + File.separator + tmpDir);
+			
+			// normally there is no way two executions at the same nano second
+			// but I don't want to take a risk
+			need_to_find_name = path.exists();
+		} while (need_to_find_name);
+		
+		return path.getAbsolutePath();
+	}
+	
+	
 	/*******
 	 * create flat tree if needed. <br/>
 	 * The latest version of hpcviewer, flat tree is generated dynamically when needed.

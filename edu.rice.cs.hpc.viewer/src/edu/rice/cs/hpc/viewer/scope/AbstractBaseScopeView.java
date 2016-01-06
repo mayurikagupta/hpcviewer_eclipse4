@@ -472,8 +472,19 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * @see org.eclipse.ui.part.WorkbenchPart#dispose()
      */
     public void dispose() {
+		disactivateListeners();
+		
     	if (gc != null)
     		gc.dispose();
+    }
+    
+    
+    public void disactivateListeners()
+    {
+		final ISourceProviderService service   = (ISourceProviderService)Util.getActiveWindow().
+				getService(ISourceProviderService.class);
+		DatabaseState serviceProvider  = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
+		serviceProvider.removeSourceProviderListener(listener);
     }
     
     //======================================================
@@ -487,6 +498,11 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	database = db;
     	myRootScope = scope;// try to get the aggregate value
 
+    	if (database.getExperiment().isMergedDatabase()) {
+    		// a merged database doesn't need to have a refresh listener
+    		disactivateListeners();
+    	}
+    	
         // tell the action class that we have built the tree
         objViewActions.setTreeViewer(treeViewer);
         
