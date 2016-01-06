@@ -13,6 +13,7 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.filters.EmptyMetricValuePropagationFilter;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.DuplicateScopeTreesVisitor;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
+import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.ResetCounterVisitor;
 
 /******************************************************
@@ -59,9 +60,9 @@ public class TreeSimilarity
 		mergeTree(target, source, offset);
 		
 		// compute the merged metric percentage
-		/*PercentScopeVisitor percentVisitor = new PercentScopeVisitor(offset, 
+		PercentScopeVisitor percentVisitor = new PercentScopeVisitor(0, 
 				((Experiment)target.getExperiment()).getMetricCount(), target);
-		target.dfsVisitScopeTree(percentVisitor);*/
+		target.dfsVisitScopeTree(percentVisitor);
 		
 		if (debug) {
 			float mergePercent = (float) (numMerges * 100.0 / numNodes);

@@ -552,7 +552,7 @@ public MetricValue getMetricValue(BaseMetric metric)
 	MetricValue value = getMetricValue(index);
 
 	// compute percentage if necessary
-	if((this != root) && (! MetricValue.isAnnotationAvailable(value)))
+	if((this != root) && MetricValue.isAvailable(value) && (! MetricValue.isAnnotationAvailable(value)))
 	{
 		MetricValue total = root.getMetricValue(metric);
 		if(MetricValue.isAvailable(total))
