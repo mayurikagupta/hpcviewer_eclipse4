@@ -17,7 +17,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -138,8 +137,8 @@ public abstract class BaseViewPaint extends Job
 			launchDataGettingThreads(changedBounds, launch_threads);
 			
 		} catch (Exception e) {
-			MessageDialog.openError(window.getShell(), "Error while reading data", 
-					e.getMessage());
+			/*MessageDialog.openError(window.getShell(), "Error while reading data", 
+					e.getMessage());*/
 			e.printStackTrace();
 			
 			// shutdown the monitor to end the progress bar

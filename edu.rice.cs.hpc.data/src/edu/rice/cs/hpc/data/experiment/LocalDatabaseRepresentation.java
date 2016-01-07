@@ -17,11 +17,18 @@ public class LocalDatabaseRepresentation implements IDatabaseRepresentation
 	final private IUserData<String, String> userData; 
 	final private boolean need_metric;
 
-	public LocalDatabaseRepresentation(File fileExperiment, 
+	/*****
+	 * Create a local database representation. T
+	 * 
+	 * @param location : the location of database. It can be a file or directory
+	 * @param userData
+	 * @param need_metric
+	 */
+	public LocalDatabaseRepresentation(File location, 
 			IUserData<String, String> userData, 
 			boolean need_metric)
 	{
-		this.fileExperiment = fileExperiment;
+		this.fileExperiment = location;
 		this.userData		= userData;
 		this.need_metric	= need_metric;
 	}
@@ -31,7 +38,7 @@ public class LocalDatabaseRepresentation implements IDatabaseRepresentation
 	public void open(BaseExperiment experiment) throws Exception
 	{		
 		ExperimentFileXML fileXML = new ExperimentFileXML();
-		fileXML.parse(fileExperiment, experiment, need_metric, userData);	
+		fileExperiment = fileXML.parse(fileExperiment, experiment, need_metric, userData);	
 	}
 
 	@Override

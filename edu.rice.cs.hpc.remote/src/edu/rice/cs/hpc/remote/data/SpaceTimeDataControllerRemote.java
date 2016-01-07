@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import edu.rice.cs.hpc.data.experiment.ExperimentConfiguration;
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
 import edu.rice.cs.hpc.data.experiment.extdata.IFilteredData;
 import edu.rice.cs.hpc.remote.data.DecompressionThread.DecompressionItemToDo;
@@ -159,6 +160,6 @@ public class SpaceTimeDataControllerRemote extends SpaceTimeDataController
 
 	@Override
 	public String getName() {
-		return exp.getXMLExperimentFile().getAbsolutePath();
+		return exp.getConfiguration().getName(ExperimentConfiguration.NAME_EXPERIMENT);
 	}
 }

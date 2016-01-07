@@ -103,26 +103,30 @@ public void parse(InputStream stream, String name,
  *	Parses the file and returns the contained experiment subparts.
  *	The subparts are returned by adding them to given lists.
  *
- *	@param	experiment		Experiment object to own the parsed subparts.
- * @throws Exception 
+ * @param  	location 				location of the database
+ * @param  	BaseExperiment		Experiment object to own the parsed subparts.
+ * @param	need_metrics		whether to read metrics or not
+ * @param	userData			user preference data
+ * 
+ * @throws 	Exception 
  *
  ************************************************************************/
 	
-public void parse(File file, BaseExperiment experiment, boolean need_metrics, IUserData<String, String> userData)
+public File parse(File location, BaseExperiment experiment, boolean need_metrics, IUserData<String, String> userData)
 		throws	Exception
 		{
 	// get an appropriate input stream
 	InputStream stream;
-	String name = file.toString();
+	String name = location.toString();
 
 	// check if the argument "file" is really a file (old version) or a directory (new version)
 	String directory, xmlFilePath;
-	if (file.isDirectory()) {
-		directory = file.getAbsolutePath(); // it's a database directory
+	if (location.isDirectory()) {
+		directory = location.getAbsolutePath(); // it's a database directory
 		xmlFilePath = directory + File.separatorChar + Constants.DATABASE_FILENAME;
 	} else {
-		directory = file.getParent(); // it's experiment.xml file
-		xmlFilePath = file.getAbsolutePath();
+		directory = location.getParent(); // it's experiment.xml file
+		xmlFilePath = location.getAbsolutePath();
 	}
 
 	File XMLfile = new File(xmlFilePath);
@@ -177,5 +181,6 @@ public void parse(File file, BaseExperiment experiment, boolean need_metrics, IU
 	if ( builder.getParseOK() != Builder.PARSER_OK ) {
 		throw new InvalExperimentException(builder.getParseErrorLineNumber());        	
 	}
+	return XMLfile;
 }
 }

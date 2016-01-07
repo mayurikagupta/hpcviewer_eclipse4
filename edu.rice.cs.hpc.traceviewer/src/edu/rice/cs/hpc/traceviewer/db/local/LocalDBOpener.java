@@ -90,6 +90,7 @@ public class LocalDBOpener extends AbstractDBOpener
 		default:
 			throw new InvalExperimentException("Trace data version is not unknown: " + version);
 		}
+		//fileDB.open(directory, 0, 0);
 		
 		// prepare the xml experiment and all extended data
 		SpaceTimeDataControllerLocal stdc = new SpaceTimeDataControllerLocal(
