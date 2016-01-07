@@ -145,7 +145,7 @@ public class ExperimentMerger
 	public static String generateMergeName(Experiment exp1, Experiment exp2)  
 	{
 		boolean need_to_find_name = true;
-		File dir  = exp1.getXMLExperimentFile().getParentFile();
+		File dir  = exp1.getDefaultDirectory();
 		File path;
 
 		// find a unique name for the merged file

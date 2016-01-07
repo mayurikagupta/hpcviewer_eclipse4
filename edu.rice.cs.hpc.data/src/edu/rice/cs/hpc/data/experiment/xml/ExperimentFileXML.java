@@ -41,18 +41,6 @@ import java.io.InputStream;
 
 public class ExperimentFileXML extends ExperimentFile
 {
-
-	private File file;
-
-	public File getFile() 
-	{
-		return file;
-	}
-	
-	public void setFile(File file)
-	{
-		this.file = file;
-	}
 	
 	
 //////////////////////////////////////////////////////////////////////////
@@ -102,7 +90,7 @@ public void parse(InputStream stream, String name,
 
 	if (builder.getParseOK() == Builder.PARSER_OK) {
 		// set the file the same as the name of the database
-		setFile(new File(name));
+		// setFile(new File(name));
 		// parsing is done successfully
 	} else
 		throw new InvalExperimentException(
@@ -143,7 +131,7 @@ public void parse(File file, BaseExperiment experiment, boolean need_metrics, IU
 		throw new IOException("File does not exist or not readable: " + XMLfile.getAbsolutePath());
 	}
 	
-	setFile(XMLfile);
+	// setFile(XMLfile);
 	
 	// parse the stream
 	final Builder builder;

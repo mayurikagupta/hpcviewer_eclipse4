@@ -323,7 +323,7 @@ public class Experiment extends BaseExperimentWithMetrics
 
 
 	public void setXMLExperimentFile(File file) {
-		databaseRepresentation.getXMLFile().setFile(file);
+		databaseRepresentation.setFile(file);
 	}
 
 	public void setMetricRaw(MetricRaw []metrics) {

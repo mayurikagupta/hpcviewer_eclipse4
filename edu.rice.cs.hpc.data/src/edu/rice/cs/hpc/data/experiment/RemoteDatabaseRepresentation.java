@@ -1,17 +1,23 @@
 package edu.rice.cs.hpc.data.experiment;
 
+import java.io.File;
 import java.io.InputStream;
 
 import edu.rice.cs.hpc.data.experiment.xml.ExperimentFileXML;
 import edu.rice.cs.hpc.data.util.IUserData;
 
+/***********************************************
+ * 
+ * Database representation for remote data
+ *
+ ***********************************************/
 public class RemoteDatabaseRepresentation implements IDatabaseRepresentation 
 {
 	final private InputStream expStream;
 	final private IUserData<String, String> userData;
 	final private String name;
-	private ExperimentFileXML fileXML;
-	
+	private File fileExperiment;
+
 	public RemoteDatabaseRepresentation( 
 			InputStream expStream, 
 			IUserData<String, String> userData,
@@ -22,25 +28,27 @@ public class RemoteDatabaseRepresentation implements IDatabaseRepresentation
 		this.name		= name;
 	}
 	
-	@Override
-	public ExperimentFileXML getXMLFile() {
-		return fileXML;
-	}
 
 	@Override
 	public void open(BaseExperiment experiment) throws Exception {
 		
-		if (fileXML == null) {
-			fileXML = new ExperimentFileXML();
-		}
+		ExperimentFileXML fileXML = new ExperimentFileXML();
 		fileXML.parse(expStream, name, experiment, false, userData);
 	}
 
 	@Override
 	public IDatabaseRepresentation duplicate() {
-		RemoteDatabaseRepresentation dup = new RemoteDatabaseRepresentation(expStream, userData, name);
-		dup.fileXML = new ExperimentFileXML();
-		
+		RemoteDatabaseRepresentation dup = new RemoteDatabaseRepresentation(expStream, userData, name);	
 		return dup;
+	}
+
+	@Override
+	public File getFile() {
+		return fileExperiment;
+	}
+
+	@Override
+	public void setFile(File file) {
+		fileExperiment = file;
 	}
 }

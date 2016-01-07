@@ -246,7 +246,7 @@ public abstract class BaseExperiment implements IExperiment
 	}
 
 	public File getXMLExperimentFile() {
-		return databaseRepresentation.getXMLFile().getFile();
+		return databaseRepresentation.getFile();
 	}
 
 

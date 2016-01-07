@@ -97,8 +97,9 @@ public class ViewerWindow {
 			if (db == null)
 				continue;
 			Experiment experiment = db.getExperiment();
-			// filter the experiment
-			if (experiment != null) 
+			// filter the experiment if it is not null and it is in original form
+			// (it isn't a merged database)
+			if (experiment != null && !experiment.isMergedDatabase()) 
 			{
 				try {
 					// ---------------------------------------

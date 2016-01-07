@@ -41,7 +41,8 @@ import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 public class ShowView extends AbstractHandler {
 	
 	private IWorkbenchWindow window;
-	//@Override
+	
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
 		window= HandlerUtil.getActiveWorkbenchWindow(event);
@@ -161,7 +162,7 @@ public class ShowView extends AbstractHandler {
 			this.window = window;
 		}
 		
-		//@Override
+		@Override
 		public Image getImage(Object element) {
 			Object o = ((TreeNode)element).getValue();
 			if (o instanceof TreeItemNode) {
@@ -171,7 +172,7 @@ public class ShowView extends AbstractHandler {
 			return null;
 		}
 
-		//@Override
+		@Override
 		public String getText(Object element) {
 			
 			TreeNode node = (TreeNode)element; 

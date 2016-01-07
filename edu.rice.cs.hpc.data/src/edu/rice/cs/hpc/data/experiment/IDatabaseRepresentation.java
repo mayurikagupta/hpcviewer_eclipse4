@@ -1,10 +1,13 @@
 package edu.rice.cs.hpc.data.experiment;
 
-import edu.rice.cs.hpc.data.experiment.xml.ExperimentFileXML;
+import java.io.File;
+
 
 public interface IDatabaseRepresentation 
 {
-	public ExperimentFileXML getXMLFile();
+	public File getFile();
+	public void setFile(File file);
+	
 	public void open(BaseExperiment experiment) throws	Exception;
 	public IDatabaseRepresentation duplicate();
 }
