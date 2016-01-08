@@ -163,13 +163,14 @@ implements IDynamicRootTree
 		 * @return boolean true if the view has to be rendered. false otherwise.
 		 */
 		private boolean shouldBeRendered(IWorkbenchPartReference partRef) {
-			if (isMyView(partRef)) {
+			if ( (ViewerWindowManager.size()>0) && isMyView(partRef) ) {
+
 				IWorkbenchPart part = partRef.getPart(false);
 				DynamicScopeView view = (DynamicScopeView) part;
 
 				IWorkbenchWindow window = part.getSite().getWorkbenchWindow();
 				final ViewerWindow vw 	= ViewerWindowManager.getViewerWindow(window);
-				if (view.database != null) {
+				if (vw != null && view.database != null) {
 					File file = view.database.getExperiment().getXMLExperimentFile();
 					String path = vw.getDatabasePath(file);
 					boolean exist = (vw.getDb(path) != null); 

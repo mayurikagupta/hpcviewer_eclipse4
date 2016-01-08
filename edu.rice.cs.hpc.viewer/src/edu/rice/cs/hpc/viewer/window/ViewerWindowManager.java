@@ -117,10 +117,6 @@ public class ViewerWindowManager {
 				return vWindows.get(i);
 			}
 		}
-
-		MessageDialog.openError(window.getShell(), 
-			"Error: Current Window Unknown.", 
-			"Unable to find hpcviewer window associated with " + window.toString());
 		return null;
 	}
 	
