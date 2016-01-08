@@ -20,6 +20,7 @@ import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.metric.AggregateMetric;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric.AnnotationType;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricValueCollection;
 import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.experiment.scope.filters.MetricValuePropagationFilter;
@@ -552,12 +553,18 @@ public MetricValue getMetricValue(BaseMetric metric)
 	MetricValue value = getMetricValue(index);
 
 	// compute percentage if necessary
-	if((this != root) && MetricValue.isAvailable(value) && (! MetricValue.isAnnotationAvailable(value)))
-	{
-		MetricValue total = root.getMetricValue(metric);
-		if(MetricValue.isAvailable(total))
-			MetricValue.setAnnotationValue(value, MetricValue.getValue(value)/MetricValue.getValue(total));
-	} 
+	if (metric.getAnnotationType() == AnnotationType.PERCENT) {
+		if(MetricValue.isAvailable(value) && (! MetricValue.isAnnotationAvailable(value)))
+		{
+			if (this instanceof RootScope) {
+				MetricValue.setAnnotationValue(value, 1.0);
+			} else {
+				MetricValue total = root.getMetricValue(metric);
+				if(MetricValue.isAvailable(total))
+					MetricValue.setAnnotationValue(value, MetricValue.getValue(value)/MetricValue.getValue(total));
+			}
+		} 
+	}
 
 	return value;
 }
