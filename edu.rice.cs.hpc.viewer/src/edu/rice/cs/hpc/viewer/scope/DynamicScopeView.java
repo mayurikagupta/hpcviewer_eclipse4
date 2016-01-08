@@ -1,15 +1,20 @@
 package edu.rice.cs.hpc.viewer.scope;
 
+import java.io.File;
+
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.viewer.window.Database;
+import edu.rice.cs.hpc.viewer.window.ViewerWindow;
+import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
 /****************************************************************************
  * 
@@ -78,6 +83,7 @@ implements IDynamicRootTree
 	static private final class PartListener implements IPartListener2
 	{
 		final private String firstID, secondaryID;
+		
 		public PartListener(String firstID, String secondaryID) {
 			this.secondaryID = secondaryID;
 			this.firstID	 = firstID;
@@ -109,7 +115,7 @@ implements IDynamicRootTree
 
 		@Override
 		public void partVisible(IWorkbenchPartReference partRef) {
-			if (isMyView(partRef)) {
+			if (shouldBeRendered(partRef)) {
 				// i am visible now
 				DynamicScopeView view = (DynamicScopeView) partRef.getPart(false);
 				Database database  = view.getDatabase();
@@ -124,15 +130,49 @@ implements IDynamicRootTree
 		@Override
 		public void partInputChanged(IWorkbenchPartReference partRef) {}
 
+		/*****
+		 * check if the view part is identical to this view or not
+		 * @param partRef
+		 * @return
+		 */
 		private boolean isMyView(IWorkbenchPartReference partRef) {
 			IWorkbenchPart part = partRef.getPart(false);
+			
 			if (part instanceof DynamicScopeView) {
 				DynamicScopeView view = (DynamicScopeView) part;
 				
 				final String ID	   = view.getViewSite().getId();
 				final String secID = view.getViewSite().getSecondaryId();
 				
-				return (secondaryID.equals(secID) && firstID.equals(ID));
+				boolean me = (secondaryID.equals(secID) && firstID.equals(ID));
+
+				return me;
+			}
+			return false;
+		}
+		
+		/***
+		 * check if the view should be rendered or not.
+		 * This method will check if the reference is the same as the ID of the view or not.
+		 * IF this is the case, then it checks if we are closing or not. Sometimes eclipse
+		 * send "visible" notification before it closes (I know it's annoying), so we have 
+		 * to be careful when we should render the view.
+		 * 
+		 * @param partRef : the reference to the view part
+		 * 
+		 * @return boolean true if the view has to be rendered. false otherwise.
+		 */
+		private boolean shouldBeRendered(IWorkbenchPartReference partRef) {
+			if (isMyView(partRef)) {
+				IWorkbenchPart part = partRef.getPart(false);
+				DynamicScopeView view = (DynamicScopeView) part;
+
+				IWorkbenchWindow window = part.getSite().getWorkbenchWindow();
+				final ViewerWindow vw 	= ViewerWindowManager.getViewerWindow(window);
+				File file = view.database.getExperiment().getXMLExperimentFile();
+				String path = vw.getDatabasePath(file);
+				boolean exist = (vw.getDb(path) != null); 
+				return exist ;
 			}
 			return false;
 		}
