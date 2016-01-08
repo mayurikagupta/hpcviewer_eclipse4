@@ -112,8 +112,19 @@ public ProcedureScope(RootScope root, LoadModuleScope loadModule, SourceFile fil
 public boolean equals(Object obj) {
 	if (obj instanceof ProcedureScope) {
 		ProcedureScope p = (ProcedureScope) obj;
-		return this.getName().equals(p.getName()) && this.getSourceFile().getName().equals(p.getSourceFile().getName());
-	} else return false;
+		boolean equal = this.getName().equals(p.getName());
+		if (equal) {
+			// corner case: somehow Eclipse needs to compare different tree item before it closes.
+			// of course, when it's closing, we remove databases and all references to enable
+			// garbage collection to gather unused storage
+			SourceFile mySrc = getSourceFile();
+			SourceFile pSrc  = p.getSourceFile();
+			if (mySrc != null && pSrc != null) {
+				return  mySrc.getName().equals(pSrc.getName());
+			}
+		}
+	} 
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
