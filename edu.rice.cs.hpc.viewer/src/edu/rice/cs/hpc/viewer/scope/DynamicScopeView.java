@@ -169,10 +169,12 @@ implements IDynamicRootTree
 
 				IWorkbenchWindow window = part.getSite().getWorkbenchWindow();
 				final ViewerWindow vw 	= ViewerWindowManager.getViewerWindow(window);
-				File file = view.database.getExperiment().getXMLExperimentFile();
-				String path = vw.getDatabasePath(file);
-				boolean exist = (vw.getDb(path) != null); 
-				return exist ;
+				if (view.database != null) {
+					File file = view.database.getExperiment().getXMLExperimentFile();
+					String path = vw.getDatabasePath(file);
+					boolean exist = (vw.getDb(path) != null); 
+					return exist ;
+				}
 			}
 			return false;
 		}
