@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="hpctraceviewer" id="edu.rice.cs.hpc.traceviewer.product" application="edu.rice.cs.hpc.traceviewer.application" version="5.4.1.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="hpctraceviewer" id="edu.rice.cs.hpc.traceviewer.product" application="edu.rice.cs.hpc.traceviewer.application" version="5.4.2.qualifier" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/edu.rice.cs.hpc.traceviewer/icons/hpctraceviewer048.png"/>
@@ -15,7 +15,7 @@ Science as part of the SciDAC Center for Scalable Application Development
 Software (CScADS), the Performance Engineering Research Institute (PERI) 
 and Performance Insight For Programmers and Exascale Runtimes (PIPER).
 
-Release 5.4.1  (C) Copyright 2015, Rice University.
+Release 5.4.2  (C) Copyright 2016, Rice University.
       </text>
    </aboutInfo>
 
@@ -24,7 +24,7 @@ Release 5.4.1  (C) Copyright 2015, Rice University.
 
    <launcherArgs>
       <programArgs>-consoleLog</programArgs>
-      <vmArgs>-Dosgi.requiredJavaVersion=1.5 -XX:MaxPermSize=256m -Xms40m -Xmx1512m</vmArgs>
+      <vmArgs>-Dosgi.requiredJavaVersion=1.6 -XX:MaxPermSize=256m -Xms40m -Xmx1512m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
@@ -44,15 +44,14 @@ Release 5.4.1  (C) Copyright 2015, Rice University.
       </win>
    </launcher>
 
+
    <vm>
    </vm>
+
 
    <plugins>
       <plugin id="com.graphbuilder"/>
       <plugin id="com.ibm.icu"/>
-      <plugin id="com.instantiations.assist.eclipse.fragment.swt" fragment="true"/>
-      <plugin id="com.instantiations.assist.eclipse.fragment.ui.ide" fragment="true"/>
-      <plugin id="com.instantiations.assist.eclipse.fragment.ui.workbench" fragment="true"/>
       <plugin id="com.jcraft.jsch"/>
       <plugin id="edu.rice.cs.hpc.common"/>
       <plugin id="edu.rice.cs.hpc.data"/>
