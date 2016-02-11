@@ -106,7 +106,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 			finalize();
 		}
 		// terminate the monitor progress bar (if any) when there's no more work to do 
-		monitor.done();
+		//monitor.done();
 		return numTraces;
 	}
 
