@@ -111,14 +111,14 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			if (objFlat != null) {
 				addCostIfNecessary(id, objFlat.flat_lm, scope, add_inclusive, add_exclusive);
 				addCostIfNecessary(id, objFlat.flat_file, scope, add_inclusive, add_exclusive);
-			}
 
-			//--------------------------------------------------------------------------
-			// For call site, we need also to create its procedure scope
-			//--------------------------------------------------------------------------
-			if (objFlat != null && scope instanceof CallSiteScope) {
-				ProcedureScope proc_cct_s = ((CallSiteScope) scope).getProcedureScope();
-				this.getFlatCounterPart(proc_cct_s, scope, id);
+				//--------------------------------------------------------------------------
+				// For call site, we need also to create its procedure scope
+				//--------------------------------------------------------------------------
+				if (scope instanceof CallSiteScope) {
+					ProcedureScope proc_cct_s = ((CallSiteScope) scope).getProcedureScope();
+					this.getFlatCounterPart(proc_cct_s, scope, id);
+				}
 			}
 
 		} else {
