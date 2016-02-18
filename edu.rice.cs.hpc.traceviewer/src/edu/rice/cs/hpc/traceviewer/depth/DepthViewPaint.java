@@ -93,7 +93,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected void drawPainting(ISpaceTimeCanvas canvas,
 			ImagePosition img) {
-		if (masterGC != null && !masterGC.isDisposed())
+		if (masterGC != null && !masterGC.isDisposed() && img != null && img.image != null)
 		{
 			try {
 				masterGC.drawImage(img.image, 0, 0, img.image.getBounds().width, 

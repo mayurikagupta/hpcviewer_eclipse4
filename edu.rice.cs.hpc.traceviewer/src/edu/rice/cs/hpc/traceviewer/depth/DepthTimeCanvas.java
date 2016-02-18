@@ -206,7 +206,7 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 		currentProcess = frame.position.process;
 
 		final Display display = Display.getDefault();
-		display.asyncExec( new Runnable() {
+		display.syncExec( new Runnable() {
 			
 			@Override
 			public void run() {

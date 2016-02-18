@@ -902,7 +902,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		DetailViewPaint detailPaint = new DetailViewPaint(bufferGC, origGC, stData, 
 					attributes, changedBounds, window, this, threadExecutor); 
 
-		detailPaint.setUser(true);
+		//detailPaint.setUser(true);
 		detailPaint.addJobChangeListener(new IJobChangeListener() {
 			
 			@Override

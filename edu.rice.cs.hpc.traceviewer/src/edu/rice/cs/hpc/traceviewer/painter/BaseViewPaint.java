@@ -269,7 +269,7 @@ public abstract class BaseViewPaint extends Job
 					return false;
 				
 				result.add(linenum);
-				Debugger.printDebug(1, "BVP thread " + i + "/" + launch_threads + " finish " + linenum);
+				Debugger.printDebug(1, getClass() + " thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
