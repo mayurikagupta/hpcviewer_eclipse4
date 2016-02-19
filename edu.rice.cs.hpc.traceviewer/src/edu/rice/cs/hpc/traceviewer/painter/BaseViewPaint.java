@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -197,14 +196,13 @@ public abstract class BaseViewPaint extends Job
 			// -------------------------------------------------------------------
 			// sequential painting for Unix/Linux platform
 			// -------------------------------------------------------------------
-			final ExecutorService es = Executors.newSingleThreadScheduledExecutor();
-			executePaint(es, ecs, launch_threads, 1, queue, linesToPaint, timelineDone, monitor);
+			executePaint(ecs, launch_threads, 1, queue, linesToPaint, timelineDone, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
 			// painting to the buffer "concurrently" if numPaintThreads > 1
 			// -------------------------------------------------------------------
-			executePaint(threadExecutor, ecs, launch_threads, launch_threads, 
+			executePaint(ecs, launch_threads, launch_threads, 
 					queue, linesToPaint, timelineDone, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
@@ -217,7 +215,6 @@ public abstract class BaseViewPaint extends Job
 	/****
 	 * run jobs for collecting data and painting the image
 	 * 
-	 * @param es : executor service for painting the image
 	 * @param ecs : completion service from data collection job
 	 * @param num_threads : number of threads for collecting data (see ecs)
 	 * @param num_paint_threads : number of threads for paiting
@@ -226,7 +223,7 @@ public abstract class BaseViewPaint extends Job
 	 * @param timelineDone : atomic integer for number of lines collected
 	 * @param monitor : UI progress monitor 
 	 */
-	private void executePaint(ExecutorService es, ExecutorCompletionService<Integer> ecs,
+	private void executePaint(ExecutorCompletionService<Integer> ecs,
 			int num_threads, int num_paint_threads, Queue<TimelineDataSet> queue, 
 			int linesToPaint, AtomicInteger timelineDone, IProgressMonitor monitor) 
 	{
