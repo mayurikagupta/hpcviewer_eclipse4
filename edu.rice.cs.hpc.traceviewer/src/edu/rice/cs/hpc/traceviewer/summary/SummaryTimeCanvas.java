@@ -1,6 +1,8 @@
 package edu.rice.cs.hpc.traceviewer.summary;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -168,6 +170,7 @@ implements IOperationHistoryListener
 			for (int y = 0; y < detailData.height; ++y)
 			{
 				int pixelValue = detailData.getPixel(x,y);
+				
 				Integer count  = sortedColorMap.get(pixelValue);
 				if (count != null)
 					sortedColorMap.put( pixelValue , count+1 );
@@ -186,10 +189,11 @@ implements IOperationHistoryListener
 			{
 				final Integer pixel = it.next();
 				final RGB rgb = detailData.palette.getRGB(pixel);
+
 				final Color c = new Color(getDisplay(), rgb);
 				final Integer numCounts = sortedColorMap.get(pixel);
 				final int height = (int) Math.ceil(numCounts * yScale);
-				
+
 				buffer.setBackground(c);
 				
 				// if this is the last color, we should draw from the current position to the end
@@ -286,21 +290,10 @@ implements IOperationHistoryListener
 		protected String getText(Event event) {
 			if (mapStatistics != null ) 
 			{
-				// ------------------------------------------------
-				// copy the area pointed by the mouse to an image
-				// ------------------------------------------------
-				final Image image = new Image(event.display, 1, 1);
-				GC gc = new GC(SummaryTimeCanvas.this);
-				gc.copyArea(image, event.x, event.y);
-				final ImageData data = image.getImageData();
-				gc.dispose();
+				Image img = SummaryTimeCanvas.this.getBuffer();
+				ImageData imgData = img.getImageData();
+				int pixel = imgData.getPixel(event.x, event.y);
 				
-				// ------------------------------------------------
-				// get the pixel of the image 
-				// ------------------------------------------------
-				int pixel = data.getPixel(0, 0); 
-				image.dispose();
-
 				// ------------------------------------------------
 				// get the number of counts of this pixel
 				// ------------------------------------------------
@@ -311,6 +304,7 @@ implements IOperationHistoryListener
 					// compute the percentage
 					// ------------------------------------------------
 					float percent = (float)100.0 * ((float)stat / (float) totPixels);
+
 					if (percent > 0) {
 						final String percent_str = String.format("%.2f %%", percent);
 						return percent_str;
