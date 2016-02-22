@@ -7,7 +7,8 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistoryListener;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryEvent;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -235,14 +236,9 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 				
 				BaseViewPaint depthPaint = new DepthViewPaint(Util.getActiveWindow(), bufferGC, 
 						stData, attributes, true, DepthTimeCanvas.this, threadExecutor);
-				NullProgressMonitor progress = new NullProgressMonitor();
 				
-				// WARNING: we avoid background job to avoid data races
-				// this is just a temporary fix. we need to redesign the painting so that
-				// if another event occurs, it can terminate the current painting
-				depthPaint.paint(progress);
-				
-				DepthTimeCanvas.this.redraw();
+				depthPaint.addJobChangeListener(new DepthJobListener(bufferGC));
+				depthPaint.schedule();
 			}
 		});
 	}
@@ -328,5 +324,44 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private class DepthJobListener implements IJobChangeListener
+	{
+		final private GC bufferGC;
+		
+		public DepthJobListener(GC bufferGC)
+		{
+			this.bufferGC = bufferGC;
+		}
+		
+		@Override
+		public void sleeping(IJobChangeEvent event) {}
+		
+		@Override
+		public void scheduled(IJobChangeEvent event) {}
+		
+		@Override
+		public void running(IJobChangeEvent event) {}
+		
+		@Override
+		public void done(IJobChangeEvent event) {
+			bufferGC.dispose();	
+			Display display = Display.getDefault();
+			display.asyncExec(new Runnable() {
+				
+				@Override
+				public void run() {
+					redraw();
+				}
+			} );
+		}
+		
+		@Override
+		public void awake(IJobChangeEvent event) {}
+		
+		@Override
+		public void aboutToRun(IJobChangeEvent event) {}
+
 	}
 }
