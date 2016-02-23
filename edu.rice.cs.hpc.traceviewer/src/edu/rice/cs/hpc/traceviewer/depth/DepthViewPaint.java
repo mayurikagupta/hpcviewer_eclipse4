@@ -30,11 +30,11 @@ public class DepthViewPaint extends BaseViewPaint {
 	private final AtomicInteger timelineDone;
 	private float numPixels;
 	
-	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController _data,
-			ImageTraceAttributes _attributes, boolean _changeBound, ISpaceTimeCanvas canvas, 
+	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController data,
+			ImageTraceAttributes attributes, boolean changeBound, ISpaceTimeCanvas canvas, 
 			ExecutorService threadExecutor) {
 		
-		super("Depth view", _data, _attributes, _changeBound,  window, canvas, threadExecutor);
+		super("Depth view", data, attributes, changeBound,  window, canvas, threadExecutor);
 		this.masterGC = masterGC;
 		timelineDone  = new AtomicInteger(0);
 	}
@@ -42,8 +42,6 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) 
 	{
-		//controller.resetDepthCounter();
-		
 		final ImageTraceAttributes attributes = controller.getAttributes();
 		
 		int process = attributes.getPosition().process;
@@ -73,7 +71,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
 			Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
-		return new TimelineDepthThread( controller, yscale, queue, timelineDone, 
+		return new TimelineDepthThread( controller, attributes, yscale, queue, timelineDone, 
 				controller.isEnableMidpoint(), monitor);
 	}
 
@@ -93,8 +91,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	}
 
 	@Override
-	protected void drawPainting(ISpaceTimeCanvas canvas,
-			ImagePosition img) {
+	protected void drawPainting(ISpaceTimeCanvas canvas, ImagePosition img) {
 		if (masterGC != null && !masterGC.isDisposed() && img != null && img.image != null)
 		{
 			try {

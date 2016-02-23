@@ -10,6 +10,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.DataPreparation;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 
@@ -30,11 +31,12 @@ public class TimelineThread
 	 * Creates a TimelineThread with SpaceTimeData _stData; the rest of the parameters are things for drawing
 	 * @param changedBounds - whether or not the thread needs to go get the data for its ProcessTimelines.
 	 ***********************************************************************************************************/
-	public TimelineThread(IWorkbenchWindow window, SpaceTimeDataController stData, ProcessTimelineService traceService,
+	public TimelineThread(IWorkbenchWindow window, SpaceTimeDataController stData, ImageTraceAttributes attributes,
+			ProcessTimelineService traceService,
 			boolean _changedBounds, double _scaleY, Queue<TimelineDataSet> queue, 
 			AtomicInteger currentLine, IProgressMonitor monitor)
 	{
-		super(stData, _scaleY, queue, currentLine, stData.isEnableMidpoint(), monitor);
+		super(stData, attributes, _scaleY, queue, currentLine, stData.isEnableMidpoint(), monitor);
 		changedBounds = _changedBounds;		
 		this.traceService = traceService;		
 	}

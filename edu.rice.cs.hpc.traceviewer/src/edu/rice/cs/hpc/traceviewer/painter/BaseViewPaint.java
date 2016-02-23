@@ -9,8 +9,6 @@ import java.util.concurrent.Future;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -48,19 +46,22 @@ public abstract class BaseViewPaint extends Job
 
 	final private ExecutorService threadExecutor;
 	final private ISpaceTimeCanvas canvas;
+	
+	final protected ImageTraceAttributes attributes;
 
 	/**
 	 * Constructor to paint a view (trace and depth view)
-	 * @param controller: the object used to launch the mode-specific prep before painting
 	 * 
-	 * @param _data: global data of the traces
-	 * @param _attributes: the attribute of the trace view
-	 * @param _changeBound: true or false if it requires changes of bound
-	 * @param _statusMgr: used for displaying the status
-	 * @param _monitor: progress monitor
+	 * @param title name of this view (job title purpose)
+	 * @param _data global data of the traces
+	 * @param _attributes the attribute of the trace view
+	 * @param _changeBound true or false if it requires changes of bound
+	 * @param window
+	 * @param canvas
+	 * @param threadExecutor executor
 	 */
 
-	public BaseViewPaint(String title, SpaceTimeDataController _data, ImageTraceAttributes _attributes, boolean _changeBound, 
+	public BaseViewPaint(String title, SpaceTimeDataController _data, ImageTraceAttributes attributes, boolean _changeBound, 
 			IWorkbenchWindow window, ISpaceTimeCanvas canvas, ExecutorService threadExecutor) 
 	{
 		super(title);
@@ -71,6 +72,7 @@ public abstract class BaseViewPaint extends Job
 		this.window 		= (window == null ? Util.getActiveWindow() : window);
 		this.canvas 		= canvas;
 		this.threadExecutor = threadExecutor;
+		this.attributes		= attributes;
 		
 		setRule(new MutexRule(this));
 	}
@@ -108,7 +110,6 @@ public abstract class BaseViewPaint extends Job
 		int linesToPaint = getNumberOfLines();
 		Debugger.printDebug(2, "BVP-begin " + linesToPaint + " lines");
 
-		final ImageTraceAttributes attributes = controller.getAttributes();
 		// -------------------------------------------------------------------
 		// hack fix: if the number of horizontal pixels is less than 1 we
 		// return immediately, otherwise it throws an exception
@@ -227,12 +228,13 @@ public abstract class BaseViewPaint extends Job
 	{
 		final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
 		final ImageTraceAttributes attributes = controller.getAttributes();
-
+		Device device = window.getShell().getDisplay();
+		
 		// for threads as many as the number of paint threads (specified by the caller)
 		for (int threadNum=0; threadNum < num_paint_threads; threadNum++) 
 		{
 			final BasePaintThread thread = getPaintThread(queue, linesToPaint,
-					Display.getCurrent(), attributes.numPixelsH, monitor);
+					device, attributes.numPixelsH, monitor);
 			if (thread != null) {
 				final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
 				threadsPaint.add(submit);

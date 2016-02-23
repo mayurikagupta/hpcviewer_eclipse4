@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.DataPreparation;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 
@@ -34,11 +35,12 @@ public class TimelineDepthThread
 	 * @param width  : the width
 	 */
 	public TimelineDepthThread(SpaceTimeDataController data, 
+			ImageTraceAttributes attributes,
 			double scaleY, Queue<TimelineDataSet> queue, 
 			AtomicInteger timelineDone, 
 			boolean usingMidpoint, IProgressMonitor monitor)
 	{
-		super(data, scaleY, queue, timelineDone, usingMidpoint, monitor);
+		super(data, attributes, scaleY, queue, timelineDone, usingMidpoint, monitor);
 	}
 
 

@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.DataPreparation;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
@@ -37,8 +38,10 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	final private Queue<TimelineDataSet> queue;
 	final private AtomicInteger currentLine;
 	final private IProgressMonitor monitor;
+	final private ImageTraceAttributes attributes;
 
 	public BaseTimelineThread(SpaceTimeDataController stData,
+			ImageTraceAttributes attributes,
 			double scaleY, Queue<TimelineDataSet> queue, 
 			AtomicInteger currentLine, 
 			boolean usingMidpoint, IProgressMonitor monitor)
@@ -49,6 +52,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 		this.queue 		   = queue;
 		this.currentLine   = currentLine; 
 		this.monitor 	   = monitor;
+		this.attributes	   = attributes;
 	}
 	
 	@Override
@@ -60,8 +64,8 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 
 		ProcessTimeline trace = getNextTrace(currentLine);
 		Integer numTraces = 0;
-		final double pixelLength = (stData.getAttributes().getTimeInterval())/(double)stData.getPixelHorizontal();
-		final long timeBegin = stData.getAttributes().getTimeBegin();
+		final double pixelLength = (attributes.getTimeInterval())/(double)attributes.numPixelsH;
+		final long timeBegin = attributes.getTimeBegin();
 
 		while (trace != null)
 		{
