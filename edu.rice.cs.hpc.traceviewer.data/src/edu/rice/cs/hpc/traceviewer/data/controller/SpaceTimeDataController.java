@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 
 import edu.rice.cs.hpc.common.util.ProcedureAliasMap;
@@ -210,11 +211,16 @@ public abstract class SpaceTimeDataController
 	 * 
 	 * @return The next trace.
 	 **********************************************************************/
-	public synchronized ProcessTimeline getNextDepthTrace(AtomicInteger depthLineNum) {
+	public synchronized ProcessTimeline getNextDepthTrace(AtomicInteger depthLineNum, 
+			ImageTraceAttributes attributes, IProgressMonitor monitor) {
 		
 		ProcessTimeline depthTrace = getCurrentDepthTrace();
-		if (depthTrace == null)
+		if (depthTrace == null) {
+			System.out.println("depth trace is null at line " + depthLineNum);
+			monitor.setCanceled(true);
+			monitor.done(); // forcing to reset the title bar
 			return null;
+		}
 		
 		int currentDepthLineNum = depthLineNum.getAndIncrement();
 		if (currentDepthLineNum < Math.min(attributes.numPixelsDepthV, maxDepth)) {

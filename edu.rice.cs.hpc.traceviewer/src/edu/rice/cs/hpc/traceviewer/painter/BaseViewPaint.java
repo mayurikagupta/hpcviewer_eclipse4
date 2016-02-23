@@ -283,6 +283,9 @@ public abstract class BaseViewPaint extends Job
 	{
 		for( Future<List<ImagePosition>> listFutures : listOfImageThreads ) 
 		{
+			if (monitor.isCanceled())
+				return false;
+			
 			try {
 				List<ImagePosition> listImages = listFutures.get();
 				if (listImages == null)
@@ -291,6 +294,8 @@ public abstract class BaseViewPaint extends Job
 				{
 					if (!monitor.isCanceled())
 						drawPainting(canvas, image);
+					else
+						return false;
 				}				
 			} catch (Exception e) {
 				e.printStackTrace();

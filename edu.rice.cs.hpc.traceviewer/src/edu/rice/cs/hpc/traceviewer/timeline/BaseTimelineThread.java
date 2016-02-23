@@ -37,8 +37,8 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	final protected boolean usingMidpoint;
 	final private Queue<TimelineDataSet> queue;
 	final private AtomicInteger currentLine;
-	final private IProgressMonitor monitor;
-	final private ImageTraceAttributes attributes;
+	final protected IProgressMonitor monitor;
+	protected final ImageTraceAttributes attributes;
 
 	public BaseTimelineThread(SpaceTimeDataController stData,
 			ImageTraceAttributes attributes,
@@ -96,7 +96,6 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 				final TimelineDataSet dataSet = data.getList();
 				queue.add(dataSet);				
 			}
-			//numTimelines.decrementAndGet();
 			if (monitor.isCanceled())
 				return null;
 			
