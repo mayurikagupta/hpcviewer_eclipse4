@@ -46,6 +46,7 @@ public class DetailViewPaint extends BaseViewPaint {
 	
 	final private ProcessTimelineService ptlService;
 	final private boolean debug;
+	final private AtomicInteger currentLine;
 	
 	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController _data,
 			ImageTraceAttributes _attributes, boolean _changeBound,
@@ -74,11 +75,12 @@ public class DetailViewPaint extends BaseViewPaint {
 		// initialize the size of maximum text
 		//	the longest text should be: ">99(>99)"
 		maxTextSize = masterGC.textExtent(TOO_MANY_RECORDS + "(" + TOO_MANY_RECORDS + ")");
+		
+		currentLine = new AtomicInteger(0);
 	}
 
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) {
-		controller.resetCounter();
 		return true;
 	}
 
@@ -90,11 +92,10 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale,
-			double yscale, Queue<TimelineDataSet> queue, AtomicInteger timelineDone
-			, IProgressMonitor monitor) {
+			double yscale, Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
 
 		return new TimelineThread(this.window, controller, ptlService, changedBounds,   
-				yscale, queue, timelineDone, monitor);
+				yscale, queue, currentLine, monitor);
 	}
 
 	@Override
@@ -105,10 +106,10 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected BasePaintThread getPaintThread(
-			Queue<TimelineDataSet> queue, int numLines, AtomicInteger timelineDone, 
+			Queue<TimelineDataSet> queue, int numLines, 
 			Device device, int width, IProgressMonitor monitor) {
 
-		return new DetailPaintThread( controller, queue, numLines, timelineDone, 
+		return new DetailPaintThread( controller, queue, numLines, currentLine, 
 				device, width, maxTextSize, debug, monitor);
 	}
 

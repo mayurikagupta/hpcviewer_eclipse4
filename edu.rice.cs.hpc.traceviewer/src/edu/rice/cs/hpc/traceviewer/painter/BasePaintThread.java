@@ -76,10 +76,8 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	public List<ImagePosition> call() throws Exception {
 
 		while( ! list.isEmpty() 				 		      // while there are tasks to do 
-				||								 		      // or  
-				numberOfTotalLines>getNumberOfCreatedData()   // the data collection threads have not finished 
 				|| 											  // or	
-				timelineDone.get()>0 ) 					  	  // the data preparation threads haven't finished the job
+				timelineDone.get()<numberOfTotalLines ) 	  // the data preparation threads haven't finished the job
 		{
 			if (monitor.isCanceled()) {
 				return listOfImages;
@@ -152,9 +150,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @return
 	 */
 	abstract protected ImagePosition finalizePaint(int linenum);
-	
-	abstract protected int getNumberOfCreatedData();
-	
+		
 	/***
 	 * basic method to paint on a gc
 	 * 

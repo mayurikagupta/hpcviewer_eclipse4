@@ -35,18 +35,19 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	final private double scaleY;	
 	final protected boolean usingMidpoint;
 	final private Queue<TimelineDataSet> queue;
-	final private AtomicInteger numTimelines;
+	final private AtomicInteger currentLine;
 	final private IProgressMonitor monitor;
 
 	public BaseTimelineThread(SpaceTimeDataController stData,
 			double scaleY, Queue<TimelineDataSet> queue, 
-			AtomicInteger numTimelines, boolean usingMidpoint, IProgressMonitor monitor)
+			AtomicInteger currentLine, 
+			boolean usingMidpoint, IProgressMonitor monitor)
 	{
 		this.stData 	   = stData;
 		this.scaleY 	   = scaleY;
 		this.usingMidpoint = usingMidpoint;
 		this.queue 		   = queue;
-		this.numTimelines  = numTimelines;
+		this.currentLine   = currentLine; 
 		this.monitor 	   = monitor;
 	}
 	
@@ -57,7 +58,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	 */
 	public Integer call() throws Exception {
 
-		ProcessTimeline trace = getNextTrace();
+		ProcessTimeline trace = getNextTrace(currentLine);
 		Integer numTraces = 0;
 		final double pixelLength = (stData.getAttributes().getTimeInterval())/(double)stData.getPixelHorizontal();
 		final long timeBegin = stData.getAttributes().getTimeBegin();
@@ -91,13 +92,13 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 				final TimelineDataSet dataSet = data.getList();
 				queue.add(dataSet);				
 			}
-			numTimelines.decrementAndGet();
+			//numTimelines.decrementAndGet();
 			if (monitor.isCanceled())
 				return null;
 			
 			monitor.worked(1);
 			
-			trace = getNextTrace();
+			trace = getNextTrace(currentLine);
 			numTraces++;
 			
 			// ---------------------------------
@@ -115,7 +116,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	 * 
 	 * @return
 	 ****/
-	abstract protected ProcessTimeline getNextTrace();
+	abstract protected ProcessTimeline getNextTrace(AtomicInteger currentLine);
 	
 	abstract protected boolean init(ProcessTimeline trace) throws IOException;
 	

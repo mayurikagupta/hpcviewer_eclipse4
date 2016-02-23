@@ -110,7 +110,7 @@ public class SpaceTimeDataControllerRemote extends SpaceTimeDataController
 	}
 
 	@Override
-	public ProcessTimeline getNextTrace(boolean changedBounds) {
+	public ProcessTimeline getNextTrace(AtomicInteger lineNum, boolean changedBounds) {
 		Integer nextIndex;
 
 		if (changedBounds) {

@@ -134,10 +134,4 @@ public class DetailPaintThread
 
 		return imgPos;
 	}
-
-	@Override
-	protected int getNumberOfCreatedData() {
-
-		return stData.getNumberOfLines();
-	}	
 }

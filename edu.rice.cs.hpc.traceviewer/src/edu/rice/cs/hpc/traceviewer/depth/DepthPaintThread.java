@@ -49,10 +49,4 @@ public class DepthPaintThread extends BasePaintThread {
 		gc.dispose();
 		return new ImagePosition(linenum, image);
 	}
-
-	@Override
-	protected int getNumberOfCreatedData() {
-		return stData.getNumberOfDepthLines();
-	}
-
 }

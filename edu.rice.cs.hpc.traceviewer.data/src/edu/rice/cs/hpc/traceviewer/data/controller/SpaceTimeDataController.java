@@ -59,7 +59,7 @@ public abstract class SpaceTimeDataController
 	// We probably want to get away from this. The for code that needs it should be
 	// in one of the threads. It's here so that both local and remote can use
 	// the same thread class yet get their information differently.
-	protected AtomicInteger lineNum;
+	//protected AtomicInteger lineNum;
 	AtomicInteger depthLineNum;
 		
 	/** The maximum depth of any single CallStackSample in any trace. */
@@ -151,7 +151,7 @@ public abstract class SpaceTimeDataController
 		
 		// attributes initialization
 		attributes 	 = new ImageTraceAttributes();
-		lineNum 	 = new AtomicInteger(0);
+		//lineNum 	 = new AtomicInteger(0);
 		depthLineNum = new AtomicInteger(0);
 
 		ISourceProviderService sourceProviderService = (ISourceProviderService) _window.getService(ISourceProviderService.class);
@@ -303,13 +303,13 @@ public abstract class SpaceTimeDataController
 		return enableMidpoint;
 	}
 
-	public void resetCounter() {
+	/*public void resetCounter() {
 		lineNum.set(0);
 	}
 	
 	public int getNumberOfLines() {
 		return lineNum.get();
-	}
+	}*/
 
 	public void resetDepthCounter() {
 		depthLineNum.set(0);
@@ -364,7 +364,14 @@ public abstract class SpaceTimeDataController
 	 *************************************************************************/
 	abstract public String getName() ;
 
-	public abstract ProcessTimeline getNextTrace(boolean changedBounds);
+	/***
+	 * get the next trace process timeline base on the current line
+	 * 
+	 * @param currentLine : atomic integer of current line
+	 * @param changedBounds : boolean flag whether there's a change of boundary or not
+	 * @return
+	 */
+	public abstract ProcessTimeline getNextTrace(AtomicInteger currentLine, boolean changedBounds);
 
 	public abstract void closeDB();
 

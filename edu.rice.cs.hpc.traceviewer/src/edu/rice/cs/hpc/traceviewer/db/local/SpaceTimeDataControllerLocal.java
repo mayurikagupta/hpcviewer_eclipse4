@@ -2,6 +2,7 @@ package edu.rice.cs.hpc.traceviewer.db.local;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -119,7 +120,7 @@ public class SpaceTimeDataControllerLocal extends SpaceTimeDataController
 	 * @return The next trace.
 	 **********************************************************************/
 	@Override
-	public ProcessTimeline getNextTrace(boolean changedBounds) {
+	public ProcessTimeline getNextTrace(AtomicInteger currentLine, boolean changedBounds) {
 		
 		int tracesToRender = Math.min(attributes.numPixelsV, attributes.getProcessInterval());
 		
@@ -127,7 +128,7 @@ public class SpaceTimeDataControllerLocal extends SpaceTimeDataController
 		// other threads will not increment at the same time
 		// if the current line reaches the number of traces to render, we are done
 		
-		int currentLineNum = lineNum.getAndIncrement();
+		int currentLineNum = currentLine.getAndIncrement();
 		if (currentLineNum < tracesToRender) {
 			
 			if (ptlService.getNumProcessTimeline() == 0)

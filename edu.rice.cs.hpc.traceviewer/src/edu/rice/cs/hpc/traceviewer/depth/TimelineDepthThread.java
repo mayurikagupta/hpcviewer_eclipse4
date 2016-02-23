@@ -35,14 +35,15 @@ public class TimelineDepthThread
 	 */
 	public TimelineDepthThread(SpaceTimeDataController data, 
 			double scaleY, Queue<TimelineDataSet> queue, 
-			AtomicInteger timelineDone, boolean usingMidpoint, IProgressMonitor monitor)
+			AtomicInteger timelineDone, 
+			boolean usingMidpoint, IProgressMonitor monitor)
 	{
 		super(data, scaleY, queue, timelineDone, usingMidpoint, monitor);
 	}
 
 
 	@Override
-	protected ProcessTimeline getNextTrace() {
+	protected ProcessTimeline getNextTrace(AtomicInteger currentLine) {
 		return stData.getNextDepthTrace();
 	}
 

@@ -163,8 +163,6 @@ public abstract class BaseViewPaint extends Job
 		
 		Debugger.printTimestampDebug("Rendering beginning (" + canvas.toString()+")");
 		
-		final AtomicInteger timelineDone = new AtomicInteger(linesToPaint);
-
 		final double xscale = canvas.getScalePixelsPerTime();
 		final double yscale = Math.max(canvas.getScalePixelsPerRank(), 1);
 		
@@ -172,7 +170,7 @@ public abstract class BaseViewPaint extends Job
 		
 		for (int threadNum = 0; threadNum < launch_threads; threadNum++) {
 			final BaseTimelineThread thread = getTimelineThread(canvas, xscale, yscale, queue, 
-					timelineDone, monitor);
+					monitor);
 			ecs.submit(thread);
 		}
 		
@@ -188,7 +186,7 @@ public abstract class BaseViewPaint extends Job
 		//	 	 the canvas
 		// -------------------------------------------------------------------
 
-		Debugger.printDebug(1, canvas.toString() + " BVP --- lp: " + linesToPaint + ", tld: " + timelineDone + ", qs: " + queue.size());
+		Debugger.printDebug(1, canvas.toString() + " BVP --- lp: " + linesToPaint + ", qs: " + queue.size());
 		Debugger.printTimestampDebug("Rendering mostly finished. (" + canvas.toString()+")");
 		
 		if (OSValidator.isUnix()) 
@@ -196,14 +194,14 @@ public abstract class BaseViewPaint extends Job
 			// -------------------------------------------------------------------
 			// sequential painting for Unix/Linux platform
 			// -------------------------------------------------------------------
-			executePaint(ecs, launch_threads, 1, queue, linesToPaint, timelineDone, monitor);
+			executePaint(ecs, launch_threads, 1, queue, linesToPaint, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
 			// painting to the buffer "concurrently" if numPaintThreads > 1
 			// -------------------------------------------------------------------
 			executePaint(ecs, launch_threads, launch_threads, 
-					queue, linesToPaint, timelineDone, monitor);
+					queue, linesToPaint, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
 		monitor.done();
@@ -225,7 +223,7 @@ public abstract class BaseViewPaint extends Job
 	 */
 	private void executePaint(ExecutorCompletionService<Integer> ecs,
 			int num_threads, int num_paint_threads, Queue<TimelineDataSet> queue, 
-			int linesToPaint, AtomicInteger timelineDone, IProgressMonitor monitor) 
+			int linesToPaint, IProgressMonitor monitor) 
 	{
 		final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
 		final ImageTraceAttributes attributes = controller.getAttributes();
@@ -233,7 +231,7 @@ public abstract class BaseViewPaint extends Job
 		// for threads as many as the number of paint threads (specified by the caller)
 		for (int threadNum=0; threadNum < num_paint_threads; threadNum++) 
 		{
-			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
+			final BasePaintThread thread = getPaintThread(queue, linesToPaint,
 					Display.getCurrent(), attributes.numPixelsH, monitor);
 			if (thread != null) {
 				final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
@@ -415,7 +413,7 @@ public abstract class BaseViewPaint extends Job
 	 * @return
 	 */
 	abstract protected BaseTimelineThread  getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
-			Queue<TimelineDataSet> queue, AtomicInteger timelineDone, IProgressMonitor monitor);
+			Queue<TimelineDataSet> queue, IProgressMonitor monitor);
 	
 	/***
 	 * get a thread for painting a number of lines
@@ -427,5 +425,5 @@ public abstract class BaseViewPaint extends Job
 	 * @return
 	 */
 	abstract protected BasePaintThread getPaintThread( Queue<TimelineDataSet> queue, int numLines, 
-			AtomicInteger timelineDone, Device device, int width, IProgressMonitor monitor);
+			Device device, int width, IProgressMonitor monitor);
 }
