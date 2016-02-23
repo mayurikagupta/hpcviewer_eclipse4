@@ -158,6 +158,18 @@ public class ImageTraceAttributes {
 		numPixelsDepthV = other.numPixelsDepthV;
 	}
 	
+	/****
+	 * return a new duplicate of this attributes
+	 * 
+	 * @return a new image attribute
+	 */
+	public ImageTraceAttributes duplicate() 
+	{
+		ImageTraceAttributes att = new ImageTraceAttributes();
+		att.copy(this);
+		return att;
+	}
+	
 	public String toString()
 	{
 		return ("T [ " + frame.begTime + ","  + frame.endTime+ " ]" +

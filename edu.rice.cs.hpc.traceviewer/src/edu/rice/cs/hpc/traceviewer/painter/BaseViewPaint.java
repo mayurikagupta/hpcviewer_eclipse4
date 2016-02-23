@@ -226,7 +226,6 @@ public abstract class BaseViewPaint extends Job
 			int linesToPaint, IProgressMonitor monitor) 
 	{
 		final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
-		final ImageTraceAttributes attributes = controller.getAttributes();
 		Device device = window.getShell().getDisplay();
 		
 		// for threads as many as the number of paint threads (specified by the caller)

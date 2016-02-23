@@ -42,8 +42,6 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) 
 	{
-		final ImageTraceAttributes attributes = controller.getAttributes();
-		
 		int process = attributes.getPosition().process;
 		
 		// we need to check if the data is ready.
@@ -52,7 +50,7 @@ public class DepthViewPaint extends BaseViewPaint {
 		//  - and the main view has finished generated the timelines
 		
 		if (process >= attributes.getProcessBegin() && process <= attributes.getProcessEnd()) {
-			
+			// TODO warning: data races for accessing the current process timeline 
 			if ( controller.getCurrentDepthTrace() != null) {
 				numPixels = attributes.numPixelsDepthV/(float)controller.getMaxDepth();
 				return changedBounds;
@@ -64,7 +62,6 @@ public class DepthViewPaint extends BaseViewPaint {
 
 	@Override
 	protected int getNumberOfLines() {
-		final ImageTraceAttributes attributes = controller.getAttributes();
 		return Math.min(attributes.numPixelsDepthV, controller.getMaxDepth());
 	}
 
