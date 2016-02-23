@@ -42,7 +42,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) 
 	{
-		controller.resetDepthCounter();
+		//controller.resetDepthCounter();
 		
 		final ImageTraceAttributes attributes = controller.getAttributes();
 		

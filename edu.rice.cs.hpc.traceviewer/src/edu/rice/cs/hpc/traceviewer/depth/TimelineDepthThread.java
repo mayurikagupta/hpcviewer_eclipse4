@@ -44,7 +44,7 @@ public class TimelineDepthThread
 
 	@Override
 	protected ProcessTimeline getNextTrace(AtomicInteger currentLine) {
-		return stData.getNextDepthTrace();
+		return stData.getNextDepthTrace(currentLine);
 	}
 
 	@Override

@@ -60,7 +60,7 @@ public abstract class SpaceTimeDataController
 	// in one of the threads. It's here so that both local and remote can use
 	// the same thread class yet get their information differently.
 	//protected AtomicInteger lineNum;
-	AtomicInteger depthLineNum;
+	//AtomicInteger depthLineNum;
 		
 	/** The maximum depth of any single CallStackSample in any trace. */
 	protected int maxDepth;
@@ -152,7 +152,7 @@ public abstract class SpaceTimeDataController
 		// attributes initialization
 		attributes 	 = new ImageTraceAttributes();
 		//lineNum 	 = new AtomicInteger(0);
-		depthLineNum = new AtomicInteger(0);
+		//depthLineNum = new AtomicInteger(0);
 
 		ISourceProviderService sourceProviderService = (ISourceProviderService) _window.getService(ISourceProviderService.class);
 		ptlService = (ProcessTimelineService) sourceProviderService.getSourceProvider(ProcessTimelineService.PROCESS_TIMELINE_PROVIDER); 
@@ -210,7 +210,7 @@ public abstract class SpaceTimeDataController
 	 * 
 	 * @return The next trace.
 	 **********************************************************************/
-	public synchronized ProcessTimeline getNextDepthTrace() {
+	public synchronized ProcessTimeline getNextDepthTrace(AtomicInteger depthLineNum) {
 		
 		ProcessTimeline depthTrace = getCurrentDepthTrace();
 		if (depthTrace == null)
@@ -311,13 +311,13 @@ public abstract class SpaceTimeDataController
 		return lineNum.get();
 	}*/
 
-	public void resetDepthCounter() {
+/*	public void resetDepthCounter() {
 		depthLineNum.set(0);
 	}
 	
 	public int getNumberOfDepthLines() {
 		return depthLineNum.get();
-	}
+	}*/
 	
 	//see the note where this is called in FilterRanks
 	public IFilteredData getFilteredBaseData() {
