@@ -128,4 +128,10 @@ public class DetailViewPaint extends BaseViewPaint {
 		imgDetailLine.image.dispose();
 		imgDetailLine.imageOriginal.dispose();
 	}
+
+	@Override
+	protected void endPainting(boolean isCanceled) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -15,7 +15,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.util.OSValidator;
@@ -289,48 +288,22 @@ public abstract class BaseViewPaint extends Job
 				List<ImagePosition> listImages = listFutures.get();
 				if (listImages == null)
 					return false;
-				
-				Display display = Display.getDefault();
-				DrawPainting job = new DrawPainting(this, listImages, monitor);
-				display.syncExec(job);
-				
+				for (ImagePosition image : listImages) 
+				{
+					if (!monitor.isCanceled())
+						drawPainting(canvas, image);
+				}				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		// notify user that we have finished painting
+		endPainting(monitor.isCanceled());
+		
 		return true;
 	}
 	
 
-	/*****************************************************
-	 * 
-	 * class to paint images
-	 *
-	 *****************************************************/
-	static private class DrawPainting implements Runnable
-	{
-		final private IProgressMonitor monitor;
-		final private List<ImagePosition> listImages;
-		final private BaseViewPaint viewPaint;
-		
-		DrawPainting(BaseViewPaint viewPaint, List<ImagePosition> listImages, IProgressMonitor monitor) {
-			this.monitor 	= monitor;
-			this.listImages = listImages;
-			this.viewPaint	= viewPaint;
-		}
-		
-		@Override
-		public void run() {
-			monitor.subTask("Painting");
-			for (ImagePosition image : listImages) 
-			{
-				viewPaint.drawPainting(viewPaint.canvas, image);
-			}
-			monitor.done();
-		}
-	}
-	
-	
 	/*********************************
 	 * 
 	 * Rule for avoiding two jobs execute simultaneously
@@ -380,6 +353,13 @@ public abstract class BaseViewPaint extends Job
 	 * @return false will exit the painting
 	 */
 	abstract protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds);
+	
+	/*****
+	 * notification for the termination of painting
+	 * 
+	 * @param isCanceled : flag if the process has been canceled or not
+	 */
+	abstract protected void endPainting(boolean isCanceled);
 	
 	/***
 	 * start painting an image to the canvas

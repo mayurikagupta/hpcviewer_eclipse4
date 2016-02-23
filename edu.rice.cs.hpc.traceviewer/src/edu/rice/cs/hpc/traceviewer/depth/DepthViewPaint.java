@@ -105,4 +105,10 @@ public class DepthViewPaint extends BaseViewPaint {
 			img.image.dispose();
 		}
 	}
+
+	@Override
+	protected void endPainting(boolean isCanceled) {
+		if (masterGC != null && !masterGC.isDisposed())
+			masterGC.dispose();
+	}
 }

@@ -237,7 +237,7 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 				BaseViewPaint depthPaint = new DepthViewPaint(Util.getActiveWindow(), bufferGC, 
 						stData, attributes, true, DepthTimeCanvas.this, threadExecutor);
 				
-				depthPaint.addJobChangeListener(new DepthJobListener(bufferGC));
+				depthPaint.addJobChangeListener(new DepthJobListener());
 				depthPaint.schedule();
 			}
 		});
@@ -328,12 +328,6 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 	
 	private class DepthJobListener implements IJobChangeListener
 	{
-		final private GC bufferGC;
-		
-		public DepthJobListener(GC bufferGC)
-		{
-			this.bufferGC = bufferGC;
-		}
 		
 		@Override
 		public void sleeping(IJobChangeEvent event) {}
@@ -346,7 +340,7 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 		
 		@Override
 		public void done(IJobChangeEvent event) {
-			bufferGC.dispose();	
+			//bufferGC.dispose();	
 			Display display = Display.getDefault();
 			display.asyncExec(new Runnable() {
 				
