@@ -40,7 +40,7 @@ public class TimelineDepthThread
 			AtomicInteger timelineDone, 
 			boolean usingMidpoint, IProgressMonitor monitor)
 	{
-		super(data, attributes, scaleY, queue, timelineDone, usingMidpoint, monitor);
+		super(data, attributes, scaleY, queue, timelineDone,  usingMidpoint, monitor);
 	}
 
 

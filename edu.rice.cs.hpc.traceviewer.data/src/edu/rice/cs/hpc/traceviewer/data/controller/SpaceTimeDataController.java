@@ -216,7 +216,6 @@ public abstract class SpaceTimeDataController
 		
 		ProcessTimeline depthTrace = getCurrentDepthTrace();
 		if (depthTrace == null) {
-			System.out.println("depth trace is null at line " + depthLineNum);
 			monitor.setCanceled(true);
 			monitor.done(); // forcing to reset the title bar
 			return null;
@@ -377,7 +376,8 @@ public abstract class SpaceTimeDataController
 	 * @param changedBounds : boolean flag whether there's a change of boundary or not
 	 * @return
 	 */
-	public abstract ProcessTimeline getNextTrace(AtomicInteger currentLine, boolean changedBounds);
+	public abstract ProcessTimeline getNextTrace(AtomicInteger currentLine, int totalLines,
+			ImageTraceAttributes attributes, boolean changedBounds, IProgressMonitor monitor);
 
 	public abstract void closeDB();
 

@@ -856,6 +856,10 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		// -----------------------------------------------------------------------
 
 		final Rectangle view = getClientArea();
+		final ImageTraceAttributes attributes = stData.getAttributes();
+		
+		attributes.numPixelsH = view.width;
+		attributes.numPixelsV = view.height;
 				
 		final Image imageFinal = new Image(getDisplay(), view.width, view.height);
 		final GC bufferGC = new GC(imageFinal);
@@ -869,7 +873,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		//	the number of ranks or the number of pixels
 		// -----------------------------------------------------------------------
 		
-		int numLines = Math.min(view.height, stData.getAttributes().getProcessInterval() );
+		final int numLines = Math.min(view.height, attributes.getProcessInterval() );
 		final Image imageOrig = new Image(getDisplay(), view.width, numLines);
 		
 		final GC origGC = new GC(imageOrig);
@@ -881,16 +885,11 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		// if there's no exception or interruption, we redraw the canvas
 		// -----------------------------------------------------------------------
 
-		ImageTraceAttributes attributes = stData.getAttributes();
 		final boolean changedBounds = (refreshData? refreshData : !attributes.sameTrace(oldAttributes) );
-		
-		attributes.numPixelsH = view.width;
-		attributes.numPixelsV = view.height;
 		
 		oldAttributes.copy(attributes);
 		if (changedBounds) {
-			final int num_traces = Math.min(attributes.numPixelsV, attributes.getProcessInterval());
-			ProcessTimeline []traces = new ProcessTimeline[ num_traces ];
+			ProcessTimeline []traces = new ProcessTimeline[ numLines ];
 			ptlService.setProcessTimeline(traces);
 		}
 
@@ -900,7 +899,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		 *	the sample's max depth before becoming overDepth on samples that have gone over depth.
 		 *************************************************************************/
 		DetailViewPaint detailPaint = new DetailViewPaint(bufferGC, origGC, stData, 
-					attributes, changedBounds, window, this, threadExecutor); 
+					attributes, numLines, changedBounds, window, this, threadExecutor); 
 
 		//detailPaint.setUser(true);
 		detailPaint.addJobChangeListener(new IJobChangeListener() {

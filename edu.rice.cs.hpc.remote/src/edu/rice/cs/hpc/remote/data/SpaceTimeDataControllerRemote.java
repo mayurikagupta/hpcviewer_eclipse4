@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -16,6 +17,7 @@ import edu.rice.cs.hpc.remote.data.DecompressionThread.DecompressionItemToDo;
 import edu.rice.cs.hpc.remote.data.RemoteFilteredBaseData;
 import edu.rice.cs.hpc.data.experiment.extdata.TraceName;
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 
@@ -110,7 +112,8 @@ public class SpaceTimeDataControllerRemote extends SpaceTimeDataController
 	}
 
 	@Override
-	public ProcessTimeline getNextTrace(AtomicInteger lineNum, boolean changedBounds) {
+	public ProcessTimeline getNextTrace(AtomicInteger lineNum, int totalLines, 
+			ImageTraceAttributes attributes, boolean changedBounds, IProgressMonitor monitor) {
 		Integer nextIndex;
 
 		if (changedBounds) {
@@ -118,6 +121,9 @@ public class SpaceTimeDataControllerRemote extends SpaceTimeDataController
 			
 			// TODO: Should this be implemented with real locking?
 			while ((nextIndex = timelineToRender.poll()) == null) {
+				if (monitor.isCanceled())
+					return null;
+				
 				//Make sure a different thread didn't get the last one while 
 				//this thread was waiting:
 				if (lineNum.get() >= ptlService.getNumProcessTimeline())

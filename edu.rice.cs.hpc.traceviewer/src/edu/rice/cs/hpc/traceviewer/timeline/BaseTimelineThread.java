@@ -39,6 +39,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	final private AtomicInteger currentLine;
 	final protected IProgressMonitor monitor;
 	protected final ImageTraceAttributes attributes;
+	
 
 	public BaseTimelineThread(SpaceTimeDataController stData,
 			ImageTraceAttributes attributes,
@@ -50,7 +51,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 		this.scaleY 	   = scaleY;
 		this.usingMidpoint = usingMidpoint;
 		this.queue 		   = queue;
-		this.currentLine   = currentLine; 
+		this.currentLine   = currentLine;
 		this.monitor 	   = monitor;
 		this.attributes	   = attributes;
 	}

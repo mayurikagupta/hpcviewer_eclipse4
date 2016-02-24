@@ -29,7 +29,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	private final GC masterGC;
 	private final AtomicInteger timelineDone;
 	private float numPixels;
-	
+
 	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController data,
 			ImageTraceAttributes attributes, boolean changeBound, ISpaceTimeCanvas canvas, 
 			ExecutorService threadExecutor) {
@@ -68,7 +68,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
 			Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
-		return new TimelineDepthThread( controller, attributes, yscale, queue, timelineDone, 
+		return new TimelineDepthThread( controller, attributes, yscale, queue, timelineDone,
 				controller.isEnableMidpoint(), monitor);
 	}
 

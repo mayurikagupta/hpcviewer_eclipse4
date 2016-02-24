@@ -34,8 +34,13 @@ public class ProcessTimelineService extends AbstractSourceProvider {
 	}
 	
 	
-	public void setProcessTimeline(int index, ProcessTimeline trace) {
-		traces[index] = trace;
+	public boolean setProcessTimeline(int index, ProcessTimeline trace) {
+		boolean result = (traces != null && traces.length > index);
+		if (result)
+			traces[index] = trace;
+		/*else
+			System.err.println("PTS incorrect index: " + index + " out of " + (traces == null ? 0 : traces.length));*/
+		return result;
 	}
  	
 	

@@ -47,14 +47,16 @@ public class DetailViewPaint extends BaseViewPaint {
 	final private ProcessTimelineService ptlService;
 	final private boolean debug;
 	final private AtomicInteger currentLine;
+	final private int numLines;
 	
-	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController _data,
-			ImageTraceAttributes _attributes, boolean _changeBound,
+	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController data,
+			ImageTraceAttributes attributes, int numLines, boolean changeBound,
 			IWorkbenchWindow window, ISpaceTimeCanvas canvas, ExecutorService threadExecutor) 
 	{
-		super("Main trace view", _data, _attributes, _changeBound, window, canvas, threadExecutor);
+		super("Main trace view", data, attributes, changeBound, window, canvas, threadExecutor);
 		this.masterGC = masterGC;
 		this.origGC   = origGC;
+		this.numLines = numLines;
 
 		ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(
 				ISourceProviderService.class);
@@ -86,8 +88,7 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected int getNumberOfLines() {
-		final ImageTraceAttributes attributes = controller.getAttributes();
-		return Math.min(attributes.numPixelsV, attributes.getProcessInterval() );
+		return numLines;
 	}
 
 	@Override
@@ -95,7 +96,7 @@ public class DetailViewPaint extends BaseViewPaint {
 			double yscale, Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
 
 		return new TimelineThread(this.window, controller, attributes, ptlService, changedBounds,   
-				yscale, queue, currentLine, monitor);
+				yscale, queue, currentLine, numLines, monitor);
 	}
 
 	@Override
