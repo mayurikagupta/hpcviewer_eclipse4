@@ -242,8 +242,14 @@ public abstract class BaseViewPaint extends Job
 		// Finalize the painting (to be implemented by the instance)
 		// -------------------------------------------------------------------
 		ArrayList<Integer> result = new ArrayList<Integer>();
-		waitDataPreparationThreads(ecs, result, num_threads);
-		endPainting(threadsPaint, monitor);
+		if (waitDataPreparationThreads(ecs, result, num_threads, monitor))
+		{
+			endPainting(threadsPaint, monitor);
+		} else {
+			monitor.setCanceled(true);
+			// whatever the result, we need to clear the 
+			monitor.setTaskName("");
+		}
 	}
 	
 	/******
@@ -254,7 +260,7 @@ public abstract class BaseViewPaint extends Job
 	 * @param launch_threads : number of launched threads
 	 */
 	private boolean waitDataPreparationThreads(ExecutorCompletionService<Integer> ecs, 
-			ArrayList<Integer> result, int launch_threads)
+			ArrayList<Integer> result, int launch_threads, IProgressMonitor monitor)
 	{
 		for (int i=0; i<launch_threads; i++)
 		{
@@ -267,6 +273,7 @@ public abstract class BaseViewPaint extends Job
 				Debugger.printDebug(1, getClass() + " thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
 				e.printStackTrace();
+				return false;
 			}
 		}
 		return true;
