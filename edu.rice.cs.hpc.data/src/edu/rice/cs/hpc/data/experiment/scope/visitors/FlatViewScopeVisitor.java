@@ -101,7 +101,7 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			if (flat_info != null) {
 				this.htFlatCostAdded.remove(id);
 			}
-			
+
 			FlatScopeInfo objFlat = this.getFlatCounterPart(scope, scope, id);
 			
 			//--------------------------------------------------------------------------
@@ -476,7 +476,7 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		while(parent != null) {
 			if (parent instanceof CallSiteScope) {
 				ProcedureScope proc = ((CallSiteScope) parent).getProcedureScope();
-				if (!proc.isAlien()) return proc;
+				/*if (!proc.isAlien()) */return proc;
 			}
 			if (parent instanceof ProcedureScope) {
 				ProcedureScope proc = (ProcedureScope) parent;
