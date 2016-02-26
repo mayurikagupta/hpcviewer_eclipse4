@@ -6,7 +6,8 @@ Bundle-Version: 5.4.2.qualifier
 Bundle-Activator: edu.rice.cs.hpc.viewer.framework.Activator
 Bundle-Vendor: Rice University
 Require-Bundle: org.eclipse.ui,
- edu.rice.cs.hpc.data
+ edu.rice.cs.hpc.data,
+ org.eclipse.ui.ide.source
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Import-Package: 
