@@ -27,7 +27,7 @@ import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 public class DepthViewPaint extends BaseViewPaint {
 
 	private final GC masterGC;
-	private final AtomicInteger timelineDone;
+	private final AtomicInteger timelineDone, numDataCollected;
 	private float numPixels;
 
 	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController data,
@@ -37,6 +37,7 @@ public class DepthViewPaint extends BaseViewPaint {
 		super("Depth view", data, attributes, changeBound,  window, canvas, threadExecutor);
 		this.masterGC = masterGC;
 		timelineDone  = new AtomicInteger(0);
+		numDataCollected  = new AtomicInteger(0);
 	}
 
 	@Override
@@ -68,7 +69,7 @@ public class DepthViewPaint extends BaseViewPaint {
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
 			Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
-		return new TimelineDepthThread( controller, attributes, yscale, queue, timelineDone,
+		return new TimelineDepthThread( controller, attributes, yscale, queue, numDataCollected,
 				controller.isEnableMidpoint(), monitor);
 	}
 
@@ -83,7 +84,8 @@ public class DepthViewPaint extends BaseViewPaint {
 			Queue<TimelineDataSet> queue, int linesToPaint, 
 			Device device, int width, IProgressMonitor monitor) {
 
-		return new DepthPaintThread(controller, queue, linesToPaint, timelineDone, 
+		return new DepthPaintThread(controller, queue, linesToPaint, 
+				numDataCollected, timelineDone, 
 				device, width, monitor);
 	}
 

@@ -119,7 +119,7 @@ public abstract class BaseViewPaint extends Job
 		// -------------------------------------------------------------------
 		// initialize the painting (to be implemented by the instance)
 		// -------------------------------------------------------------------
-		int launch_threads = Utility.getNumThreads(linesToPaint);
+		int launch_threads = Utility.getNumThreads(Math.min(linesToPaint, 4));
 		if (!startPainting(linesToPaint, launch_threads, changedBounds))
 			return false;
 

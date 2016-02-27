@@ -22,10 +22,10 @@ public class DepthPaintThread extends BasePaintThread {
 	private GC gc;
 
 	public DepthPaintThread(SpaceTimeDataController stData, Queue<TimelineDataSet> list, int linesToPaint, 
-			AtomicInteger paintDone, Device device, 
+			AtomicInteger numDataCollected, AtomicInteger paintDone, Device device, 
 			int width, IProgressMonitor monitor) {
 
-		super(stData, list, linesToPaint, paintDone, device, width, monitor);
+		super(stData, list, linesToPaint, numDataCollected, paintDone, device, width, monitor);
 	}
 
 	@Override

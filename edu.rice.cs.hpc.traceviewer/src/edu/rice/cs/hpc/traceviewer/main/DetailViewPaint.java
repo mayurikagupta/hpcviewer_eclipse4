@@ -46,7 +46,7 @@ public class DetailViewPaint extends BaseViewPaint {
 	
 	final private ProcessTimelineService ptlService;
 	final private boolean debug;
-	final private AtomicInteger currentLine;
+	final private AtomicInteger currentLine, numDataCollected;
 	final private int numLines;
 	
 	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController data,
@@ -79,6 +79,7 @@ public class DetailViewPaint extends BaseViewPaint {
 		maxTextSize = masterGC.textExtent(TOO_MANY_RECORDS + "(" + TOO_MANY_RECORDS + ")");
 		
 		currentLine = new AtomicInteger(0);
+		numDataCollected = new AtomicInteger(0);
 	}
 
 	@Override
@@ -96,7 +97,7 @@ public class DetailViewPaint extends BaseViewPaint {
 			double yscale, Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
 
 		return new TimelineThread(this.window, controller, attributes, ptlService, changedBounds,   
-				yscale, queue, currentLine, numLines, monitor);
+				yscale, queue, numDataCollected, numLines, monitor);
 	}
 
 	@Override
@@ -110,7 +111,8 @@ public class DetailViewPaint extends BaseViewPaint {
 			Queue<TimelineDataSet> queue, int numLines, 
 			Device device, int width, IProgressMonitor monitor) {
 
-		return new DetailPaintThread( controller, queue, numLines, currentLine, 
+		return new DetailPaintThread( controller, queue, numLines, 
+				numDataCollected, currentLine, 
 				device, width, maxTextSize, debug, monitor);
 	}
 

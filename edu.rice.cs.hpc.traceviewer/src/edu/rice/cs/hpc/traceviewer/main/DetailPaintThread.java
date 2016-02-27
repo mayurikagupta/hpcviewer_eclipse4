@@ -53,11 +53,11 @@ public class DetailPaintThread
 	 * @param debugMode : flag whether we need to show text information
 	 */
 	public DetailPaintThread( SpaceTimeDataController stData, Queue<TimelineDataSet> list, int numLines,
-			AtomicInteger paintDone, Device device, int width, Point maxTextSize, boolean debugMode,
+			AtomicInteger numDataCollected, AtomicInteger paintDone, Device device, int width, 
+			Point maxTextSize, boolean debugMode,
 			IProgressMonitor monitor) {
 		
-		super(stData, list, numLines, paintDone, device, width, monitor);
-		
+		super(stData, list, numLines, numDataCollected, paintDone, device, width, monitor);
 		this.maxTextSize = maxTextSize;
 		this.debugMode = debugMode;
 	}
@@ -121,7 +121,7 @@ public class DetailPaintThread
 		// paint the text on the real image
 		final DetailDataVisualization dataDetail = (DetailDataVisualization) data;
 		paintText(gcFinal, data.x_start, data.x_end, height,
-				data.depth, data.color, dataDetail.sample_counts);		
+				data.depth, data.color, dataDetail.sample_counts);
 	}
 
 	@Override

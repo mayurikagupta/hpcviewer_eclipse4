@@ -67,7 +67,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 		Integer numTraces = 0;
 		final double pixelLength = (attributes.getTimeInterval())/(double)attributes.numPixelsH;
 		final long timeBegin = attributes.getTimeBegin();
-
+		
 		while (trace != null)
 		{
 			// ---------------------------------
@@ -96,6 +96,11 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 				
 				final TimelineDataSet dataSet = data.getList();
 				queue.add(dataSet);				
+			} else {
+				// empty trace, we need to notify the BasePaintThread class
+				// of this anomaly by adding NullTimeline
+				queue.add(TimelineDataSet.NULLTimeline);
+				//System.out.println("init incorrect at " + trace.line());
 			}
 			if (monitor.isCanceled())
 				return null;
@@ -110,6 +115,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 			// ---------------------------------
 			finalize();
 		}
+		//System.out.println("BTT q: " + queue.size() + " line:" + currentLine.get() +" tot: " + numTraces);
 		// terminate the monitor progress bar (if any) when there's no more work to do 
 		//monitor.done();
 		return numTraces;

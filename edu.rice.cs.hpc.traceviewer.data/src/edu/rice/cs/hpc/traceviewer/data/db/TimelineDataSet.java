@@ -3,7 +3,9 @@ package edu.rice.cs.hpc.traceviewer.data.db;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TimelineDataSet {
+public class TimelineDataSet 
+{
+	final static public TimelineDataSet NULLTimeline = new TimelineDataSet(-1, 0, 0);
 
 	final private List<BaseDataVisualization> list;
 	final private int height;

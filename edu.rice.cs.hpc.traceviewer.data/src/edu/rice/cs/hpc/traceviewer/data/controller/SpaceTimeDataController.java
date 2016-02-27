@@ -211,7 +211,7 @@ public abstract class SpaceTimeDataController
 	 * 
 	 * @return The next trace.
 	 **********************************************************************/
-	public synchronized ProcessTimeline getNextDepthTrace(AtomicInteger depthLineNum, 
+	public ProcessTimeline getNextDepthTrace(AtomicInteger depthLineNum, 
 			ImageTraceAttributes attributes, IProgressMonitor monitor) {
 		
 		ProcessTimeline depthTrace = getCurrentDepthTrace();

@@ -37,7 +37,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	final private int numberOfTotalLines;
 	
 	final protected SpaceTimeDataController stData;
-	final private AtomicInteger timelineDone;
+	final private AtomicInteger numDataCollected, currentPaint;
 	
 	/****
 	 * constructor of the class, requiring a queue of list of data (per line) to be
@@ -53,7 +53,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @param width : the width of the view
 	 */
 	public BasePaintThread( SpaceTimeDataController stData, Queue<TimelineDataSet> list, 
-			int numberOfTotalLines, AtomicInteger paintDone,
+			int numberOfTotalLines, AtomicInteger dataCollected, AtomicInteger currentPaint,
 			Device device, int width, IProgressMonitor monitor) {
 		
 		Assert.isNotNull(list);
@@ -63,8 +63,8 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 		this.monitor 			= monitor;
 		this.list 				= list;
 		this.numberOfTotalLines = numberOfTotalLines;
-		this.timelineDone 		= paintDone;
-		
+		this.numDataCollected 	= dataCollected;
+		this.currentPaint		= currentPaint;
 		listOfImages = new ArrayList<ImagePosition>(list.size());
 	}
 	
@@ -75,9 +75,11 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 */
 	public List<ImagePosition> call() throws Exception {
 
-		while( ! list.isEmpty() 				 		      // while there are tasks to do 
-				|| 											  // or	
-				timelineDone.get()<numberOfTotalLines ) 	  // the data preparation threads haven't finished the job
+		while( /*! list.isEmpty() 				 		 // while there are tasks to do 
+				|| 						*/				 // or	
+				currentPaint.get() < numberOfTotalLines  // the current painting is not done yet
+				|| 											// or
+				numDataCollected.get()<numberOfTotalLines )  // the data preparation threads haven't finished the job
 		{
 			if (monitor.isCanceled()) {
 				return listOfImages;
@@ -91,6 +93,11 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 			TimelineDataSet setDataToPaint = list.poll();
 			if (setDataToPaint == null) {
 				Thread.sleep(40);
+				continue;
+			}
+			if (setDataToPaint == TimelineDataSet.NULLTimeline) {
+				// empty trace
+				currentPaint.incrementAndGet();
 				continue;
 			}
 			final int height = setDataToPaint.getHeight();
@@ -119,6 +126,8 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 			final ImagePosition imgPos = finalizePaint(position);
 			
 			listOfImages.add(imgPos);
+			currentPaint.incrementAndGet();
+			//System.out.println("    bpt "+cp+" / " + numberOfTotalLines + "  col data: " + numDataCollected);
 		}
 
 		return listOfImages;
