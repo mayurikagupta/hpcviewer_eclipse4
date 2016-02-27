@@ -194,9 +194,9 @@ public class CallStackViewer extends TableViewer
 		ProcessTimeline ptl = ptlService.getProcessTimeline(estimatedProcess);
 		if (ptl != null) {
 			int sample = ptl.findMidpointBefore(position.time, stData.isEnableMidpoint());
+			final Vector<String> sampleVector;
 			if (sample>=0) {
 				final CallPath cp = ptl.getCallPath(sample, depth);
-				final Vector<String> sampleVector;
 				if (cp != null)
 					sampleVector = ptl.getCallPath(sample, depth).getFunctionNames();
 				else
@@ -212,17 +212,24 @@ public class CallStackViewer extends TableViewer
 					for(int l = 0; l<numOverDepth; l++)
 						sampleVector.add(EMPTY_FUNCTION);
 				}
-				final Display display = Display.getDefault();
-				display.asyncExec( new Runnable() {
-					
-					@Override
-					public void run() {
-						setInput(new ArrayList<String>(sampleVector));
-						selectDepth(depth);
-						viewerColumn.getColumn().pack();
-					}
-				} );
+			} else {
+				// empty array of string
+				sampleVector = new Vector<String>();
+				
+				for(int l = 0; l<=depth; l++)
+					sampleVector.add(EMPTY_FUNCTION);
 			}
+			// fill the call stack and select the current depth
+			final Display display = Display.getDefault();
+			display.asyncExec( new Runnable() {
+				
+				@Override
+				public void run() {
+					setInput(new ArrayList<String>(sampleVector));
+					selectDepth(depth);
+					viewerColumn.getColumn().pack();
+				}
+			} );
 		}
 		else
 		{
