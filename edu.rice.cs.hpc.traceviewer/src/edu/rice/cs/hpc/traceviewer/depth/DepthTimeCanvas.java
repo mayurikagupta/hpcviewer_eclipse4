@@ -216,9 +216,8 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 				final int viewHeight = rb.height;
 
 				if (viewWidth>0 && viewHeight>0) {
-					if (getBuffer() != null) {
-						getBuffer().dispose();
-					}
+					initBuffer();
+
 					//paints the current screen
 					final Image imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
 					setBuffer(imageBuffer);

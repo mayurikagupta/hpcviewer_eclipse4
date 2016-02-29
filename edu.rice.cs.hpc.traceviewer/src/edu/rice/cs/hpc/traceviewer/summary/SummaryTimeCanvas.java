@@ -1,8 +1,6 @@
 package edu.rice.cs.hpc.traceviewer.summary;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -132,9 +130,7 @@ implements IOperationHistoryListener
 		// ------------------------------------------------------------------------------------------
 		// let use GC instead of ImageData since GC allows us to draw lines and rectangles
 		// ------------------------------------------------------------------------------------------
-		if (getBuffer() != null) {
-			getBuffer().dispose();
-		}
+		initBuffer();
 		final int viewWidth = getBounds().width;
 		final int viewHeight = getBounds().height;
 

@@ -953,9 +953,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 
 	private void donePainting(Image imageOrig, Image imageFinal, boolean refreshData)
 	{		
-		if (getBuffer() != null) {
-			getBuffer().dispose();
-		}
+		initBuffer();
 		setBuffer( imageFinal );
 		
 		// in case of filter, we may need to change the cursor position
