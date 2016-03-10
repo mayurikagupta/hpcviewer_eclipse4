@@ -25,6 +25,7 @@ Release 5.4.2  (C) Copyright 2016, Rice University.
    <launcherArgs>
       <programArgs>-consoleLog</programArgs>
       <vmArgs>-Dosgi.requiredJavaVersion=1.6 -XX:MaxPermSize=256m -Xms40m -Xmx1512m</vmArgs>
+      <vmArgsLin>-Dorg.eclipse.swt.internal.gtk.cairoGraphics=false</vmArgsLin>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
@@ -44,10 +45,8 @@ Release 5.4.2  (C) Copyright 2016, Rice University.
       </win>
    </launcher>
 
-
    <vm>
    </vm>
-
 
    <plugins>
       <plugin id="com.graphbuilder"/>

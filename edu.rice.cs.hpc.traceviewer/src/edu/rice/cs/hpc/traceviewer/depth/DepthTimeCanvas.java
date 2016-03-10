@@ -267,8 +267,12 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 			if (operation.hasContext(BufferRefreshOperation.context)) {
 				// this event includes if there's a change of colors definition, so everyone needs
 				// to refresh the content
-				super.init();
-				rebuffer();
+				try {
+					super.init();
+					rebuffer();
+				} catch (java.lang.NullPointerException e) {
+					// ignore exception when there's (possibly) multiple thread access  
+				}
 				
 			} else if (operation.hasContext(PositionOperation.context)) {
 				PositionOperation opPos = (PositionOperation) operation;
