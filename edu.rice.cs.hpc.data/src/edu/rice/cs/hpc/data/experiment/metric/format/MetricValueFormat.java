@@ -17,6 +17,7 @@ package edu.rice.cs.hpc.data.experiment.metric.format;
 
 import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.util.*;
+import edu.rice.cs.hpc.data.util.string.StringUtil;
 
 import java.text.DecimalFormat;
 
@@ -457,7 +458,7 @@ public String format(MetricValue value)
 			return formatted.toString();
 		}
 
-		formatted.append(Util.spaces(this.annotationStyle.fieldWidth));
+		formatted.append(StringUtil.spaces(this.annotationStyle.fieldWidth));
 	}
 	
 	return formatted.toString();
@@ -511,7 +512,7 @@ protected String formatDouble(double d, DecimalFormat formatter, FormatStyle sty
 		s = s + ((exponent < 0) ? "-" : "+") + e;
 	}
 	else
-		s = Util.formatDouble(d, formatter, fieldWidth);
+		s = StringUtil.formatDouble(d, formatter, fieldWidth);
 
 	return s;
 }
@@ -563,7 +564,7 @@ protected void ensureFormatters()
 	}
 	
 	// separation between values
-	this.separator = Util.spaces(this.separatorWidth);
+	this.separator = StringUtil.spaces(this.separatorWidth);
 }
 
 

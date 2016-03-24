@@ -12,6 +12,7 @@ import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeCallerView;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.data.util.string.StringUtil;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
@@ -91,37 +92,6 @@ public class StyledScopeLabelProvider extends StyledCellLabelProvider {
 		}
 	}
 
-	// Wrap a Scope name to provide a more pleasing string for a tool tip. Specifically, 
-	// whenever a tool tip line exceeds the specified target length, wrap it to a new
-	// line following the next embedded space.
-	public String wrapScopeName(String s, int desiredLineLength)
-	{
-		String out = ""; 
-		if (!s.isEmpty()) {
-			String indent = "  "; // prefix for lines 1..N
-			String splits[] = s.split(" ",0); // split string at spaces
-			// output initial split up to first space
-			out += splits[0]; 
-			int lineLength = splits[0].length(); // length of current line
-			// for the remaining splits
-			for (int i = 1; i < splits.length; i++) {
-				// append a split to the current line and update the line length
-				out         += " " + splits[i]; 
-				lineLength  += 1   + splits[i].length(); 
-				// if the current line exceeds the target length 
-				if (lineLength >= desiredLineLength) {
-					// if there are more splits
-					if (i != splits.length - 1) { 
-						// add a newline and indent the new current line
-						out += "\n" + indent;
-						// initialize length for the current line
-						lineLength = indent.length(); 
-					}
-				}
-			}
-		}
-		return out;
-	}
 	
 	@Override
 	/*
@@ -134,9 +104,10 @@ public class StyledScopeLabelProvider extends StyledCellLabelProvider {
 		{	
 			final int minLengthForToolTip = 50;  
 			final int toolTipDesiredLineLength = 80;
+			
 			String scopeName = ((Scope)element).getName();
 			if (scopeName.length() > minLengthForToolTip) {
-				return wrapScopeName(scopeName, toolTipDesiredLineLength);
+				return StringUtil.wrapScopeName(scopeName, toolTipDesiredLineLength);
 			}
 		}
 		return null; // no tool tip for this cell

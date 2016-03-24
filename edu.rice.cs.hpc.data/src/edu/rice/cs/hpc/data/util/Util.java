@@ -37,26 +37,14 @@ public class Util
 {
 
 
-
-
 //////////////////////////////////////////////////////////////////////////
 //	PRIVATE CONSTANTS													//
 //////////////////////////////////////////////////////////////////////////
 
 
-
-
-/** An array of space characters used to left-pad the output of <code>DecimalFormat</code>. */
-protected static final String SPACES = "                                        ";
-
-
-
-
 //////////////////////////////////////////////////////////////////////////
 //	STRING CONVERSION													//
 //////////////////////////////////////////////////////////////////////////
-
-
 
 
 /*************************************************************************
@@ -69,45 +57,6 @@ public static boolean booleanValue(String s)
 }
 
 
-
-
-//////////////////////////////////////////////////////////////////////////
-//	TEXT FORMATTING														//
-//////////////////////////////////////////////////////////////////////////
-
-
-
-
-/*************************************************************************
- *	Returns a <code>String</code> of a given number of space characters.
- ************************************************************************/
-	
-public static String spaces(int count)
-{
-	Dialogs.Assert(count <= SPACES.length(), "request too long Util::spaces");
-	
-	return SPACES.substring(0, count);
-}
-
-
-
-
-/*************************************************************************
- *	Fits a string into a field of given width, right adjusted.
- ************************************************************************/
-	
-public static String rightJustifiedField(String s, int fieldWidth)
-{
-	String field;
-	
-	int padLeft = fieldWidth - s.length();
-	if( padLeft > 0 )
-		field = Util.spaces(padLeft) + s;
-	else
-		field = s.substring(0, fieldWidth);
-
-	return field;
-}
 
 
 
@@ -127,38 +76,6 @@ public static DecimalFormat makeDecimalFormatter(String pattern)
 	df.applyPattern(pattern);
 	
 	return df;
-}
-
-
-
-
-/*************************************************************************
- *	Formats an <code>int</code> in a given format and field width.
- *
- *	TODO: It might be possible to improve this method's implementation by
- *	using class <code>java.text.FieldPosition</code>.
- *
- ************************************************************************/
-	
-public static String formatInt(int n, DecimalFormat formatter, int fieldWidth)
-{
-	return Util.rightJustifiedField(formatter.format(n), fieldWidth);
-}
-
-
-
-
-/*************************************************************************
- *	Formats a <code>double</code> in a given format and field width.
- *
- *	TODO: It might be possible to improve this method's implementation by
- *	using class <code>java.text.FieldPosition</code>.
- *
- ************************************************************************/
-	
-public static String formatDouble(double d, DecimalFormat formatter, int fieldWidth)
-{
-	return Util.rightJustifiedField(formatter.format(d), fieldWidth);
 }
 
 
