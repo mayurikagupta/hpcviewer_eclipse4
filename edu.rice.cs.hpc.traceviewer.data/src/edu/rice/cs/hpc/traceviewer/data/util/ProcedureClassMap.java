@@ -77,7 +77,10 @@ public class ProcedureClassMap extends AliasMap<String,ProcedureClassData> {
 		Iterator<Entry<String, ProcedureClassData>> iterator = data.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Entry<String, ProcedureClassData> entry = iterator.next();
-			String glob = Util.convertGlobToRegex(entry.getKey()); //entry.getKey().replace("*", ".*").replace("?", ".?");
+			
+			// convert glob pattern into regular expression
+			//entry.getKey().replace("*", ".*").replace("?", ".?");
+			String glob = Util.convertGlobToRegex(entry.getKey()); 
 			if (key.equals(glob) || key.matches(glob)) {
 				return entry.getValue();
 			}

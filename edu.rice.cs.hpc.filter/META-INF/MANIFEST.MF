@@ -18,4 +18,5 @@ Import-Package: edu.rice.cs.hpc.data.experiment,
  edu.rice.cs.hpc.data.experiment.scope,
  edu.rice.cs.hpc.data.experiment.scope.filters,
  edu.rice.cs.hpc.data.experiment.scope.visitors,
- edu.rice.cs.hpc.data.filter
+ edu.rice.cs.hpc.data.filter,
+ edu.rice.cs.hpc.data.util

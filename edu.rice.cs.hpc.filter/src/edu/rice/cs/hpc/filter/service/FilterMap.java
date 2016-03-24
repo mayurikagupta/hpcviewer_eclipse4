@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.Platform;
 import edu.rice.cs.hpc.common.util.AliasMap;
 import edu.rice.cs.hpc.data.filter.FilterAttribute;
 import edu.rice.cs.hpc.data.filter.IFilterData;
+import edu.rice.cs.hpc.data.util.*;
 
 /******************************************************************
  * 
@@ -142,7 +143,9 @@ implements IFilterData
 			FilterAttribute toFilter = pattern.getValue();
 			if (toFilter.enable)
 			{
-				final String key = pattern.getKey().replace("*", ".*").replace("?", ".?");
+				// convert glob into regular expression
+				// old: pattern.getKey().replace("*", ".*").replace("?", ".?");
+				final String key = Util.convertGlobToRegex(pattern.getKey());
 				if (element.matches(key)) {
 					return toFilter;
 				}

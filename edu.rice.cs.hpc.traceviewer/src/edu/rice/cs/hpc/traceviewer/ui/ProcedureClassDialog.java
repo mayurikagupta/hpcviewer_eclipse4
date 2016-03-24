@@ -12,6 +12,8 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -27,6 +29,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -221,6 +224,13 @@ public class ProcedureClassDialog extends TitleAreaDialog {
 		tableViewer.getTable().addSelectionListener(new SelectionAdapter(){
 			public void widgetSelected(SelectionEvent e) {
 				checkButton();
+			}
+		});
+		tableViewer.addDoubleClickListener(new IDoubleClickListener() {
+			
+			@Override
+			public void doubleClick(DoubleClickEvent event) {
+				btnEdit.notifyListeners(SWT.Selection, new Event());
 			}
 		});
 		
