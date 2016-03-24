@@ -2,7 +2,7 @@ package edu.rice.cs.hpc.traceviewer.data.db;
 
 import java.io.IOException;
 
-import org.eclipse.jface.action.IStatusLineManager;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
@@ -38,7 +38,7 @@ public abstract class AbstractDBOpener {
 	 * @throws Exception 
 	 * @throws InvalExperimentException 
 	 */
-	public abstract SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window, IStatusLineManager statusMgr)
+	public abstract SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window, IProgressMonitor statusMgr)
 			throws IOException, InvalExperimentException, Exception;
 
 	// Our current policy on closing: Except for back-to-back connections to the

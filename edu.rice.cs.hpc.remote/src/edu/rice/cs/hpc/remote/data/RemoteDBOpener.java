@@ -14,7 +14,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.zip.GZIPInputStream;
 
-import org.eclipse.jface.action.IStatusLineManager;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.jcraft.jsch.JSchException;
@@ -88,7 +88,7 @@ public class RemoteDBOpener extends AbstractDBOpener
 	 * org.eclipse.jface.action.IStatusLineManager)
 	 */
 	public SpaceTimeDataController openDBAndCreateSTDC(
-			IWorkbenchWindow window, IStatusLineManager statusMgr) 
+			IWorkbenchWindow window, IProgressMonitor statusMgr) 
 			throws InvalExperimentException, Exception 
 	{
 
@@ -174,7 +174,7 @@ public class RemoteDBOpener extends AbstractDBOpener
 			tunnelXML = createSSHTunnel(window, tunnelXML, xmlMessagePortNumber);			
 		}
 		
-		statusMgr.setMessage("Receiving XML stream");
+		statusMgr.setTaskName("Receiving XML stream");
 		
 		InputStream xmlStream = getXmlStream(host, port, xmlMessagePortNumber);
 		
@@ -190,7 +190,7 @@ public class RemoteDBOpener extends AbstractDBOpener
 		RemoteDataRetriever dataRetriever = new RemoteDataRetriever(serverConnection,
 				 window.getShell(), compressionType);
 		
-		SpaceTimeDataControllerRemote stData = new SpaceTimeDataControllerRemote(dataRetriever, window, statusMgr,
+		SpaceTimeDataControllerRemote stData = new SpaceTimeDataControllerRemote(dataRetriever, window, 
 				xmlStream, connectionInfo.getDatabasePath() + " on " + host, traceCount, valuesX, sender);
 
 		sendInfoPacket(sender, stData);

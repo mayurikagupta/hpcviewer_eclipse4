@@ -3,12 +3,19 @@ package edu.rice.cs.hpc.traceviewer.db;
 import java.util.HashMap;
 
 import org.eclipse.core.commands.Command;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.common.ui.Util;
@@ -112,14 +119,14 @@ public class TraceDatabase
 	 * 
 	 * @return true if the opening is successful. False otherwise
 	 */
-	static public boolean openRemoteDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr) 
+	static public boolean openRemoteDatabase(IWorkbenchWindow window) 
 	{	
-		OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, null, false);
+		OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), null, false);
 		if (dlg.open() == Window.CANCEL)
 			return false;
 		
 		DatabaseAccessInfo info = dlg.getDatabaseAccessInfo();
-		return openDatabase(window, statusMgr, info, false);
+		return openDatabase(window, info, false);
 	}
 
 	/************
@@ -129,13 +136,13 @@ public class TraceDatabase
 	 * @param statusMgr : current status line manager
 	 * @return true if the opening is successful. False otherwise
 	 */
-	static public boolean openLocalDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr,
+	static public boolean openLocalDatabase(IWorkbenchWindow window, 
 			final String database)
 	{
 		DatabaseAccessInfo info = null;
 		if (database == null)
 		{
-			OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, null, true);
+			OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), null, true);
 			if (dlg.open() == Window.CANCEL)
 				return false;
 			
@@ -143,7 +150,7 @@ public class TraceDatabase
 		} else {
 			info = new DatabaseAccessInfo(database);
 		}
-		return openDatabase(window, statusMgr, info, true);
+		return openDatabase(window, info, true);
 	}
 
 	/*******
@@ -155,35 +162,96 @@ public class TraceDatabase
 	 * @param info
 	 * @return
 	 */
-	static private boolean openDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr, 
-			DatabaseAccessInfo info, boolean useLocalDatbaase)
+	static private boolean openDatabase(final IWorkbenchWindow window,  
+			final DatabaseAccessInfo info, final boolean useLocalDatbaase)
 	{
-		SpaceTimeDataController stdc = null;
-		DatabaseAccessInfo database_info = info;
+		final JobOpeningDatabase job = new JobOpeningDatabase(window, info, useLocalDatbaase);
+
+		job.addJobChangeListener(new JobOpeningDatabaseListener(window, job));
+		job.schedule();
 		
-		do {
-			try {
-				AbstractDBOpener opener = getDBOpener(database_info);
-				stdc = opener.openDBAndCreateSTDC(window, statusMgr);
-			} catch (Exception e) 
-			{
-				// in case of error while opening the database, we should display again
-				// the open database window with the error message
-				OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), statusMgr, 
-						e.getMessage(), useLocalDatbaase);
-				if (dlg.open() == Window.CANCEL)
-					// user gives up
-					return false;
-				
-				stdc    	  = null; // just to mark we need to go back to the loop
-				database_info = dlg.getDatabaseAccessInfo();
-			}
-		} while (stdc == null);
-		
-		return processDatabase(window, statusMgr, stdc);
+		return true;
 	}
 	
-	static private boolean processDatabase(IWorkbenchWindow window, IStatusLineManager statusMgr,
+	static private class JobOpeningDatabase extends UIJob 
+	{
+		private final IWorkbenchWindow window;
+		private final DatabaseAccessInfo info; 
+		private final boolean useLocalDatbaase;
+		private SpaceTimeDataController stdc;
+		
+		JobOpeningDatabase(final IWorkbenchWindow window, final DatabaseAccessInfo info, 
+				final boolean useLocalDatbaase) {
+			super("Opening " + info);
+			this.window = window;
+			this.info	= info;
+			this.stdc	= null;
+			this.useLocalDatbaase = useLocalDatbaase;
+		}
+
+		@Override
+		public IStatus runInUIThread(IProgressMonitor monitor) {
+			DatabaseAccessInfo database_info = info;
+			
+			do {
+				try {
+					AbstractDBOpener opener = getDBOpener(database_info);
+					stdc = opener.openDBAndCreateSTDC(window, monitor);
+				} catch (Exception e) 
+				{
+					// in case of error while opening the database, we should display again
+					// the open database window with the error message
+					OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), 
+							e.getMessage(), useLocalDatbaase);
+					if (dlg.open() == Window.CANCEL)
+						// user gives up
+						return Status.CANCEL_STATUS;
+					
+					stdc    	  = null; // just to mark we need to go back to the loop
+					database_info = dlg.getDatabaseAccessInfo();
+				}
+			} while (stdc == null);
+			return Status.OK_STATUS;
+		}
+		
+		SpaceTimeDataController getSTDC() {
+			return stdc;
+		}
+	}
+	
+	static private class JobOpeningDatabaseListener implements IJobChangeListener
+	{
+		private final IWorkbenchWindow window;
+		private final JobOpeningDatabase job;
+		
+		JobOpeningDatabaseListener(IWorkbenchWindow window, JobOpeningDatabase job) {
+			this.window = window;
+			this.job	= job;
+		}
+		@Override
+		public void sleeping(IJobChangeEvent event) {}
+		
+		@Override
+		public void scheduled(IJobChangeEvent event) {}
+		
+		@Override
+		public void running(IJobChangeEvent event) {}
+		
+		@Override
+		public void done(IJobChangeEvent event) {
+			processDatabase(window, job.getSTDC());				
+		}
+		
+		@Override
+		public void awake(IJobChangeEvent event) {}
+		
+		@Override
+		public void aboutToRun(IJobChangeEvent event) {}
+
+	}
+	
+	
+	static private boolean processDatabase(IWorkbenchWindow window, 
 			SpaceTimeDataController stdc)
 	{
 		TraceDatabase database = TraceDatabase.getInstance(window);
@@ -198,8 +266,6 @@ public class TraceDatabase
 		final Command command = Util.getCommand(window, OptionMidpoint.commandId);
 		boolean enableMidpoint = Util.isOptionEnabled(command);
 		database.dataTraces.setEnableMidpoint(enableMidpoint);
-		
-		statusMgr.setMessage("Rendering trace data ...");
 		
 		final Shell shell = window.getShell();
 		shell.update();

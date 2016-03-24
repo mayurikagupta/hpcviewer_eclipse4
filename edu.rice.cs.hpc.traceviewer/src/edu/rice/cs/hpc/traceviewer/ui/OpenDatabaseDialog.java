@@ -2,7 +2,6 @@ package edu.rice.cs.hpc.traceviewer.ui;
 
 import java.util.EnumMap;
 
-import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -73,7 +72,6 @@ public class OpenDatabaseDialog extends Dialog
 	//This is the most convenient and flexible way to pass around the data.
 	//private String[]  args  = null;
 	
-	private final IStatusLineManager status;
 	private Button okButton;
 	private String errorMessage;//empty string means no error
 	private Button checkboxTunneling;
@@ -93,10 +91,9 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param parentShell
 	 * @param inStatus
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus,
+	public OpenDatabaseDialog(Shell parentShell, 
 			boolean useLocalDatabase) { 
 		super(parentShell);
-		status=inStatus;
 		errorMessage="";
 		this.useLocalDatabase = useLocalDatabase;
 	}
@@ -108,10 +105,9 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param inStatus
 	 * @param error message
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus, 
+	public OpenDatabaseDialog(Shell parentShell, 
 			String _errorMessage, boolean useLocalDatabase){
 		super(parentShell);
-		status=inStatus;
 		setErrorMessage(_errorMessage);
 		this.useLocalDatabase = useLocalDatabase;
 	}
@@ -148,9 +144,6 @@ public class OpenDatabaseDialog extends Dialog
 	protected Control createDialogArea(Composite parent) {
 
 		getShell().setText("Open a Database");
-
-		if (status != null)
-			status.setMessage("Select a local or remote directory containing traces");
 
 		Composite outerComposite = (Composite) super.createDialogArea(parent);
 

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
@@ -46,7 +45,7 @@ public class SpaceTimeDataControllerLocal extends SpaceTimeDataController
 	 * @throws InvalExperimentException
 	 * @throws Exception
 	 */
-	public SpaceTimeDataControllerLocal(IWorkbenchWindow _window, IStatusLineManager statusMgr, 
+	public SpaceTimeDataControllerLocal(IWorkbenchWindow _window, IProgressMonitor statusMgr, 
 			String databaseDirectory, IFileDB fileDB) 
 			throws InvalExperimentException, Exception 
 	{
@@ -78,11 +77,9 @@ public class SpaceTimeDataControllerLocal extends SpaceTimeDataController
 	 * @param statusMgr
 	 * @return
 	 *********************/
-	static private String getTraceFile(String directory, final IStatusLineManager statusMgr)
+	static private String getTraceFile(String directory, final IProgressMonitor statusMgr)
 	{
 		try {
-			statusMgr.setMessage("Merging traces ...");
-
 			final TraceProgressReport traceReport = new TraceProgressReport(
 					statusMgr);
 			final String outputFile = directory

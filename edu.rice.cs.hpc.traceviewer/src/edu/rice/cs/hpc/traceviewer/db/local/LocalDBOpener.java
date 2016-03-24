@@ -1,7 +1,8 @@
 package edu.rice.cs.hpc.traceviewer.db.local;
 
 import java.io.File;
-import org.eclipse.jface.action.IStatusLineManager;
+
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -50,7 +51,7 @@ public class LocalDBOpener extends AbstractDBOpener
 	 * (org.eclipse.ui.IWorkbenchWindow, org.eclipse.jface.action.IStatusLineManager)
 	 */
 	public SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window,
-			final IStatusLineManager statusMgr) throws InvalExperimentException, Exception {
+			final IProgressMonitor statusMgr) throws InvalExperimentException, Exception {
 		
 		final Shell shell = window.getShell();
 		
@@ -65,7 +66,7 @@ public class LocalDBOpener extends AbstractDBOpener
 		// ---------------------------------------------------------------------
 		
 		
-		statusMgr.setMessage("Opening trace data...");
+		statusMgr.setTaskName("Opening trace data...");
 		shell.update();
 
 		// ---------------------------------------------------------------------
