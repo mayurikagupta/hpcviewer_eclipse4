@@ -138,7 +138,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     				break;
     			case FilterScopeVisitor.STATUS_OK:
     	    		int filtered = myExperiment.getNumberOfFilteredScopes();
-	    			objViewActions.showInfoMessage("At least there are " + filtered + " scopes omitted with the filter.");
+	    			objViewActions.showInfoMessage("At least there is/are " + filtered + " scopes matched with the filter.");
 	    			break;
     		}
     	}
