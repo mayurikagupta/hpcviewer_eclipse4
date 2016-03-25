@@ -138,7 +138,18 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     				break;
     			case FilterScopeVisitor.STATUS_OK:
     	    		int filtered = myExperiment.getNumberOfFilteredScopes();
-	    			objViewActions.showInfoMessage("At least there is/are " + filtered + " scopes matched with the filter.");
+    	    		if (filtered>0) {
+    	    			// show the information how many scopes matched with the filer
+    	    			// this is important to warn users that filtering may hide some scopes 
+    	    			// that can be useful for analysis.
+        	    		String msg = "At least there ";
+        	    		if (filtered == 1) {
+        	    			msg += "is one scope";
+        	    		}  else {
+        	    			msg += "are " + filtered + " scopes";
+        	    		}
+    	    			objViewActions.showInfoMessage(msg + " matched with the filter.");
+    	    		}
 	    			break;
     		}
     	}
