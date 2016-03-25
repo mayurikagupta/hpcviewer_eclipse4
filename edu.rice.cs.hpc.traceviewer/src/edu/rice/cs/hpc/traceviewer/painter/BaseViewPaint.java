@@ -272,7 +272,9 @@ public abstract class BaseViewPaint extends Job
 				result.add(linenum);
 				Debugger.printDebug(1, getClass() + " thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
-				e.printStackTrace();
+				// we don't need to show exception message everywhere unless if we are in develop mode
+				if (Debugger.getDebugLevel()>0)
+					e.printStackTrace();
 				return false;
 			}
 		}

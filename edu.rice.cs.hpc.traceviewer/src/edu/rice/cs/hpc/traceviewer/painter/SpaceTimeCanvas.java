@@ -16,7 +16,7 @@ public abstract class SpaceTimeCanvas extends BufferedCanvas
     /**Creates a SpaceTimeCanvas with the data _stData and Composite _composite.*/
     public SpaceTimeCanvas(Composite _composite)
     {
-		super(_composite);
+		super(_composite, false);
 	}
         
     /**Conversion factor from actual time to pixels on the x axis. To be implemented in subclasses.*/

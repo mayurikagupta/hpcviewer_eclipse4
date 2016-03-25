@@ -9,13 +9,12 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.progress.UIJob;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.common.ui.Util;
@@ -173,7 +172,12 @@ public class TraceDatabase
 		return true;
 	}
 	
-	static private class JobOpeningDatabase extends UIJob 
+	/*******************************************************
+	 * 
+	 * Class to open a database with a separate thread
+	 *
+	 *******************************************************/
+	static private class JobOpeningDatabase extends Job 
 	{
 		private final IWorkbenchWindow window;
 		private final DatabaseAccessInfo info; 
@@ -190,23 +194,30 @@ public class TraceDatabase
 		}
 
 		@Override
-		public IStatus runInUIThread(IProgressMonitor monitor) {
+		public IStatus run/*InUIThread*/(IProgressMonitor monitor) {
 			DatabaseAccessInfo database_info = info;
 			
+			final Display display = Display.getDefault();
 			do {
 				try {
 					AbstractDBOpener opener = getDBOpener(database_info);
 					stdc = opener.openDBAndCreateSTDC(window, monitor);
-				} catch (Exception e) 
+				} catch (final Exception e) 
 				{
 					// in case of error while opening the database, we should display again
 					// the open database window with the error message
-					OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), 
+					final OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), 
 							e.getMessage(), useLocalDatbaase);
-					if (dlg.open() == Window.CANCEL)
-						// user gives up
-						return Status.CANCEL_STATUS;
 					
+					display.syncExec( new Runnable() {
+
+						@Override
+						public void run() {
+							dlg.open();
+						}						
+					});
+					if  (dlg.getReturnCode() == Window.CANCEL)
+						return Status.CANCEL_STATUS;
 					stdc    	  = null; // just to mark we need to go back to the loop
 					database_info = dlg.getDatabaseAccessInfo();
 				}
@@ -251,10 +262,10 @@ public class TraceDatabase
 	}
 	
 	
-	static private boolean processDatabase(IWorkbenchWindow window, 
+	static private boolean processDatabase(final IWorkbenchWindow window, 
 			SpaceTimeDataController stdc)
 	{
-		TraceDatabase database = TraceDatabase.getInstance(window);
+		final TraceDatabase database = TraceDatabase.getInstance(window);
 		removeDatabase(database);
 		// remove old resources
 		 
@@ -267,58 +278,62 @@ public class TraceDatabase
 		boolean enableMidpoint = Util.isOptionEnabled(command);
 		database.dataTraces.setEnableMidpoint(enableMidpoint);
 		
-		final Shell shell = window.getShell();
-		shell.update();
-		
-		// get a window service to store the new database
-		ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
-
-		// keep the current data in "shared" variable
-		DataService dataService = (DataService) sourceProviderService.getSourceProvider(DataService.DATA_PROVIDER);
-		dataService.setData(database.dataTraces);
-
 		// reset the operation history
 		TraceOperation.clear();
 
-		try {
-			// ---------------------------------------------------------------------
-			// Update the title of the application
-			// ---------------------------------------------------------------------
-			shell.setText("hpctraceviewer: " + database.dataTraces.getName());
+		Display display = Display.getDefault();
+		display.syncExec( new Runnable() {
 
-			// ---------------------------------------------------------------------
-			// Tell all views that we have the data, and they need to refresh
-			// their content
-			// Due to tightly coupled relationship between views,
-			// we need to be extremely careful of the order of view activation
-			// if the order is "incorrect", it can crash the program
-			//
-			// TODO: we need to use Eclipse's ISourceProvider to handle the
-			// existence of data
-			// this should avoid a tightly-coupled views
-			// ---------------------------------------------------------------------
+			@Override
+			public void run() {
+				// get a window service to store the new database
+				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
 
-			IWorkbenchPage page = window.getActivePage();
+				// keep the current data in "shared" variable
+				DataService dataService = (DataService) sourceProviderService.getSourceProvider(DataService.DATA_PROVIDER);
+				dataService.setData(database.dataTraces);
 
-			HPCSummaryView sview = (HPCSummaryView) page.showView(HPCSummaryView.ID);
-			sview.updateView(database.dataTraces);
+				final Shell shell = window.getShell();
+				// ---------------------------------------------------------------------
+				// Update the title of the application
+				// ---------------------------------------------------------------------
+				shell.setText("hpctraceviewer: " + database.dataTraces.getName());
 
-			HPCDepthView dview = (HPCDepthView) page.showView(HPCDepthView.ID);
-			dview.updateView(database.dataTraces);
+				try {
 
-			HPCTraceView tview = (HPCTraceView) page.showView(HPCTraceView.ID);
-			tview.updateView(database.dataTraces);
+					// ---------------------------------------------------------------------
+					// Tell all views that we have the data, and they need to refresh
+					// their content
+					// Due to tightly coupled relationship between views,
+					// we need to be extremely careful of the order of view activation
+					// if the order is "incorrect", it can crash the program
+					//
+					// TODO: we need to use Eclipse's ISourceProvider to handle the
+					// existence of data
+					// this should avoid a tightly-coupled views
+					// ---------------------------------------------------------------------
 
-			HPCCallStackView cview = (HPCCallStackView) page.showView(HPCCallStackView.ID);
-			cview.updateView(database.dataTraces);
+					IWorkbenchPage page = window.getActivePage();
 
-			return true;
+					HPCSummaryView sview = (HPCSummaryView) page.showView(HPCSummaryView.ID);
+					sview.updateView(database.dataTraces);
 
-		} catch (PartInitException e) {
-			e.printStackTrace();
-		}
+					HPCDepthView dview = (HPCDepthView) page.showView(HPCDepthView.ID);
+					dview.updateView(database.dataTraces);
 
-		return false;
+					HPCTraceView tview = (HPCTraceView) page.showView(HPCTraceView.ID);
+					tview.updateView(database.dataTraces);
+
+					HPCCallStackView cview = (HPCCallStackView) page.showView(HPCCallStackView.ID);
+					cview.updateView(database.dataTraces);
+
+				} catch (PartInitException e) {
+					e.printStackTrace();
+				}
+			}			
+		});
+
+		return true;
 
 	}
 }

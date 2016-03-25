@@ -516,7 +516,7 @@ public class SpaceTimeMiniCanvas extends SpaceTimeCanvas
 
 	public void mouseDown(MouseEvent e)
 	{
-		if (mouseState == MouseState.ST_MOUSE_NONE)
+		if (e.button == 1 && mouseState == MouseState.ST_MOUSE_NONE)
 		{
 			mouseState = MouseState.ST_MOUSE_DOWN;
 			mouseDown = new Point(e.x,e.y);

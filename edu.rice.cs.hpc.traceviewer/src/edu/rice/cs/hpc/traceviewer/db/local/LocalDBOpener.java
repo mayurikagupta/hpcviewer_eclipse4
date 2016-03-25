@@ -3,7 +3,6 @@ package edu.rice.cs.hpc.traceviewer.db.local;
 import java.io.File;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
@@ -52,9 +51,7 @@ public class LocalDBOpener extends AbstractDBOpener
 	 */
 	public SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window,
 			final IProgressMonitor statusMgr) throws InvalExperimentException, Exception {
-		
-		final Shell shell = window.getShell();
-		
+			
 		// Laks 2014.03.10: needs to comment the call to removeInstance
 		// this call causes the data to be deleted but the GC+Color instances still exist
 		// the allocated GC+Color can be disposed later in SpaceTimeDataController class
@@ -67,7 +64,6 @@ public class LocalDBOpener extends AbstractDBOpener
 		
 		
 		statusMgr.setTaskName("Opening trace data...");
-		shell.update();
 
 		// ---------------------------------------------------------------------
 		// dispose resources if the data has been allocated

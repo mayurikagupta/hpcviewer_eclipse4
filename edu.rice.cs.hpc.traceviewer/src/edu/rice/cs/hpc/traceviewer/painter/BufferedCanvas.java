@@ -32,11 +32,17 @@ public abstract class BufferedCanvas extends Canvas
 
 	public BufferedCanvas(Composite parent) 
 	{
+		this(parent, true);
+	}
+	
+	public BufferedCanvas(Composite parent, boolean withMenu)
+	{
 		super(parent, SWT.NO_BACKGROUND);
 		addPaintListener(this);
 		addDisposeListener(this);
 		
-		setContextMenus();
+		if (withMenu)
+			setContextMenus();
 	}
 
 	@Override

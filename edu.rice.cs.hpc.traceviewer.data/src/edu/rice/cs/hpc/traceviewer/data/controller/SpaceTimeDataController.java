@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -135,36 +136,43 @@ public abstract class SpaceTimeDataController
 	 * @param _window
 	 * @throws Exception 
 	 ******/
-	private void init(IWorkbenchWindow _window) 
+	private void init(final IWorkbenchWindow window) 
 			throws InvalExperimentException 
 	{	
-		// tree traversal to get the list of cpid, procedures and max depth
-		TraceDataVisitor visitor = new TraceDataVisitor();
-		RootScope root = exp.getRootScope(RootScopeType.CallingContextTree);
-		root.dfsVisitScopeTree(visitor);
+		final Display display = Display.getDefault();
+		display.syncExec(new Runnable() {
 
-		maxDepth   = visitor.getMaxDepth();
-		scopeMap   = visitor.getMap();
-		colorTable = (ColorTable) visitor.getProcedureTable();
-		
-		// initialize colors
-		colorTable.setColorTable();
-		
-		// attributes initialization
-		attributes 	 = new ImageTraceAttributes();
-		//lineNum 	 = new AtomicInteger(0);
-		//depthLineNum = new AtomicInteger(0);
+			@Override
+			public void run() {
+				// tree traversal to get the list of cpid, procedures and max depth
+				TraceDataVisitor visitor = new TraceDataVisitor();
+				RootScope root = exp.getRootScope(RootScopeType.CallingContextTree);
+				root.dfsVisitScopeTree(visitor);
 
-		ISourceProviderService sourceProviderService = (ISourceProviderService) _window.getService(ISourceProviderService.class);
-		ptlService = (ProcessTimelineService) sourceProviderService.getSourceProvider(ProcessTimelineService.PROCESS_TIMELINE_PROVIDER); 
+				maxDepth   = visitor.getMaxDepth();
+				scopeMap   = visitor.getMap();
+				colorTable = (ColorTable) visitor.getProcedureTable();
+				
+				// initialize colors
+				colorTable.setColorTable();
+				
+				// attributes initialization
+				attributes 	 = new ImageTraceAttributes();
+				//lineNum 	 = new AtomicInteger(0);
+				//depthLineNum = new AtomicInteger(0);
 
-		TraceAttribute trAttribute = exp.getTraceAttribute();
+				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
+				ptlService = (ProcessTimelineService) sourceProviderService.getSourceProvider(ProcessTimelineService.PROCESS_TIMELINE_PROVIDER); 
+			}			
+		});
+		final TraceAttribute trAttribute = exp.getTraceAttribute();
 		
 		if (trAttribute == null) {
 			throw new InvalExperimentException("Database does not contain traces: " + exp.getDefaultDirectory());
 		}
 		minBegTime = trAttribute.dbTimeMin;
 		maxEndTime = trAttribute.dbTimeMax;
+
 	}
 
 	public int getMaxDepth() 
