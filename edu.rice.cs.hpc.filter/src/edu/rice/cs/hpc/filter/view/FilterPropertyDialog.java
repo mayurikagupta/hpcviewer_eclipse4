@@ -418,7 +418,7 @@ public class FilterPropertyDialog extends TitleAreaDialog
 			this.filterMap = filterMap;
 		}
 		public void widgetSelected(SelectionEvent e) {
-			final Shell shell = Util.getActiveShell();
+			final Shell shell = viewer.getTable().getShell();
 			switch (type) {
 			case Add: 
 				add(shell); 	break;
