@@ -96,7 +96,7 @@ public class DetailViewPaint extends BaseViewPaint {
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale,
 			double yscale, Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
 
-		return new TimelineThread(this.window, controller, attributes, ptlService, changedBounds,   
+		return new TimelineThread(controller, attributes, ptlService, changedBounds,   
 				yscale, queue, numDataCollected, numLines, monitor);
 	}
 

@@ -91,7 +91,11 @@ public class Util {
 		return statusLine;
 	}
 
-	
+	/******
+	 * Retrieve the shell of the current active window
+	 * <p>Do NOT use this method for creating a window as it will mislead the parent of the child. 
+	 * @return a shell window
+	 */
 	static public Shell getActiveShell() {
 		Shell shell = null;
 		final IWorkbenchWindow window = getActiveWindow();
@@ -100,6 +104,10 @@ public class Util {
 		return shell;
 	}	
 	
+	/*****
+	 * get the current active window
+	 * @return
+	 */
 	static public IWorkbenchWindow getActiveWindow() {
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		return window;

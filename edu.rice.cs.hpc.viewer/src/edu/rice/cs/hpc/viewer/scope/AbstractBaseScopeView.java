@@ -478,8 +478,10 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     		gc.dispose();
     }
     
-    
-    public void disactivateListeners()
+    /*****
+     * remove listener registered in this view
+     */
+    private void disactivateListeners()
     {
 		final ISourceProviderService service   = (ISourceProviderService)Util.getActiveWindow().
 				getService(ISourceProviderService.class);

@@ -39,7 +39,7 @@ public abstract class BaseViewPaint extends Job
 {
 	protected boolean changedBounds;
 	
-	protected final IWorkbenchWindow window;
+	private final IWorkbenchWindow window;
 	
 	protected SpaceTimeDataController controller;
 
