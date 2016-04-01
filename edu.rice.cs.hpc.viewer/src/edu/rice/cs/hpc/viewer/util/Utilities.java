@@ -466,7 +466,7 @@ public class Utilities {
     	// check if the source code availability is already computed
     	if(scope.iSourceCodeAvailability == Scope.SOURCE_CODE_UNKNOWN) {
     		SourceFile newFile = (scope.getSourceFile());
-    		if (newFile != null) {
+    		if (newFile != null && !newFile.getName().isEmpty()) {
         		if( (newFile != SourceFile.NONE)
             			|| ( newFile.isAvailable() )  ) {
             			if (newFile instanceof FileSystemSourceFile) {

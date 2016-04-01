@@ -287,7 +287,13 @@ implements IOperationHistoryListener
 			if (mapStatistics != null ) 
 			{
 				Image img = SummaryTimeCanvas.this.getBuffer();
+				if (img == null) 
+					return null;
+				
 				ImageData imgData = img.getImageData();
+				if (imgData == null) 
+					return null;
+				
 				int pixel = imgData.getPixel(event.x, event.y);
 				
 				// ------------------------------------------------
