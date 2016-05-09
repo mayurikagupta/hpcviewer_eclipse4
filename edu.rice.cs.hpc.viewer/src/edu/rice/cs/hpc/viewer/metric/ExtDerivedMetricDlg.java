@@ -361,21 +361,29 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			});
 			btnDefaultFormat.setSelection(true);
 
+			// when we are provided a metric, we should select the correct option based
+			// on the type of the metric. i.e., we need to make sure:
+			// - percent option is checked
+			// - type of metric is correctly selected
+			
 			if (metric != null) {
 				boolean bPercent = metric.getAnnotationType() == BaseMetric.AnnotationType.PERCENT;
 				btnPercent.setSelection( bPercent );
 				
 				IMetricValueFormat format = metric.getDisplayFormat();
+				// check if the metric has a custom format. If it is the case, check if it only displays
+				// percentage (with specific format) or user-customized format
 				if (format instanceof MetricValuePredefinedFormat) {
 					String strFormat = ((MetricValuePredefinedFormat)format ).getFormat();
 					txtFormat.setText( strFormat  );
 					
 					if (strFormat.equals( FORMAT_PERCENT )) {
-						btnPercentFormat.setSelection(true);
-						
-						// only one option is allowed. If one is enabled, the other is disabled
-						btnDefaultFormat.setSelection(false);
+						btnPercentFormat.setSelection(true);						
+					} else {
+						btnCustomFormat.setSelection(true);
 					}
+					// only one option is allowed. If one is enabled, the other is disabled
+					btnDefaultFormat.setSelection(false);
 				}
 			}
 			
@@ -387,8 +395,6 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 					+ "Example: '%6.2f ' will display 6 digit floating-points with 2 digit precision. ");
 			
 			GridLayoutFactory.fillDefaults().numColumns(2).generateLayout(cCustomFormat);
-			
-			//GridLayoutFactory.fillDefaults().numColumns(1).generateLayout(cFormat);
 			
 			// item for expansion bar
 			ExpandItem eiOptions = new ExpandItem(barOptions, SWT.NONE, 0);
