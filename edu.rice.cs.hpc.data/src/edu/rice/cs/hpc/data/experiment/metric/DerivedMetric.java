@@ -81,7 +81,7 @@ public class DerivedMetric extends BaseMetric {
 	 */
 	public void setExpression( String expr ) {
 		expression = ExpressionTree.parse(expr);
-		rootValue  = getValue(root);
+		rootValue  = setRootValue(root);
 		// new formula has been set, refresh the root value used for computing percent
 		//dRootValue = getDoubleValue(root);
 	}
@@ -118,9 +118,7 @@ public class DerivedMetric extends BaseMetric {
 		// if the scope is a root scope, then we return the aggregate value
 		if(scope instanceof RootScope) {
 			if (rootValue == null) {
-				double rootVal = getDoubleValue(scope);
-				double rootAnn = 1.0d;
-				rootValue 	   = new MetricValue(rootVal, rootAnn);
+				rootValue = setRootValue((RootScope)scope);
 			}
 			return rootValue;
 		} else {
@@ -173,5 +171,12 @@ public class DerivedMetric extends BaseMetric {
 		this.experiment = experiment;
 		// updating as well the variable mapping to metrics
 		varMap.setMetricManager(experiment);
+	}
+	
+	private MetricValue setRootValue(RootScope rootScope) 
+	{
+		double rootVal = getDoubleValue(rootScope);
+		double rootAnn = 1.0d;
+		return new MetricValue(rootVal, rootAnn);
 	}
 }
