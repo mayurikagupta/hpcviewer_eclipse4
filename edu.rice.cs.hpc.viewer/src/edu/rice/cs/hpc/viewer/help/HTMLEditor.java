@@ -162,7 +162,8 @@ public class HTMLEditor extends EditorPart {
 	 */
 	//@Override
 	public void setFocus() {
-		this.browser.setFocus();
+		if (browser != null)
+			this.browser.setFocus();
 	}
 	
 }
