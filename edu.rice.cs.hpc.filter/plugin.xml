@@ -39,21 +39,5 @@
          </variable>
       </sourceProvider>
    </extension>
-   <extension
-         point="org.eclipse.ui.menus">
-               <menuContribution
-            allPopups="false"
-            locationURI="toolbar:edu.rice.cs.hpc.filter.view.FilterView">
-         <command
-               commandId="edu.rice.cs.hpc.filter.action.FilterAdd"
-               icon="icons/add_att.gif"
-               label="Add"
-               mnemonic="A"
-               style="push"
-               tooltip="Add a new filter pattern">
-         </command>
-      </menuContribution>
-         
-   </extension>
 
 </plugin>

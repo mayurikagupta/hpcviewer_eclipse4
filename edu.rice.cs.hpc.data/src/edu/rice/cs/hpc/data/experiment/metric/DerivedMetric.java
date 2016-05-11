@@ -67,6 +67,8 @@ public class DerivedMetric extends BaseMetric {
 
 		// set up the variables
 		this.varMap = new MetricVarMap(root, experiment);
+		this.varMap.setMetric(this);
+		
 		setExpression(expression);
 
 		// Bug fix: always compute the aggregate value 

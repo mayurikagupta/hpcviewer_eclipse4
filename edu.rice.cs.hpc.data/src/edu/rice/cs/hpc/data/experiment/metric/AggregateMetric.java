@@ -43,12 +43,15 @@ public class AggregateMetric extends BaseMetric {
 
 		super( sID, sDisplayName, displayed, format, annotationType, index, partner, type);
 		
-		this.fctMap = new FuncMap();
-		this.fctMap.loadDefaultFunctions();
+		fctMap = new FuncMap();
+		fctMap.loadDefaultFunctions();
 		
 		// set up the variables
-		this.finalizeVarMap = new MetricVarMap();
-		this.combineVarMap = new CombineAggregateMetricVarMap();
+		finalizeVarMap = new MetricVarMap();
+		finalizeVarMap.setMetric(this);
+		
+		combineVarMap = new CombineAggregateMetricVarMap();
+		combineVarMap.setMetric(this);
 	}
 
 
@@ -173,10 +176,12 @@ public class AggregateMetric extends BaseMetric {
 		return value;
 	}
 
+	@Override
 	public MetricValue getRawValue(IMetricScope s) {
 		MetricValue mv = s.getMetricValue(this.index);
 		return mv;
 	}
+	
 	@Override
 	/*
 	 * (non-Javadoc)

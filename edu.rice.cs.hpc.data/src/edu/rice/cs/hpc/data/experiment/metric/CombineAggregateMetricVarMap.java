@@ -25,9 +25,9 @@ public class CombineAggregateMetricVarMap extends MetricVarMap {
 	public double getValue(String varName) {
 		assert(iCounter==0 || iCounter==1);
 		if (iCounter<0 || iCounter>1) {
-			System.err.println("Unable to retrieve value.\n\tscopes=[" + scopes[0] + ", " + scopes[1]+"]\n\tscopes-id=[" +
-					 scopes[0].getCCTIndex() + "," + scopes[1].getCCTIndex()  + "]\n\tcounter=" + iCounter  );
-			throw new RuntimeException();
+			final String msg = "Unable to retrieve value.\n\tscopes=[" + scopes[0] + ", " + scopes[1]+"]\n\tscopes-id=[" +
+					 scopes[0].getCCTIndex() + "," + scopes[1].getCCTIndex()  + "]\n\tcounter=" + iCounter  ;
+			throw new RuntimeException(msg);
 		}
 			
 		super.setScope(this.scopes[iCounter]);
