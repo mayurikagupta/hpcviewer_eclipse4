@@ -350,6 +350,12 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 				@Override
 				public void run() {
 					redraw();
+/*					final Image image = getBuffer();
+					System.out.println("dispose: " + image.isDisposed() + ", type: " + image.type 
+							+ ", bounds: " + image.getBounds() );
+					if (image.isDisposed()) {
+						System.err.println("image is disposed");
+					}*/
 				}
 			} );
 		}

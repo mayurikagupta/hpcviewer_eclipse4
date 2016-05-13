@@ -126,6 +126,11 @@
                id="org.eclipse.ui.commands.toggleState">
          </state>
       </command>
+      <command
+            defaultHandler="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+            id="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+            name="Refresh">
+      </command>
    </extension>
    <extension
          id="edu.rice.cs.hpc.traceviewer.menus"
@@ -244,6 +249,17 @@
                   tooltip="About hpctraceviewer">
             </command>
          </menu>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:hpcdepthview.view">
+         <command
+               commandId="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+               icon="icons/refresh-16.png"
+               label="Refresh"
+               style="push"
+               tooltip="Refresh data and repaint the views">
+         </command>
       </menuContribution>
    </extension>
    <extension
