@@ -265,6 +265,9 @@ public class TraceDatabase
 	static private boolean processDatabase(final IWorkbenchWindow window, 
 			SpaceTimeDataController stdc)
 	{
+		if (stdc == null) {
+			return false;
+		}
 		final TraceDatabase database = TraceDatabase.getInstance(window);
 		removeDatabase(database);
 		// remove old resources
