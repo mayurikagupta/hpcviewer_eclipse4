@@ -35,8 +35,6 @@ import edu.rice.cs.hpc.traceviewer.actions.OptionMidpoint;
 import edu.rice.cs.hpc.traceviewer.actions.OptionRecordsDisplay;
 import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.Frame;
-import edu.rice.cs.hpc.traceviewer.operation.RefreshOperation;
-import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
 import edu.rice.cs.hpc.traceviewer.services.DataService;
 
 

@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 
 
 /*************************************************************************
@@ -108,41 +109,56 @@ public abstract class BufferedCanvas extends Canvas
 			imageBuffer.dispose();
 	}
 	
+	/**
+	 * Save the current buffer image to a file
+	 * 
+	 * @param filename
+	 */
+	public void save(String filename) 
+	{
+		if (filename != null && !filename.isEmpty()) 
+		{
+			// get image data from the buffer
+			ImageData data = imageBuffer.getImageData();
+			ImageLoader loader = new ImageLoader();
+			loader.data = new ImageData[] {data};
+			
+			// save the data into a file with PNG format
+			loader.save(filename, SWT.IMAGE_PNG);
+		}
+	}
 	/*************************************************************************
 	 * add context menus for the canvas
 	 *************************************************************************/
 	private void setContextMenus() {
-		
-		final Action saveImage = new Action("Save image ...") {
-			
-			public void run() {
-				
-				if (imageBuffer == null)
-					return;
-				
-				FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);
-				dialog.setText("Save image ... ");
-				dialog.setFilterExtensions(new String[] {"*.png"});
-				String filename = dialog.open();
-				if (filename == null) {
-					return;
-				}
-				
-				// get image data from the buffer
-				ImageData data = BufferedCanvas.this.imageBuffer.getImageData();
-				ImageLoader loader = new ImageLoader();
-				loader.data = new ImageData[] {data};
-				
-				// save the data into a file with PNG format
-				loader.save(filename, SWT.IMAGE_PNG);
-			}
-		};
-		
-		// add menus to the canvas
-		MenuManager mnuMgr = new MenuManager();
-		Menu menu = mnuMgr.createContextMenu(this);
-		mnuMgr.add(saveImage);
 
-		setMenu(menu);
+		final Shell shell = getShell();
+		if (shell != null) {
+			
+			final Action saveImage = new Action("Save image ...") {
+				
+				public void run() {
+					
+					if (imageBuffer == null)
+						return;
+					
+					FileDialog dialog = new FileDialog(shell, SWT.SAVE);
+					dialog.setText("Save image ... ");
+					dialog.setFilterExtensions(new String[] {"*.png"});
+					String filename = dialog.open();
+					save(filename);
+				}
+			};
+			
+			// add menus to the canvas
+			MenuManager mnuMgr = new MenuManager();
+			Menu menu = mnuMgr.createContextMenu(this);
+			mnuMgr.add(saveImage);
+
+			setMenu(menu);
+			
+		} else {
+			System.err.println("BC: shell is null");
+		}
 	}
 }

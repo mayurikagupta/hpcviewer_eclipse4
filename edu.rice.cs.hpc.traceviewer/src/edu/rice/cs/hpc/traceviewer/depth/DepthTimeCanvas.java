@@ -343,13 +343,19 @@ public class DepthTimeCanvas extends AbstractTimeCanvas
 		
 		@Override
 		public void done(IJobChangeEvent event) {
-			//bufferGC.dispose();	
+
 			Display display = Display.getDefault();
 			display.asyncExec(new Runnable() {
 				
 				@Override
 				public void run() {
 					redraw();
+/*					final Image image = getBuffer();
+					System.out.println("dispose: " + image.isDisposed() + ", type: " + image.type 
+							+ ", bounds: " + image.getBounds() );
+					if (image.isDisposed()) {
+						System.err.println("image is disposed");
+					}*/
 				}
 			} );
 		}
