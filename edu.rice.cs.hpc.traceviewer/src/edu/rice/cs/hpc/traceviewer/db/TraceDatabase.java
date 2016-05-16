@@ -250,7 +250,8 @@ public class TraceDatabase
 		
 		@Override
 		public void done(IJobChangeEvent event) {
-			processDatabase(window, job.getSTDC());				
+			if (event.getResult() == Status.OK_STATUS)
+				processDatabase(window, job.getSTDC());				
 		}
 		
 		@Override

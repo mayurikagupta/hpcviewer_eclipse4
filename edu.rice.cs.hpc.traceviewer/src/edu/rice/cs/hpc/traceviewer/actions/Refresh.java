@@ -27,8 +27,9 @@ public class Refresh extends AbstractHandler
 						ISourceProviderService.class);
 				
 				DataService dataService = (DataService) sourceProviderService.getSourceProvider(DataService.DATA_PROVIDER);
-				// broadcast to all views
-				dataService.broadcastUpdate(null);
+				// broadcast to all views if the data is available
+				if (dataService.isDataAvailable())
+					dataService.broadcastUpdate(null);
 
 			}
 		}
