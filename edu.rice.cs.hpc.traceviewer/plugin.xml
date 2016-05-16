@@ -259,6 +259,15 @@
                label="Refresh"
                style="push"
                tooltip="Refresh data and repaint the views">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="edu.rice.cs.hpc.traceviewer.services.DataService.data">
+                  <equals
+                        value="ENABLED">
+                  </equals>
+               </with>
+            </visibleWhen>
          </command>
       </menuContribution>
    </extension>
