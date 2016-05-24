@@ -281,14 +281,13 @@ public class Experiment extends BaseExperimentWithMetrics
 			//----------------------------------------------------------------------------------------------
 			// Callers View
 			//----------------------------------------------------------------------------------------------
-			if (callerView) {
-				prepareCallersView(callingContextViewRootScope);
-			}
+			// since we create the caller tree lazily, there is no harm to create the root in the beginning
+			prepareCallersView(callingContextViewRootScope);
 
 			//----------------------------------------------------------------------------------------------
 			// Flat View
 			//----------------------------------------------------------------------------------------------
-			// While creating the flat tree, we attribute the cost for procedure scopes
+			// While creating the root of flat tree, we attribute the cost for procedure scopes
 			// One the tree has been created, we compute the inclusive cost for other scopes
 			prepareFlatView(callingContextViewRootScope);
 
