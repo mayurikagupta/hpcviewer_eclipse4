@@ -37,10 +37,12 @@ import java.io.File;
 
 public class Experiment extends BaseExperimentWithMetrics
 {
+	static public enum ExperimentOpenFlag {TREE_CCT_ONLY, TREE_ALL};
+	
 	// thread level database
 	private MetricRaw[] metrics_raw;
-	private boolean need_caller_tree;
 	private boolean mergedDatabase = false;
+	private ExperimentOpenFlag flag;
 
 	//////////////////////////////////////////////////////////////////////////
 	//	PERSISTENCE															//
@@ -64,15 +66,15 @@ public class Experiment extends BaseExperimentWithMetrics
 	//////////////////////////////////////////////////////////////////////////
 	// File opening															//
 	//////////////////////////////////////////////////////////////////////////
-	@Override
+
 	/*
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.data.experiment.BaseExperiment#open(java.io.File, edu.rice.cs.hpc.data.util.IUserData, boolean)
 	 */
-	public void open(File fileExperiment, IUserData<String, String> userData, boolean need_caller_tree)
+	public void open(File fileExperiment, IUserData<String, String> userData, ExperimentOpenFlag flag)
 			throws	Exception
 	{
-		this.need_caller_tree = need_caller_tree;
+		this.flag = flag;
 		super.open(fileExperiment, userData, true);
 	}
 
@@ -372,6 +374,6 @@ public class Experiment extends BaseExperimentWithMetrics
 
 	@Override
 	protected void open_finalize() {
-		postprocess(need_caller_tree);		
+		postprocess(flag == ExperimentOpenFlag.TREE_ALL);		
 	}
 }

@@ -34,7 +34,9 @@ public class PrintFileXML {
 	 * @param experiment
 	 **--------------------------------------------------------------------------------**/
 	public void print(PrintStream objStream, Experiment experiment) {
+		RootScope cctRoot  = experiment.getRootScope(RootScopeType.CallingContextTree);
 		RootScope flatRoot = experiment.getRootScope(RootScopeType.Flat);
+		experiment.createFlatView(cctRoot, flatRoot);
 		if (flatRoot != null) {
 			
 			//---------------------------------------------------------------------------------
