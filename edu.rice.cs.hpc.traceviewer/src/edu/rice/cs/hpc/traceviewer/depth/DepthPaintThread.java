@@ -3,15 +3,18 @@ package edu.rice.cs.hpc.traceviewer.depth;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.BaseDataVisualization;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 
 public class DepthPaintThread extends BasePaintThread {
 
@@ -19,15 +22,15 @@ public class DepthPaintThread extends BasePaintThread {
 	private GC gc;
 
 	public DepthPaintThread(SpaceTimeDataController stData, Queue<TimelineDataSet> list, int linesToPaint, 
-			AtomicInteger paintDone, Device device, 
-			int width) {
+			AtomicInteger numDataCollected, AtomicInteger paintDone, Device device, 
+			int width, IProgressMonitor monitor) {
 
-		super(stData, list, linesToPaint, paintDone, device, width);
+		super(stData, list, linesToPaint, numDataCollected, paintDone, device, width, monitor);
 	}
 
 	@Override
-	protected void initPaint(Device device, int width, int height) {
-
+	protected void initPaint(/*Device device,*/ int width, int height) {
+		final Display device = Display.getDefault();
 		image = new Image(device, width, height);
 		gc    = new GC(image);
 	}
@@ -46,10 +49,4 @@ public class DepthPaintThread extends BasePaintThread {
 		gc.dispose();
 		return new ImagePosition(linenum, image);
 	}
-
-	@Override
-	protected int getNumberOfCreatedData() {
-		return stData.getNumberOfDepthLines();
-	}
-
 }

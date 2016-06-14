@@ -59,6 +59,9 @@ public class Util {
 	 * @return IStatusLineManager the status line manager
 	 */
 	public static IStatusLineManager getActiveStatusLineManager() {
+		if (!PlatformUI.isWorkbenchRunning())
+			return null;
+		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {
 			return null;
@@ -88,12 +91,23 @@ public class Util {
 		return statusLine;
 	}
 
-	
+	/******
+	 * Retrieve the shell of the current active window
+	 * <p>Do NOT use this method for creating a window as it will mislead the parent of the child. 
+	 * @return a shell window
+	 */
 	static public Shell getActiveShell() {
+		Shell shell = null;
 		final IWorkbenchWindow window = getActiveWindow();
-		return window.getShell();
-	}
+		if (window != null)
+			shell = window.getShell();
+		return shell;
+	}	
 	
+	/*****
+	 * get the current active window
+	 * @return
+	 */
 	static public IWorkbenchWindow getActiveWindow() {
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		return window;

@@ -24,7 +24,7 @@ import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.metric.IMetricValueCollection;
 import edu.rice.cs.hpc.data.experiment.metric.version2.MetricValueCollection2;
 import edu.rice.cs.hpc.data.experiment.metric.version3.MetricValueCollection3;
-import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
+
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
 
 
@@ -43,13 +43,13 @@ import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
 
 public class RootScope extends Scope
 {
-
+static final private String NAME = "Experiment Aggregate Metrics";
 
 /** The name of the experiment's program. */
 protected String rootScopeName;
 protected RootScopeType rootScopeType;
 private BaseExperiment experiment;
-
+private String name;
 
 private DataSummary dataSummary;
 
@@ -126,7 +126,15 @@ public DataSummary getDataSummary()
 	
 public String getName()
 {
-	return "Experiment Aggregate Metrics";
+	if (name == null)
+		return NAME;
+	else
+		return name;
+}
+
+public void setName(String name)
+{
+	this.name = name;
 }
 
 public String getRootName()
@@ -134,6 +142,10 @@ public String getRootName()
 	return rootScopeName;
 }
 
+public void setRootName(String name)
+{
+	this.rootScopeName = name;
+}
 
 public RootScopeType getType()
 {

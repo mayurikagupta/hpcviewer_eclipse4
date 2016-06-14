@@ -2,6 +2,7 @@ package edu.rice.cs.hpc.viewer.graph;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.swtchart.Chart;
@@ -25,7 +26,7 @@ public class GraphEditorHisto extends GraphEditorBase {
 		
 		double y_values[], x_values[];
 		try {
-			y_values = this.threadData.getMetrics(metric, scope.getCCTIndex());
+			y_values = threadData.getMetrics(scope.getCCTIndex(), metric.getRawID(), metric.getSize());
 
 		} catch (IOException e) {
 			MessageDialog.openError(this.getSite().getShell(), "Error reading file !", e.getMessage());
@@ -59,6 +60,14 @@ public class GraphEditorHisto extends GraphEditorBase {
 
 		chart.getAxisSet().getXAxis(0).getTitle().setText( "Metric Value" );
 		chart.getAxisSet().getYAxis(0).getTitle().setText( "Frequency" );
+	}
+
+
+	@Override
+	protected ArrayList<Integer> translateUserSelection(
+			ArrayList<Integer> selections) {
+
+		return selections;
 	}
 
 }

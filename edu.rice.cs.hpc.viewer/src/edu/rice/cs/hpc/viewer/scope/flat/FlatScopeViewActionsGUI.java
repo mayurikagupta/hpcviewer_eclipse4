@@ -18,7 +18,7 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.resources.Icons;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActionsGUI;
-import edu.rice.cs.hpc.viewer.scope.flat.FlatScopeViewActions;
+
 
 /**
  * Actions GUI class specifically designed for flat view. 

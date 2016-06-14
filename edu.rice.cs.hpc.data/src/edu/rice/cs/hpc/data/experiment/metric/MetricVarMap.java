@@ -9,9 +9,9 @@ import com.graphbuilder.math.FuncMap;
 import com.graphbuilder.math.VarMap;
 import com.graphbuilder.math.func.Function;
 
-import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
-import edu.rice.cs.hpc.data.experiment.scope.Scope;
+
 
 /**
  * @author la5
@@ -19,48 +19,50 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  */
 public class MetricVarMap extends VarMap {
 
-	private Experiment experiment;
-	private Scope scope;
+	private IMetricManager 	metricManager;
+	private IMetricScope 	scope;
+	private IMetricScope 	root;
+	private BaseMetric 		metric = null;
 
-	/**
-	 * 
-	 */
 	public MetricVarMap() {
-		super(false);
-	}
-
-	
-	public MetricVarMap(Experiment exp) {
-		super(false);
-		this.experiment = exp;
+		this(null, null, null);
 	}
 	
-	public MetricVarMap(Scope s, Experiment exp) {
+	public MetricVarMap(RootScope root, IMetricManager metricManager) {
+		this(root, null, metricManager);
+	}
+	
+	public MetricVarMap(RootScope root, IMetricScope s, IMetricManager metricManager) {
 		super(false);
 		this.scope = s;
-		this.experiment = exp;
+		this.root  = root;
+		this.metricManager = metricManager;
 	}
 	
-	/**
-	 * @param caseSensitive
-	 */
-	public MetricVarMap(boolean caseSensitive) {
-		super(caseSensitive);
-	}
 
 	//===========================
 	
 
-	public void setExperiment(Experiment exp) {
-		this.experiment = exp;
+	public void setMetricManager(IMetricManager metricManager) {
+		this.metricManager = metricManager;
+	}
+	
+	public void setMetric(BaseMetric metric)
+	{
+		this.metric = metric;
 	}
 	
 	/**
 	 * set the current scope which contains metric values
 	 * @param s: the scope of node
 	 */
-	public void setScope(Scope s) {
+	public void setScope(IMetricScope s) {
 		this.scope = s;
+	}
+	
+	public void setRootScope(RootScope root)
+	{
+		this.root = root;
 	}
 	
 	/**
@@ -68,41 +70,46 @@ public class MetricVarMap extends VarMap {
 	 * If the variable is a normal variable, it will call the parent method.		
 	 */
 	public double getValue(String varName) {
-		assert(experiment != null);
+		assert(metricManager != null);
 		
-		if(varName.startsWith("$")) {
+		char firstLetter = varName.charAt(0);
+		if (firstLetter == '$' || firstLetter == '@') 
+		{
+			//---------------------------------------------------------
+			// get the value of the scope for this metric
+			//---------------------------------------------------------
+
 			// Metric variable
 			String sIndex = varName.substring(1);
-			BaseMetric metric = this.experiment.getMetric(sIndex);
-			if (metric == null) 
-				throw new RuntimeException("metric doesn't exist: " + sIndex);
-			if (scope != null) {
-				MetricValue value = metric.getValue(scope);
-				if(MetricValue.isAvailable(value))
-					return MetricValue.getValue(value);
-			}
-			return 0.0;
+			BaseMetric metricToQuery = metricManager.getMetric(sIndex);
+			if (metricToQuery == null) 
+				throw new RuntimeException("metric ID unknown: " + sIndex);
 			
-		} else if (varName.startsWith("@")) {
 			//---------------------------------------------------------
 			// 2011.02.08: new interpretation of the symbol "@x" where x is the metric ID
 			// @x returns the aggregate value of metric x 
 			//---------------------------------------------------------
-			String sIndex = varName.substring(1);
+			final IMetricScope currentScope = (firstLetter == '@' ? root : scope);
 
-			try{
-				BaseMetric metric = this.experiment.getMetric(sIndex);
-				if (metric == null)
-					throw new RuntimeException("Unrecognize metric ID: " + varName);
-
-				RootScope root = (RootScope) this.experiment.getRootScopeChildren()[0];
-				return MetricValue.getValue(metric.getValue(root));
-
-			} catch (java.lang.Exception e) {
-				throw new RuntimeException("Unrecognize variable: " + varName);
+			if (currentScope != null) {
+				MetricValue value = MetricValue.NONE;
+				if (this.metric != null && this.metric == metricToQuery) {
+					// avoid recursive call: if the metric queries its own value, we returns
+					// the "raw" value 
+					value = metricToQuery.getRawValue(currentScope);
+				} else {
+					value = metricToQuery.getValue(currentScope);
+				}
+				if(MetricValue.isAvailable(value))
+					return value.getValue();
 			}
 		} else
+			//---------------------------------------------------------
+			// get directly the value of the variable
+			//---------------------------------------------------------
 			return super.getValue(varName);
+
+		return 0.0d;
 	}
 	
 	
@@ -114,7 +121,7 @@ public class MetricVarMap extends VarMap {
 		String s = "@1*r^2";
 		Expression x = ExpressionTree.parse(s);
 
-		MetricVarMap vm = new MetricVarMap(false /* case sensitive */);
+		MetricVarMap vm = new MetricVarMap();
 		vm.setValue("r", 5);
 
 		FuncMap fm = new FuncMap(); // no functions in expression

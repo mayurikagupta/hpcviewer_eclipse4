@@ -24,7 +24,7 @@ public class FilterAttribute implements Serializable
 	 * inclusive: filter the nodes and its descendants
 	 * exclusive: filter only the node
 	 */
-	static public enum Type {Self_And_Children, Self_Only, Children_Only};
+	static public enum Type {Self_And_Descendants, Self_Only, Descendants_Only};
 	
 	/***
 	 * Flag true: the filter is enabled
@@ -35,7 +35,7 @@ public class FilterAttribute implements Serializable
 	/*****
 	 * @see Type
 	 */
-	public Type filterType = Type.Self_And_Children;
+	public Type filterType = Type.Self_And_Descendants;
 	
 	/*****
 	 * get the name of the filter
@@ -45,6 +45,11 @@ public class FilterAttribute implements Serializable
 	public String getFilterType() 
 	{
 		return filterType.name();
+	}
+	
+	public boolean equals(FilterAttribute other) 
+	{
+		return (filterType == other.filterType && enable == other.enable);
 	}
 	
 	/*****
@@ -71,5 +76,21 @@ public class FilterAttribute implements Serializable
 	public String toString()
 	{
 		return "(" + enable + "," + filterType + ")";
+	}
+	
+	public String getDescription() 
+	{
+		String text;
+		switch(filterType) {
+		case Self_Only:
+			text = "Self only: only the matched nodes will be omitted from the tree"; break;
+		case Descendants_Only:
+			text = "Descendants only: all the descendants of the matched nodes will be omitted from the tree"; break;
+		case Self_And_Descendants:
+			text = "Self and descendants: the matched nodes and its descendants will be omitted from the tree"; break;
+		default:
+			text = "Unknown filter type";
+		}
+		return text;
 	}
 }

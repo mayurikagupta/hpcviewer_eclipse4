@@ -36,6 +36,8 @@ import edu.rice.cs.hpc.data.filter.IFilterData;
  ******************************************************************/
 public class FilterScopeVisitor implements IScopeVisitor 
 {
+	static public final int STATUS_INIT=0, STATUS_OK = 1, STATUS_FAKE_PROCEDURE = 2; 
+	
 	private final IFilterData filter;
 	private final IMetricValueCollection rootMetricValues;
 	private final BaseExperiment experiment;
@@ -46,7 +48,9 @@ public class FilterScopeVisitor implements IScopeVisitor
 	/**** flag to allow the dfs to continue to go deeper or not.  
 	      For inclusive filter, we should stop going deeper      *****/
 	private boolean need_to_continue;
-	private boolean scope_has_changed;
+
+	private int num_scope_filtered = 0;
+	private int filterStatus 	   = STATUS_INIT;
 	
 	/***********
 	 * Constructor to filter a cct
@@ -61,7 +65,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 		this.rootMetricValues = rootOriginalCCT.getMetricValues();
 		this.rootOriginalCCT  = rootOriginalCCT;
 		need_to_continue 	  = true;
-		scope_has_changed 	  = false;
 		
 		experiment = rootOriginalCCT.getExperiment();
 		if (experiment instanceof Experiment)
@@ -80,9 +83,14 @@ public class FilterScopeVisitor implements IScopeVisitor
 		return need_to_continue;
 	}
 	
-	public boolean scopeHasChanged()
+	public int numberOfFilteredScopes() 
 	{
-		return scope_has_changed;
+		return num_scope_filtered;
+	}
+	
+	public int getFilterStatus() 
+	{
+		return filterStatus;
 	}
 	
 	//----------------------------------------------------
@@ -112,7 +120,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 	 * @return boolean true if the scope itself has been removed, false otherwise
 	 */
 	private boolean mergeInsert(Scope scope, ScopeVisitType vt) {
-		scope_has_changed = false;
+
 		if (vt == ScopeVisitType.PreVisit) {
 			// Previsit
 			Scope parent = scope.getParentScope();
@@ -120,8 +128,13 @@ public class FilterScopeVisitor implements IScopeVisitor
 			FilterAttribute filterAttribute = filter.getFilterAttribute(scope.getName());
 			if (filterAttribute != null)
 			{
+				if (filterStatus == STATUS_INIT) {
+					filterStatus = STATUS_OK;
+				}
+				num_scope_filtered++;
 				need_to_continue = (filterAttribute.filterType == FilterAttribute.Type.Self_Only);
-				if (filterAttribute.filterType == FilterAttribute.Type.Children_Only)
+
+				if (filterAttribute.filterType == FilterAttribute.Type.Descendants_Only)
 				{
 					//-------------------------------------------------------------------
 					// merge with the metrics of the children
@@ -135,7 +148,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 							{
 								Scope child_scope = (Scope) child;
 								mergeMetrics(scope, child_scope, false);
-								
 							}
 						}
 					}
@@ -162,7 +174,6 @@ public class FilterScopeVisitor implements IScopeVisitor
 						}
 					}
 					removeChild(scope, vt, filterAttribute.filterType);
-					scope_has_changed = true;
 				}
 			} else 
 			{
@@ -172,7 +183,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 		} else 
 		{ // PostVisit
 		}
-		return scope_has_changed;
+		return need_to_continue;
 	}
 	
 	/********
@@ -234,17 +245,32 @@ public class FilterScopeVisitor implements IScopeVisitor
 	 */
 	private void mergeMetrics(Scope parent, Scope child, boolean exclusive_filter)
 	{
+		if (parent instanceof ProcedureScope) {
+			if (((ProcedureScope)parent).isFalseProcedure() ) {
+				filterStatus = STATUS_FAKE_PROCEDURE;
+			}
+		}
 		// we need to merge the metric values
 		IMetricValueCollection values = child.getMetricValues();
 		for (int i=0; i<metrics.length; i++)
 		{
+			MetricValue childValue = values.getValue(child, i);
+			if (childValue == MetricValue.NONE) {
+				// in the original hpcview (2002), we assign the -1 value as the "none existence value"
+				// this is not proper. we should assign as null for the non-existence
+				// special case: every time the child has "none" value we can skip it instead of
+				//  merging to the parent since x - 1 is not the same as x - 0
+				continue;
+			}
 			if (exclusive_filter && metrics[i].getMetricType() == MetricType.EXCLUSIVE)
 			{
-				MetricValue value = parent.getMetricValue(i).duplicate();
+				MetricValue value = parent.getMetricValue(i);
+				if (value != MetricValue.NONE)
+				  value = value.duplicate();
 				parent.setMetricValue(i, value);
 				
 				// exclusive filter: merge the exclusive metrics to the parent's exclusive
-				mergeMetricToParent(parent, i, values.getValue(child, i));
+				mergeMetricToParent(parent, i, childValue);
 				
 			} else if (!exclusive_filter && metrics[i].getMetricType() == MetricType.INCLUSIVE)
 			{
@@ -255,7 +281,7 @@ public class FilterScopeVisitor implements IScopeVisitor
 				// however, when we ask getMetric(), it requires the metric index in the array (which is 0..n)
 				// we can cheat this by converting the index into "short name" and get the metric.
 				BaseMetric metric_exc = ((Experiment)experiment).getMetric(String.valueOf(index_exclusive_metric));
-				mergeMetricToParent(parent, metric_exc.getIndex(), values.getValue(child, i));
+				mergeMetricToParent(parent, metric_exc.getIndex(), childValue);
 			}
 		}
 	}
@@ -271,6 +297,11 @@ public class FilterScopeVisitor implements IScopeVisitor
 	private void mergeMetricToParent(Scope target, 
 			int metric_exclusive_index, MetricValue mvChild)
 	{
+		// corner case: we shouldn't modify the value of the root.
+		// they are supposed to be constant, unless it's a derived metric :-(
+		if (target instanceof RootScope)
+			return;
+		
 		MetricValue mvParentExc = target.getMetricValue(metric_exclusive_index);
 		float value = 0;
 		if (mvParentExc.getValue() >= 0) {

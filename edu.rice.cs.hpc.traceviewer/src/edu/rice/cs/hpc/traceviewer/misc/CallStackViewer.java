@@ -19,23 +19,26 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
 
+import edu.rice.cs.hpc.data.util.string.StringUtil;
 import edu.rice.cs.hpc.traceviewer.operation.BufferRefreshOperation;
 import edu.rice.cs.hpc.traceviewer.operation.DepthOperation;
 import edu.rice.cs.hpc.traceviewer.operation.PositionOperation;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.services.DataService;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Position;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
+import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.graph.CallPath;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 
 
@@ -56,7 +59,7 @@ public class CallStackViewer extends TableViewer
     /**Creates a CallStackViewer with Composite parent, SpaceTimeDataController _stData, and HPCTraceView _view.*/
 	public CallStackViewer(Composite parent, final HPCCallStackView csview)
 	{
-		super(parent, SWT.SINGLE );
+		super(parent, SWT.SINGLE | SWT.READ_ONLY );
 		
 		final IWorkbenchWindow window = (IWorkbenchWindow)csview.getSite().
 				getWorkbenchWindow();
@@ -130,7 +133,8 @@ public class CallStackViewer extends TableViewer
         	
         	public String getToolTipText(Object element)
         	{
-        		return this.getText(element);
+        		final String originalText = getText(element);
+        		return StringUtil.wrapScopeName(originalText, 100);
         	}
         	
         	public int getToolTipDisplayDelayTime(Object object)
@@ -141,7 +145,8 @@ public class CallStackViewer extends TableViewer
 		viewerColumn = new TableViewerColumn(this, SWT.NONE);
 		viewerColumn.setLabelProvider(myLableProvider);
 		viewerColumn.getColumn().setWidth(100);
-		
+		getTable().setVisible(true);
+
 		ColumnViewerToolTipSupport.enableFor(csviewer, ToolTip.NO_RECREATE);
 		
 		TraceOperation.getOperationHistory().addOperationHistoryListener(this);
@@ -154,7 +159,6 @@ public class CallStackViewer extends TableViewer
 	{
 		final SpaceTimeDataController data = dataService.getData();
 		this.setSample(data.getAttributes().getPosition(), data.getAttributes().getDepth());
-		this.getTable().setVisible(true);
 	}
 	
 	/**********************************************************************
@@ -162,7 +166,7 @@ public class CallStackViewer extends TableViewer
 	 * that most closely corresponds to (closeTime, process). Additionally,
 	 * sets the depth to _depth.
 	 *********************************************************************/
-	public void setSample(Position position, int depth)
+	public void setSample(Position position, final int depth)
 	{
 		//-------------------------------------------------------------------------------------------
 		// dirty hack: the call stack viewer requires relative index of process, not the absolute !
@@ -192,30 +196,42 @@ public class CallStackViewer extends TableViewer
 		ProcessTimeline ptl = ptlService.getProcessTimeline(estimatedProcess);
 		if (ptl != null) {
 			int sample = ptl.findMidpointBefore(position.time, stData.isEnableMidpoint());
-			Vector<String> sampleVector = null;
+			final Vector<String> sampleVector;
 			if (sample>=0) {
 				final CallPath cp = ptl.getCallPath(sample, depth);
 				if (cp != null)
 					sampleVector = ptl.getCallPath(sample, depth).getFunctionNames();
-			}
-			if (sampleVector == null)
+				else
+					// empty array of string
+					sampleVector = new Vector<String>();
+
+				if (sampleVector != null && sampleVector.size()<=depth)
+				{
+					//-----------------------------------
+					// case of over depth
+					//-----------------------------------
+					final int numOverDepth = depth-sampleVector.size()+1;
+					for(int l = 0; l<numOverDepth; l++)
+						sampleVector.add(EMPTY_FUNCTION);
+				}
+			} else {
 				// empty array of string
 				sampleVector = new Vector<String>();
-
-			if (sampleVector.size()<=depth)
-			{
-				//-----------------------------------
-				// case of over depth
-				//-----------------------------------
-				final int numOverDepth = depth-sampleVector.size()+1;
-				for(int l = 0; l<numOverDepth; l++)
+				
+				for(int l = 0; l<=depth; l++)
 					sampleVector.add(EMPTY_FUNCTION);
 			}
-			this.setInput(new ArrayList<String>(sampleVector));
-		
-			selectDepth(depth);
-			
-			viewerColumn.getColumn().pack();
+			// fill the call stack and select the current depth
+			final Display display = Display.getDefault();
+			display.asyncExec( new Runnable() {
+				
+				@Override
+				public void run() {
+					setInput(new ArrayList<String>(sampleVector));
+					selectDepth(depth);
+					viewerColumn.getColumn().pack();
+				}
+			} );
 		}
 		else
 		{

@@ -31,7 +31,8 @@ public class UndoOperationAction extends OperationHistoryAction {
 	@Override
 	protected void execute() {
 		IUndoableOperation[] operations = getHistory();
-		if (operations.length<1)
+		final int len = operations.length;
+		if (len<1)
 			return;
 		
 		IUndoableOperation[] redos = TraceOperation.getRedoHistory();
@@ -41,10 +42,13 @@ public class UndoOperationAction extends OperationHistoryAction {
 			// history into the redo's stack. To do this properly, we
 			// should perform an extra undo before the real undo
 
-			doUndo();
+			//doUndo();
+			if (len-2>=0) {
+				execute(operations[len-2]);
+				return;
+			}
 		}
 		doUndo();
-		//execute(operations[operations.length-1]);
 	}
 
 	/***

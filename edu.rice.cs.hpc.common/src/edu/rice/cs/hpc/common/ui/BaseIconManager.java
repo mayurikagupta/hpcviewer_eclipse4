@@ -5,8 +5,6 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import edu.rice.cs.hpc.common.plugin.Activator;
-
 /********************************************
  * 
  * Icon manager for registering to ImageRegistry

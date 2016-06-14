@@ -10,15 +10,16 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.swt.widgets.CoolBar;
 
+import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
-import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
+import edu.rice.cs.hpc.viewer.scope.BaseScopeViewActions;
 
 /**
  * @author laksonoadhianto
  *
  */
-public class FlatScopeViewActions extends ScopeViewActions {
+public class FlatScopeViewActions extends BaseScopeViewActions {
 	
 	private enum FlatAction implements IActionType{ Flatten, Unflatten };
 	
@@ -146,15 +147,11 @@ public class FlatScopeViewActions extends ScopeViewActions {
 
 		((FlatScopeViewActionsGUI) objActionsGUI).checkFlattenButtons();
 
-		checkStates();
-	}
-
-	@Override
-	public void checkStates() {
 		boolean bCanZoomOut = objZoom.canZoomOut() && 
 				(!stackActions.isEmpty() && stackActions.peek()==ActionType.ZoomIn);
 		objActionsGUI.enableZoomOut( bCanZoomOut );
 	}
+
 
 	
 	//-----------------------------------------------------------------------
@@ -218,5 +215,10 @@ public class FlatScopeViewActions extends ScopeViewActions {
 		} else {
 			stackActions.pop();
 		}
+	}
+
+	@Override
+	protected IMetricManager getMetricManager() {
+		return (IMetricManager) myRootScope.getExperiment();
 	}
 }

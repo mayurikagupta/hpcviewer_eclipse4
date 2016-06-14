@@ -227,7 +227,7 @@ public class DataSummary extends DataCommon
 		int offset = 0;
 		for (int i=0; i<num_cctid; i++)
 		{
-			int offset_size  = (int) (cct_table[i+1] - cct_table[i]);
+			int offset_size  = (cct_table[i+1] - cct_table[i]);
 			int num_metrics  = offset_size / METRIC_ENTRY_SIZE;
 			
 			metric_id[i] 	 = new int  [num_metrics]; 

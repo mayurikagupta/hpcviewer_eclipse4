@@ -11,6 +11,7 @@ import org.eclipse.ui.PlatformUI;
 
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.AbstractThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.util.IProgressReport;
 import edu.rice.cs.hpc.data.util.MergeDataFiles;
@@ -22,9 +23,8 @@ import edu.rice.cs.hpc.data.util.MergeDataFiles;
  * while version 2 is when the files are merged into one mega file.
  *
  ******************************************************************/
-public class ThreadDataCollection2 implements IThreadDataCollection 
+public class ThreadDataCollection2 extends AbstractThreadDataCollection
 {
-	final private ThreadLevelDataCompatibility thread_data;
 	private ThreadLevelDataFile data_file[];
 	private File directory;
 	private Experiment experiment;
@@ -32,7 +32,6 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	public ThreadDataCollection2(Experiment experiment)
 	{
 		this.experiment = experiment;
-		thread_data 	= new ThreadLevelDataCompatibility();
 		int num_metrics = experiment.getMetricRaw().length;
 		data_file		= new ThreadLevelDataFile[num_metrics];
 	}
@@ -50,23 +49,18 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	public double[] getMetrics(long nodeIndex, int metricIndex, int numMetrics) 
 			throws IOException {
 		// check if the data already exists or not
-		if (data_file != null) 
-		{
-			if (data_file[metricIndex] != null)
-			{
-				return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
-			}
-		}
-		// data hasn't been created. Try to merge and open the file
-		String file = thread_data.getMergedFile(directory, metricIndex);
-		if (file != null)
-		{
-			data_file[metricIndex] = new ThreadLevelDataFile(Util.getActiveStatusLineManager());
-			data_file[metricIndex].open(file);
-			return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
-		}
-		return null;
+		ensureDataFile(metricIndex);
+		return data_file[metricIndex].getMetrics(nodeIndex, metricIndex, numMetrics);
 	}
+	
+	@Override
+	public double[] getScopeMetrics(int thread_id, int metricIndex, int numMetrics) throws IOException
+	{
+		// check if the data already exists or not
+		ensureDataFile(metricIndex);
+		return data_file[metricIndex].getScopeMetrics(thread_id, metricIndex, numMetrics);
+	}
+
 
 	@Override
 	public boolean isAvailable() {
@@ -75,8 +69,8 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 
 	
 	@Override
-	public double[] getRankLabels() {
-		final int numLevels = data_file[0].getParallelismLevel();
+	public double[] getRankLabels() throws IOException {
+		ensureDataFile(0);
 		final String []labels = data_file[0].getRankLabels();
 		
 		double []rankLabels = new double[labels.length];
@@ -87,44 +81,20 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		for(int i=0; i<labels.length; i++)
 		{
 			double rank_double = Double.parseDouble(labels[i]); 
-			if (numLevels == 1)
-			{
-				rankLabels[i] = rank_double;
-			} else {
-				// for hybrid application we need to reorder the ranks
-				int rank_first = (int) Math.floor(rank_double);
-				int num_sibling = 0;
-				int j;
-				// compute the number of threads of this process
-				for(j=i+1; j<labels.length; j++)
-				{
-					int next_rank = (int) Math.floor(Double.parseDouble(labels[j]));
-					num_sibling++;
-					if (next_rank != rank_first) {
-						break;
-					} else if (j==labels.length-1) {
-						num_sibling++;
-					}
-				}
-				// evenly sparse the thread number
-				for(int k=0; k<num_sibling; k++)
-				{
-					rankLabels[i+k] = (double)rank_first + ((double)k/num_sibling);
-				}
-				i = j-1;
-			}
+			rankLabels[i] = rank_double;
 		}
 		
 		return rankLabels;
 	}
 
 	@Override
-	public int getParallelismLevel() {
+	public int getParallelismLevel() throws IOException {
+		ensureDataFile(0);
 		return data_file[0].getParallelismLevel();
 	}
 
 	@Override
-	public String getRankTitle() {
+	public String getRankTitle() throws IOException {
 		String title;
 		if (getParallelismLevel() > 1)
 		{
@@ -150,6 +120,25 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		}
 	}
 
+	
+	private void ensureDataFile(int metricIndex) throws IOException
+	{
+		if (data_file != null) 
+		{
+			if (data_file[metricIndex] != null)
+			{
+				return;
+			}
+		}
+		// data hasn't been created. Try to merge and open the file
+		String file = ThreadLevelDataCompatibility.getMergedFile(experiment, directory, metricIndex);
+		if (file != null)
+		{
+			data_file[metricIndex] = new ThreadLevelDataFile(Util.getActiveStatusLineManager());
+			data_file[metricIndex].open(file);
+		}
+	}
+	
 	/**
 	 * class to cache the name of merged thread-level data files. 
 	 * We will ask A LOT the name of merged files, thus keeping in cache will avoid us to check to often
@@ -158,14 +147,8 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	 * The class also check compatibility with the old version.
 	 *
 	 */
-	private class ThreadLevelDataCompatibility {
-		
-		private HashMap<String, String> listOfFiles;
-		
-		public ThreadLevelDataCompatibility() {
-			listOfFiles = new HashMap<String, String>();
-		}
-		
+	static private class ThreadLevelDataCompatibility 
+	{
 		/**
 		 * method to find the name of file for a given metric ID. 
 		 * If the files are not merged, it will be merged automatically
@@ -177,9 +160,10 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 		 * @return
 		 * @throws IOException
 		 */
-		public String getMergedFile(File directory, int metric_raw_id) throws IOException {
-			
-			final MetricRaw metric = experiment.getMetricRaw()[metric_raw_id];
+		static public String getMergedFile(Experiment experiment, File directory, int metric_raw_id) throws IOException 
+		{
+			final HashMap<String, String> listOfFiles = new HashMap<String, String>();
+			final MetricRaw metric = (MetricRaw) experiment.getMetricRaw()[metric_raw_id];
 			final String globInputFile = metric.getGlob();
 			
 			// assuming the number of merged experiments is less than 10
@@ -198,7 +182,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 					"experiment-" + experiment_id + ".mdb";
 
 			// check if the file is already merged
-			String cacheFileName = this.listOfFiles.get(outputFile);
+			String cacheFileName = listOfFiles.get(outputFile);
 			
 			if (cacheFileName == null) {
 				
@@ -206,7 +190,7 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 				// the file doesn't exist, we need to merge metric-db files
 				// ----------------------------------------------------------
 				// check with the old version of thread level data
-				this.checkOldVersionOfData(directory);
+				checkOldVersionOfData(directory);
 				
 				final ProgressReport progress= new ProgressReport( Util.getActiveStatusLineManager() );
 				
@@ -229,13 +213,13 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 				} else {
 					cacheFileName = outputFile;
 				}
-				this.listOfFiles.put(outputFile, cacheFileName);
+				listOfFiles.put(outputFile, cacheFileName);
 
 			}
 			return cacheFileName;
 		}
 		
-		private void checkOldVersionOfData(File directory) {
+		static private void checkOldVersionOfData(File directory) {
 			
 			String oldFile = directory.getAbsolutePath() + File.separatorChar + "experiment.mdb"; 
 			File file = new File(oldFile);
@@ -254,10 +238,9 @@ public class ThreadDataCollection2 implements IThreadDataCollection
 	
 	/*******************
 	 * Progress bar
-	 * @author laksonoadhianto
 	 *
 	 */
-	private class ProgressReport implements IProgressReport 
+	static private class ProgressReport implements IProgressReport 
 	{
 		final private IStatusLineManager statusLine;
 

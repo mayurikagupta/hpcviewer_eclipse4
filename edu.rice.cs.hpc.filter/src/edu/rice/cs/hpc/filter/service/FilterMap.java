@@ -1,17 +1,16 @@
 package edu.rice.cs.hpc.filter.service;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.services.ISourceProviderService;
-
-import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.common.util.AliasMap;
 import edu.rice.cs.hpc.data.filter.FilterAttribute;
 import edu.rice.cs.hpc.data.filter.IFilterData;
+import edu.rice.cs.hpc.data.util.*;
 
 /******************************************************************
  * 
@@ -24,13 +23,54 @@ implements IFilterData
 {
 
 	static private final String FILE_NAME = "filter.map";
-	static private final FilterMap filterMap = new FilterMap();
+	//static private final FilterMap filterMap = new FilterMap();
 	
-	private FilterStateProvider filterStateProvider = null;
+	public FilterMap() {
+		checkData();
+	}
 	
+	/****
+	 * Factory for generating a filter map
+	 * @return FilterMap : a filter map
+	 */
 	public static FilterMap getInstance()
 	{
-		return filterMap;
+		return new FilterMap();
+	}
+	
+	public int size() 
+	{
+		if (data != null) {
+			return data.size();
+		}
+		return 0;
+	}
+	
+	/***
+	 * retrieve the iterator of the hash map
+	 * @return
+	 */
+	public Iterator<Entry<String, FilterAttribute>> iterator() {
+		checkData();
+		return data.entrySet().iterator();
+	}
+	
+	/****
+	 * Check if two FilterMap have the same key and values
+	 * @param other
+	 * @return
+	 */
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof FilterMap) {
+			FilterMap otherMap = (FilterMap) other;
+			if (data.size() == otherMap.data.size()) {
+				Set<Entry<String, FilterAttribute>> set1 = otherMap.data.entrySet();
+				Set<Entry<String, FilterAttribute>> set2 = data.entrySet();
+				return set1.equals(set2);
+			}
+		}
+		return false;
 	}
 	
 	@Override
@@ -62,7 +102,7 @@ implements IFilterData
 	public void put(String filter, FilterAttribute state)
 	{
 		super.put(filter, state);
-		save();
+		//save();
 	}
 
 	@Override
@@ -90,10 +130,6 @@ implements IFilterData
 	@Override
 	public FilterAttribute getFilterAttribute(String element) 
 	{
-		if (!isFilterEnabled())
-		{
-			return null;
-		}
 		Object []entries = getEntrySet();
 		
 		// --------------------------------------------------------------------------------
@@ -107,7 +143,9 @@ implements IFilterData
 			FilterAttribute toFilter = pattern.getValue();
 			if (toFilter.enable)
 			{
-				final String key = pattern.getKey().replace("*", ".*").replace("?", ".?");
+				// convert glob into regular expression
+				// old: pattern.getKey().replace("*", ".*").replace("?", ".?");
+				final String key = Util.convertGlobToRegex(pattern.getKey());
 				if (element.matches(key)) {
 					return toFilter;
 				}
@@ -137,7 +175,7 @@ implements IFilterData
 		{
 			remove(oldKey);
 			put(newKey, attribute);
-			save();
+			//save();
 			return true;
 		}
 		return false;
@@ -149,14 +187,20 @@ implements IFilterData
 	 */
 	public boolean isFilterEnabled() 
 	{
-		if (filterStateProvider == null)
-		{
-			IWorkbenchWindow window = Util.getActiveWindow();
-			Assert.isNotNull(window);
-			ISourceProviderService service = (ISourceProviderService) window.getService(ISourceProviderService.class);
-			filterStateProvider   = (FilterStateProvider) service.getSourceProvider(FilterStateProvider.FILTER_REFRESH_PROVIDER);
+		boolean enabled = false;
+		if (data != null) {
+			if (data.size() > 0) {
+				Collection<FilterAttribute> coll = data.values();
+				Iterator<FilterAttribute> iterator = coll.iterator();
+				
+				// iterate through the list if there is at least one pattern enabled
+				while(iterator.hasNext() && !enabled) {
+					FilterAttribute att = iterator.next();
+					enabled = att.enable;
+				}				
+			}
 		}
 		
-		return filterStateProvider.isEnabled();
+		return enabled;
 	}
 }

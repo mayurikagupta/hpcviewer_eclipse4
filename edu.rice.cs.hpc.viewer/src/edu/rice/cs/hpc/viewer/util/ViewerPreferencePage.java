@@ -11,7 +11,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentManager;
 import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.graph.GraphEditor;
-import edu.rice.cs.hpc.viewer.scope.ScopeActions;
+import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 
 /**
  * This class represents a preference page that
@@ -70,7 +70,7 @@ public class ViewerPreferencePage
 				this.getFieldEditorParent());
 		objThreshold.setValidateStrategy(StringFieldEditor.VALIDATE_ON_FOCUS_LOST);
 		objThreshold.setEmptyStringAllowed(true);
-		objThreshold.setStringValue(String.valueOf(ScopeActions.fTHRESHOLD));
+		objThreshold.setStringValue(String.valueOf(ScopeViewActions.fTHRESHOLD));
 		addField(objThreshold);
 		
 		//----------------------------------------------------------------------
@@ -124,7 +124,7 @@ public class ViewerPreferencePage
 
 		// get the threshold
 		double fThreshold = objPref.getDouble(PreferenceConstants.P_THRESHOLD);
-		ScopeActions.fTHRESHOLD = fThreshold;
+		ScopeViewActions.fTHRESHOLD = fThreshold;
 		// get the font for metrics columns
 		FontData []objFontsMetric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_METRIC);
 		FontData []objFontsGeneric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_GENERIC);

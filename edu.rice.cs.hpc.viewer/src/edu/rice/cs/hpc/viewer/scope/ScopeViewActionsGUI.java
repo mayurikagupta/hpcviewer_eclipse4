@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.*;
 import org.eclipse.swt.SWT;
@@ -33,8 +34,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
+import edu.rice.cs.hpc.viewer.metric.MetricColumnDialog;
 import edu.rice.cs.hpc.viewer.resources.Icons;
-import edu.rice.cs.hpc.viewer.util.ColumnPropertiesDialog;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -49,7 +51,10 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
  */
 public class ScopeViewActionsGUI implements IScopeActionsGUI {
 
+    // ----------------------------------- CONSTANTS
+	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
 	final static private String COLUMN_DATA_WIDTH = "w"; 
+	
     //======================================================
 	// ------ DATA ----------------------------------------
     //======================================================
@@ -70,12 +75,10 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	//------------------------------------DATA
 	protected Scope nodeTopParent; // the current node which is on the top of the table (used as the aggregate node)
 	protected Database 	database;		// experiment data	
-	protected RootScope 		myRootScope;		// the root scope of this view
+	
+	private boolean affectOtherViews;
 
-    // ----------------------------------- CONSTANTS
-	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
-    
-    /**
+	/**
      * Constructor initializing the data
      * @param shellGUI
      * @param objViewer
@@ -84,6 +87,20 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      */
 	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
 			ScopeViewActions objActions) {
+		this(objShell, window, parent, objActions, true);
+	}
+	
+	/****
+	 * Constructor to create a GUI part of the actions
+	 * 
+	 * @param objShell : parent shell
+	 * @param window : active window
+	 * @param parent : parent component
+	 * @param objActions : action
+	 * @param affectOtherViews : boolean true if an action should trigger other views
+	 */
+	public ScopeViewActionsGUI(Shell objShell, IWorkbenchWindow window, Composite parent, 
+			ScopeViewActions objActions, boolean affectOtherViews) {
 
 		this.objViewActions = objActions;
 		this.shell = objShell;
@@ -95,6 +112,8 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		this.clrYELLOW = display.getSystemColor(SWT.COLOR_YELLOW);
 		this.clrRED = display.getSystemColor(SWT.COLOR_RED);
 		this.clrGREEN = display.getSystemColor(SWT.COLOR_GREEN);
+		
+		this.affectOtherViews = affectOtherViews; 
 	}
 
 	/**
@@ -125,17 +144,13 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 			return;
 		}
 		database = vWin.getDb(sFilename);
-
-		this.myRootScope = scope;
-
-		//this.setLevelText(scope.getTreeNode().iLevel);	// @TODO: initialized with root level
 		
 		// actions needed when a new experiment is loaded
 		this.resizeTableColumns();	// we assume the data has been populated
         this.enableActions();
         // since we have a new content of experiment, we need to display 
         // the aggregate metrics
-        this.displayRootExperiment();
+    	insertParentNode(scope);
 	}
 	
     //======================================================
@@ -166,7 +181,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     		Object o = columns[i].getData();
     		if(o instanceof BaseMetric) {
     			BaseMetric metric = (BaseMetric) o;
-    			sText[i] = metric.getMetricTextValue(scope.getMetricValue(metric));
+    			// ask the metric for the value of this scope
+    			// if it's a thread-level metric, we will read metric-db file
+    			sText[i] = metric.getMetricTextValue(scope);
     		}
     	}
     	
@@ -186,10 +203,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 	/**
 	 * Add the aggregate metrics item on the top of the tree
 	 */
-    protected void displayRootExperiment() {
-    	Scope  node = (Scope) this.myRootScope;
-    	this.insertParentNode(node);
-    }
+    /*protected void displayRootExperiment() {
+    	insertParentNode(myRootScope);
+    }*/
 	
 	/**
 	 * Resize the columns automatically
@@ -285,22 +301,28 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      * Show column properties (hidden, visible ...)
      */
     protected void showColumnsProperties() {
+
+    	TreeColumn []column = treeViewer.getTree().getColumns();
+    	String []label = new String[column.length-1];
+    	boolean []checked = new boolean[column.length-1];
     	
-    	ColumnPropertiesDialog objProp = new ColumnPropertiesDialog(objWindow.getShell(), 
-    			treeViewer.getTree().getColumns());
-    	objProp.open();
-    	if(objProp.getReturnCode() == org.eclipse.jface.dialogs.IDialogConstants.OK_ID) {
-        	boolean result[] = objProp.getResult();
-        	boolean isAppliedToAllViews = objProp.getStatusApplication();
-        	// apply to all views ?
-        	if(isAppliedToAllViews) {
-        		// apply the changes for all views
-        		this.showHideColumnsAllViews(result);
-        	} else {
-        		// apply the changes only in this view
-        		this.setColumnsStatus(result);
-        	}
-   		}
+    	for(int i=1; i<column.length; i++) {
+    		if (column[i].getData() != null) {
+    			checked[i-1] = column[i].getWidth()>1;
+    			label[i-1]	 = column[i].getText();
+    		}
+    	}
+    	MetricColumnDialog dialog = new MetricColumnDialog(shell, label, checked);
+    	dialog.enableAllViewOption(affectOtherViews);
+    	if (dialog.open() == Dialog.OK) {
+    		boolean isAppliedToAllViews = dialog.isAppliedToAllViews();
+    		checked = dialog.getResult();
+    		if (isAppliedToAllViews) {
+    			showHideColumnsAllViews(checked);
+    		} else {
+    			setColumnsStatus(checked);
+    		}
+    	}
     }
     
     /**
@@ -310,9 +332,10 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     private void showHideColumnsAllViews(boolean []status) {
 		// get our database file and the and the class that contains its information
 		// get the views created for our database
-		BaseScopeView arrScopeViews[] = database.getExperimentView().getViews();
-		for(int i=0; i<arrScopeViews.length; i++) {
-			arrScopeViews[i].getViewActions().setColumnStatus(status);
+    	ExperimentView ev = database.getExperimentView();
+		for(int i=0; i<ev.getViewCount(); i++) {
+			AbstractBaseScopeView view = ev.getView(i);
+			view.getViewActions().setColumnStatus(status);
 		}
     }
     
@@ -320,7 +343,9 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      * Change the column status (hide/show) in this view only
      */
     public void setColumnsStatus(boolean []status) {
-
+    	if (treeViewer.getTree().isDisposed())
+    		return;
+    	
 		TreeColumn []columns = treeViewer.getTree().getColumns();
 		
 		// the number of table columns have to be bigger than the number of status
@@ -531,11 +556,10 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
     	
     	// set the coolitem
     	this.createCoolItem(coolbar, toolbar);
-    	
-
-    	return toolbar;
+     	return toolbar;
     }
 
+    
     /**
      * Constant comma separator
      */

@@ -127,7 +127,7 @@ public class TreeNode {
 	public void add(TreeNode child)
 	{
 		if (children == null) {
-			children = new ArrayList<TreeNode>();
+			children = new ArrayList<TreeNode>(3);
 		}
 		children.add(child);
 	}

@@ -38,7 +38,7 @@ public class Filter {
 		assert pieces.length == 2;
 		for (int i = 0; i < pieces.length; i++) {
 			//Turns something like :10 into x:10 (which becomes start:10) or
-			if (pieces[i].startsWith(":"))
+			if (pieces[i].charAt(0)==':')
 				pieces[i] = "x" + pieces[i];
 			
 			//Turns something like 20: into 20:x which becomes 20:end

@@ -9,13 +9,14 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.ui.IWorkbenchWindow;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.BaseViewPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 
 /******************************************************
@@ -26,21 +27,22 @@ import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 public class DepthViewPaint extends BaseViewPaint {
 
 	private final GC masterGC;
+	private final AtomicInteger timelineDone, numDataCollected;
 	private float numPixels;
-	
-	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController _data,
-			ImageTraceAttributes _attributes, boolean _changeBound, ISpaceTimeCanvas canvas, 
+
+	public DepthViewPaint(IWorkbenchWindow window, final GC masterGC, SpaceTimeDataController data,
+			ImageTraceAttributes attributes, boolean changeBound, ISpaceTimeCanvas canvas, 
 			ExecutorService threadExecutor) {
 		
-		super("Depth view", _data, _attributes, _changeBound,  window, canvas, threadExecutor);
+		super("Depth view", data, attributes, changeBound,  window, canvas, threadExecutor);
 		this.masterGC = masterGC;
+		timelineDone  = new AtomicInteger(0);
+		numDataCollected  = new AtomicInteger(0);
 	}
 
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) 
 	{
-		final ImageTraceAttributes attributes = controller.getAttributes();
-		
 		int process = attributes.getPosition().process;
 		
 		// we need to check if the data is ready.
@@ -49,7 +51,7 @@ public class DepthViewPaint extends BaseViewPaint {
 		//  - and the main view has finished generated the timelines
 		
 		if (process >= attributes.getProcessBegin() && process <= attributes.getProcessEnd()) {
-			
+			// TODO warning: data races for accessing the current process timeline 
 			if ( controller.getCurrentDepthTrace() != null) {
 				numPixels = attributes.numPixelsDepthV/(float)controller.getMaxDepth();
 				return changedBounds;
@@ -61,14 +63,13 @@ public class DepthViewPaint extends BaseViewPaint {
 
 	@Override
 	protected int getNumberOfLines() {
-		final ImageTraceAttributes attributes = controller.getAttributes();
 		return Math.min(attributes.numPixelsDepthV, controller.getMaxDepth());
 	}
 
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
-			Queue<TimelineDataSet> queue, AtomicInteger timelineDone, IProgressMonitor monitor) {
-		return new TimelineDepthThread( controller, yscale, queue, timelineDone, 
+			Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
+		return new TimelineDepthThread( controller, attributes, yscale, queue, numDataCollected,
 				controller.isEnableMidpoint(), monitor);
 	}
 
@@ -80,22 +81,33 @@ public class DepthViewPaint extends BaseViewPaint {
 
 	@Override
 	protected BasePaintThread getPaintThread(
-			Queue<TimelineDataSet> queue, int linesToPaint, AtomicInteger timelineDone, Device device, int width) {
+			Queue<TimelineDataSet> queue, int linesToPaint, 
+			Device device, int width, IProgressMonitor monitor) {
 
-		return new DepthPaintThread(controller, queue, linesToPaint, timelineDone, device, width);
+		return new DepthPaintThread(controller, queue, linesToPaint, 
+				numDataCollected, timelineDone, 
+				device, width, monitor);
 	}
 
 	@Override
-	protected void drawPainting(ISpaceTimeCanvas canvas,
-			ImagePosition img) {
-		if (masterGC != null && !masterGC.isDisposed())
+	protected void drawPainting(ISpaceTimeCanvas canvas, ImagePosition img) {
+		if (masterGC != null && !masterGC.isDisposed() && img != null && img.image != null)
 		{
-			masterGC.drawImage(img.image, 0, 0, img.image.getBounds().width, 
+			try {
+				masterGC.drawImage(img.image, 0, 0, img.image.getBounds().width, 
 					img.image.getBounds().height, 0, 
 					Math.round(img.position*numPixels), 
 					img.image.getBounds().width, img.image.getBounds().height);
-			
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			img.image.dispose();
 		}
+	}
+
+	@Override
+	protected void endPainting(boolean isCanceled) {
+		if (masterGC != null && !masterGC.isDisposed())
+			masterGC.dispose();
 	}
 }

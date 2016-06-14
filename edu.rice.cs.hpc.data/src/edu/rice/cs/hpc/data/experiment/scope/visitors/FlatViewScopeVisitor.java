@@ -77,7 +77,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		add(scope,vt, true, false); 
 	}
 	public void visit(ProcedureScope scope, ScopeVisitType vt) 		{
-		add(scope,vt, true, false); 
+		if (!scope.isFalseProcedure())
+			add(scope,vt, true, false); 
 	}
 
 	
@@ -100,22 +101,24 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			if (flat_info != null) {
 				this.htFlatCostAdded.remove(id);
 			}
-			
+
 			FlatScopeInfo objFlat = this.getFlatCounterPart(scope, scope, id);
 			
 			//--------------------------------------------------------------------------
 			// Aggregating metrics to load module and flat scope
 			// Notes: this is not correct for Derived incremental metrics
 			//--------------------------------------------------------------------------
-			addCostIfNecessary(id, objFlat.flat_lm, scope, add_inclusive, add_exclusive);
-			addCostIfNecessary(id, objFlat.flat_file, scope, add_inclusive, add_exclusive);
+			if (objFlat != null) {
+				addCostIfNecessary(id, objFlat.flat_lm, scope, add_inclusive, add_exclusive);
+				addCostIfNecessary(id, objFlat.flat_file, scope, add_inclusive, add_exclusive);
 
-			//--------------------------------------------------------------------------
-			// For call site, we need also to create its procedure scope
-			//--------------------------------------------------------------------------
-			if (scope instanceof CallSiteScope) {
-				ProcedureScope proc_cct_s = ((CallSiteScope) scope).getProcedureScope();
-				this.getFlatCounterPart(proc_cct_s, scope, id);
+				//--------------------------------------------------------------------------
+				// For call site, we need also to create its procedure scope
+				//--------------------------------------------------------------------------
+				if (scope instanceof CallSiteScope) {
+					ProcedureScope proc_cct_s = ((CallSiteScope) scope).getProcedureScope();
+					this.getFlatCounterPart(proc_cct_s, scope, id);
+				}
 			}
 
 		} else {
@@ -170,8 +173,9 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 				proc_cct_s = findEnclosingProcedure(cct_s);
 			}
 
-			if (proc_cct_s == null) {
-				throw new RuntimeException("Cannot find the enclosing procedure for " + cct_s);
+			if (proc_cct_s == null || proc_cct_s.isFalseProcedure()) {
+				//throw new RuntimeException("Cannot find the enclosing procedure for " + cct_s);
+				return null;
 			}
 			
 			//-----------------------------------------------------------------------------
@@ -325,21 +329,22 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 				// ----------------------------------------------
 				flat_enc_s = null;
 			} else {
+				FlatScopeInfo flat_enc_info = null;
 				if ( cct_parent_s instanceof CallSiteScope ) {
 					// ----------------------------------------------
 					// parent is a call site
 					// ----------------------------------------------
 					ProcedureScope proc_cct_s = ((CallSiteScope)cct_parent_s).getProcedureScope(); 
-					FlatScopeInfo flat_enc_info = this.getFlatScope(proc_cct_s);
-					flat_enc_s = flat_enc_info.flat_s;
+					flat_enc_info = this.getFlatScope(proc_cct_s);
 
 				} else {					
 					// ----------------------------------------------
 					// parent is a line scope or loop scope or procedure scope
 					// ----------------------------------------------
-					FlatScopeInfo flat_enc_info = this.getFlatScope(cct_parent_s);
-					flat_enc_s = flat_enc_info.flat_s;
+					flat_enc_info = this.getFlatScope(cct_parent_s);
 				}
+				if (flat_enc_info != null)
+					flat_enc_s = flat_enc_info.flat_s;
 
 			}
 		}
@@ -361,7 +366,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			}
 		}
 
-		this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
+		if (objFlat != null)
+			this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
 		return objFlat;
 		
 	}
@@ -381,14 +387,18 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 	private String getID( Scope scope ) {
 		final String id = String.valueOf(scope.getFlatIndex());
 		final String class_type = scope.getClass().getSimpleName();
-		String hash_id = (class_type == null ? id : class_type.substring(0, 2) + id);
+		StringBuffer hash_id = new StringBuffer(id);
+		if (class_type != null) {
+			hash_id.insert(0, class_type.substring(0, 2));
+		}
 		if (scope instanceof CallSiteScope)
 		{
 			// forcing to include procedure ID to ensure uniqueness of call site
 			final int proc_id = ((CallSiteScope)scope).getProcedureScope().getFlatIndex();
-			hash_id += ":" + proc_id;
+			hash_id.append(':');
+			hash_id.append(proc_id);
 		}
-		return hash_id;
+		return hash_id.toString();
 	}
 	
 	
@@ -431,8 +441,7 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		// are s1 and s2 the same class ?
 		if ( s1.getClass() != s2.getClass() )
 			return false;
-						
-		return (s1.hashCode() == s2.hashCode());					
+		return (s1.getCCTIndex() == s2.getCCTIndex());
 	}
 	
 	private void addChild(Scope parent, Scope child) {
@@ -454,11 +463,12 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		while(parent != null) {
 			if (parent instanceof CallSiteScope) {
 				ProcedureScope proc = ((CallSiteScope) parent).getProcedureScope();
-				if (!proc.isAlien()) return proc;
+				/*if (!proc.isAlien()) */return proc;
 			}
 			if (parent instanceof ProcedureScope) {
 				ProcedureScope proc = (ProcedureScope) parent;
-				if (!proc.isAlien()) return proc;
+				if (!proc.isAlien()) 
+					return proc;
 			}
 			if (parent instanceof RootScope) return null;
 			parent = parent.getParentScope();

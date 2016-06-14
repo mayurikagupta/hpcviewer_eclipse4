@@ -12,6 +12,7 @@ import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeCallerView;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
+import edu.rice.cs.hpc.data.util.string.StringUtil;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
@@ -91,6 +92,7 @@ public class StyledScopeLabelProvider extends StyledCellLabelProvider {
 		}
 	}
 
+	
 	@Override
 	/*
 	 * (non-Javadoc)
@@ -98,12 +100,17 @@ public class StyledScopeLabelProvider extends StyledCellLabelProvider {
 	 */
 	public String getToolTipText(Object element)
 	{
-		if (element instanceof Scope)
-		{
-			String text = ((Scope)element).getName();
-			return text;
+		if (element instanceof Scope) 
+		{	
+			final int minLengthForToolTip = 50;  
+			final int toolTipDesiredLineLength = 80;
+			
+			String scopeName = ((Scope)element).getName();
+			if (scopeName.length() > minLengthForToolTip) {
+				return StringUtil.wrapScopeName(scopeName, toolTipDesiredLineLength);
+			}
 		}
-		return null;
+		return null; // no tool tip for this cell
 	}
 	
 	/**

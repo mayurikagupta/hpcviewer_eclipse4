@@ -61,12 +61,6 @@ public AlienScope(RootScope root, SourceFile file,
 //	this.id = "AlienScope";
 }
 
-public AlienScope(RootScope root, SourceFile file, 
-		  String fileName, String procName, 
-		  int first, int last)
-{
-	this(root, file, fileName, procName, first, last, Scope.idMax++);
-}
 
 
 //////////////////////////////////////////////////////////////////////////

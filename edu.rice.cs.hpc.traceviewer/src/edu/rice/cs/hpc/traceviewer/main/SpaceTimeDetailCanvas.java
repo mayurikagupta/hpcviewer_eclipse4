@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.services.ISourceProviderService;
@@ -37,13 +38,13 @@ import edu.rice.cs.hpc.traceviewer.operation.ZoomOperation;
 import edu.rice.cs.hpc.traceviewer.painter.AbstractTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.BufferPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.painter.ResizeListener;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Frame;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Position;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.Frame;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
+import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 import edu.rice.cs.hpc.traceviewer.util.Utility;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
@@ -855,6 +856,10 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		// -----------------------------------------------------------------------
 
 		final Rectangle view = getClientArea();
+		final ImageTraceAttributes attributes = stData.getAttributes();
+		
+		attributes.numPixelsH = view.width;
+		attributes.numPixelsV = view.height;
 				
 		final Image imageFinal = new Image(getDisplay(), view.width, view.height);
 		final GC bufferGC = new GC(imageFinal);
@@ -868,7 +873,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		//	the number of ranks or the number of pixels
 		// -----------------------------------------------------------------------
 		
-		int numLines = Math.min(view.height, stData.getAttributes().getProcessInterval() );
+		final int numLines = Math.min(view.height, attributes.getProcessInterval() );
 		final Image imageOrig = new Image(getDisplay(), view.width, numLines);
 		
 		final GC origGC = new GC(imageOrig);
@@ -880,16 +885,11 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		// if there's no exception or interruption, we redraw the canvas
 		// -----------------------------------------------------------------------
 
-		ImageTraceAttributes attributes = stData.getAttributes();
 		final boolean changedBounds = (refreshData? refreshData : !attributes.sameTrace(oldAttributes) );
-		
-		attributes.numPixelsH = view.width;
-		attributes.numPixelsV = view.height;
 		
 		oldAttributes.copy(attributes);
 		if (changedBounds) {
-			final int num_traces = Math.min(attributes.numPixelsV, attributes.getProcessInterval());
-			ProcessTimeline []traces = new ProcessTimeline[ num_traces ];
+			ProcessTimeline []traces = new ProcessTimeline[ numLines ];
 			ptlService.setProcessTimeline(traces);
 		}
 
@@ -899,9 +899,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		 *	the sample's max depth before becoming overDepth on samples that have gone over depth.
 		 *************************************************************************/
 		DetailViewPaint detailPaint = new DetailViewPaint(bufferGC, origGC, stData, 
-					attributes, changedBounds, window, this, threadExecutor); 
+					attributes, numLines, changedBounds, window, this, threadExecutor); 
 
-		detailPaint.setUser(true);
+		//detailPaint.setUser(true);
 		detailPaint.addJobChangeListener(new IJobChangeListener() {
 			
 			@Override
@@ -922,6 +922,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				{
 					// we don't need this "new image" since the paint fails
 					imageFinal.dispose();	
+					asyncRedraw();
 				}
 				// free resources 
 				bufferGC.dispose();
@@ -937,14 +938,23 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		});
 		detailPaint.schedule();
 	}
-	
+
+	private void asyncRedraw() 
+	{
+		Display display = Display.getDefault();
+		display.asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+				redraw();
+			}
+		});
+	}
 
 	private void donePainting(Image imageOrig, Image imageFinal, boolean refreshData)
 	{		
-		if (imageBuffer != null) {
-			imageBuffer.dispose();
-		}
-		imageBuffer = imageFinal;
+		initBuffer();
+		setBuffer( imageFinal );
 		
 		// in case of filter, we may need to change the cursor position
 		if (refreshData) {
@@ -957,7 +967,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				notifyChangePosition(new_p);
 			}
 		}
-		super.redraw();
+		asyncRedraw();
 
 		// -----------------------------------------------------------------------
 		// notify to all other views that a new image has been created,

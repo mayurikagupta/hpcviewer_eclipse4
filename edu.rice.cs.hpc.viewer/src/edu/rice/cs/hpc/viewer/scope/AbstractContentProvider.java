@@ -7,13 +7,6 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
 public abstract class AbstractContentProvider implements ITreeContentProvider 
 {
-    protected ScopeTreeViewer viewer;
-    protected boolean enableFilter = false;
-    
-    public void setEnableFilter(boolean isFilterEnabled)
-    {
-    	this.enableFilter = isFilterEnabled;
-    }
     
     /**
      * get the number of elements (called by jface)
@@ -72,10 +65,7 @@ public abstract class AbstractContentProvider implements ITreeContentProvider
     * @param newInput the new input element, or <code>null</code> if the viewer
     *   does not have an input
     */
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-    	if (viewer instanceof ScopeTreeViewer)
-            this.viewer = (ScopeTreeViewer)viewer;
-    }
+    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {}
  
     /*
      * (non-Javadoc)

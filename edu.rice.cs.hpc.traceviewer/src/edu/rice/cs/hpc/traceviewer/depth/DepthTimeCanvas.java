@@ -18,6 +18,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.traceviewer.operation.BufferRefreshOperation;
 import edu.rice.cs.hpc.traceviewer.operation.PositionOperation;
@@ -26,23 +28,25 @@ import edu.rice.cs.hpc.traceviewer.operation.ZoomOperation;
 import edu.rice.cs.hpc.traceviewer.painter.AbstractTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.BaseViewPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Frame;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Position;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.util.Utility;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.Frame;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
+import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 
 /**A view for displaying the depthview.*/
 public class DepthTimeCanvas extends AbstractTimeCanvas 
-implements IOperationHistoryListener, ISpaceTimeCanvas
+	implements IOperationHistoryListener, ISpaceTimeCanvas
 {	
 	final private ExecutorService threadExecutor;
 
 	private SpaceTimeDataController stData;
 	private int currentProcess = Integer.MIN_VALUE;
 	private boolean needToRedraw = false;
+	private Rectangle bound;
 
 	/********************
 	 * constructor to create this canvas
@@ -85,7 +89,9 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 	 */
 	public void paintControl(PaintEvent event)
 	{
-		if (this.stData == null)
+		bound = getClientArea();
+
+		if (stData == null || !stData.isTimelineFilled())
 			return;
 		
 		if (needToRedraw) {
@@ -97,7 +103,7 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 		super.paintControl(event);
 		
 		final long topLeftPixelX = Math.round(stData.getAttributes().getTimeBegin()*getScalePixelsPerTime());
-		final int viewHeight 	 = getClientArea().height;
+		final int viewHeight 	 = bound.height;
 
 		//--------------------
 		//draws cross hairs
@@ -137,10 +143,8 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
      */
     private void refreshWithCondition() 
     {
-		if (imageBuffer == null) {
-			if (stData != null) {
-				rebuffer();
-			}
+		if (getBuffer() == null) {
+			rebuffer();
 			return;
 		}
 		
@@ -151,8 +155,8 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 		// this will cause misalignment in the view
 		// ------------------------------------------------------------------------
 		
-		final Rectangle r1 = imageBuffer.getBounds();
-		final Rectangle r2 = getClientArea();
+		final Rectangle r1 = getBuffer().getBounds();
+		final Rectangle r2 = bound;
 		
 		if (!(r1.height == r2.height && r1.width == r2.width))
 		{
@@ -164,14 +168,13 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
     
 	public double getScalePixelsPerTime()
 	{
-		final int viewWidth = getClientArea().width;
+		final int viewWidth = bound.width;
 
 		return (double)viewWidth / (double)getNumTimeDisplayed();
 	}
 
 	public double getScalePixelsPerRank() {
-		final Rectangle r = this.getClientArea();
-		return Math.max(r.height/(double)stData.getMaxDepth(), 1);
+		return Math.max(bound.height/(double)stData.getMaxDepth(), 1);
 	}
 
 	
@@ -192,7 +195,7 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
      */
 	private void rebuffer()
 	{
-		if (stData == null || !isVisible())
+		if (stData == null )
 			return;
 
 		final ImageTraceAttributes attributes = stData.getAttributes();
@@ -202,35 +205,41 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 		// we change the position within the same process
 		currentProcess = frame.position.process;
 
-		final Rectangle rb = getBounds();
-		
-		final int viewWidth  = rb.width;
-		final int viewHeight = rb.height;
+		final Display display = Display.getDefault();
+		display.syncExec( new Runnable() {
+			
+			@Override
+			public void run() {
+				final Rectangle rb = getBounds();
+				
+				final int viewWidth  = rb.width;
+				final int viewHeight = rb.height;
 
-		if (viewWidth>0 && viewHeight>0) {
-			if (imageBuffer != null) {
-				imageBuffer.dispose();
+				if (viewWidth>0 && viewHeight>0) {
+					initBuffer();
+
+					//paints the current screen
+					final Image imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
+					setBuffer(imageBuffer);
+				} else {
+					// empty canvas to view
+					return;
+				}
+				final GC bufferGC = new GC(getBuffer());
+				bufferGC.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+				bufferGC.fillRectangle(0,0,viewWidth,viewHeight);
+				
+				attributes.numPixelsDepthV = viewHeight;
+				
+				Debugger.printDebug(1, "DTC rebuffering " + attributes);
+				
+				BaseViewPaint depthPaint = new DepthViewPaint(Util.getActiveWindow(), bufferGC, 
+						stData, attributes, true, DepthTimeCanvas.this, threadExecutor);
+				
+				depthPaint.addJobChangeListener(new DepthJobListener());
+				depthPaint.schedule();
 			}
-			//paints the current screen
-			imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
-		} else {
-			// empty canvas to view
-			return;
-		}
-		final GC bufferGC = new GC(imageBuffer);
-		bufferGC.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-		bufferGC.fillRectangle(0,0,viewWidth,viewHeight);
-		
-		attributes.numPixelsDepthV = viewHeight;
-		
-		Debugger.printDebug(1, "DTC rebuffering " + attributes);
-		
-		BaseViewPaint depthPaint = new DepthViewPaint(Util.getActiveWindow(), bufferGC, 
-				stData, attributes, true, this, threadExecutor);
-		
-		depthPaint.setUser(true);
-		depthPaint.addJobChangeListener(new DepthJobListener(bufferGC));
-		depthPaint.schedule();
+		});
 	}
 
 	/*
@@ -258,8 +267,12 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 			if (operation.hasContext(BufferRefreshOperation.context)) {
 				// this event includes if there's a change of colors definition, so everyone needs
 				// to refresh the content
-				super.init();
-				rebuffer();
+				try {
+					super.init();
+					rebuffer();
+				} catch (java.lang.NullPointerException e) {
+					// ignore exception when there's (possibly) multiple thread access  
+				}
 				
 			} else if (operation.hasContext(PositionOperation.context)) {
 				PositionOperation opPos = (PositionOperation) operation;
@@ -318,12 +331,6 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 	
 	private class DepthJobListener implements IJobChangeListener
 	{
-		final private GC bufferGC;
-		
-		public DepthJobListener(GC bufferGC)
-		{
-			this.bufferGC = bufferGC;
-		}
 		
 		@Override
 		public void sleeping(IJobChangeEvent event) {}
@@ -336,8 +343,21 @@ implements IOperationHistoryListener, ISpaceTimeCanvas
 		
 		@Override
 		public void done(IJobChangeEvent event) {
-			bufferGC.dispose();				
-			redraw();
+
+			Display display = Display.getDefault();
+			display.asyncExec(new Runnable() {
+				
+				@Override
+				public void run() {
+					redraw();
+/*					final Image image = getBuffer();
+					System.out.println("dispose: " + image.isDisposed() + ", type: " + image.type 
+							+ ", bounds: " + image.getBounds() );
+					if (image.isDisposed()) {
+						System.err.println("image is disposed");
+					}*/
+				}
+			} );
 		}
 		
 		@Override

@@ -3,36 +3,26 @@ package edu.rice.cs.hpc.filter.action;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-import edu.rice.cs.hpc.filter.view.FilterView;
+import edu.rice.cs.hpc.filter.view.FilterPropertyDialog;
 
-public class ShowFilterView extends AbstractHandler {
+public class ShowFilterView extends AbstractHandler 
+{
+	final public static String ID = "edu.rice.cs.hpc.filter.action.ShowFilterView";
 
 	@Override 
 	public Object execute(ExecutionEvent event) throws ExecutionException 
 	{
-		final IWorkbenchPage page = HandlerUtil.getActiveWorkbenchWindow(event).getActivePage();
-		if (page != null)
-		{
-			boolean oldVal = HandlerUtil.toggleCommandState(event.getCommand());
-			boolean newVal = !oldVal;
+		final IWorkbenchWindow w  = HandlerUtil.getActiveWorkbenchWindow(event);
+		FilterPropertyDialog dialog = new FilterPropertyDialog(w.getShell());
+		
+		if (dialog.open() == IDialogConstants.OK_ID) {
 			
-			try {
-				if (newVal) {
-					page.showView(FilterView.ID);
-				} else {
-					final IViewPart part = page.findView(FilterView.ID);
-					page.hideView( part );
-				}
-			} catch (PartInitException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
+
 		return null;
 	}
 }

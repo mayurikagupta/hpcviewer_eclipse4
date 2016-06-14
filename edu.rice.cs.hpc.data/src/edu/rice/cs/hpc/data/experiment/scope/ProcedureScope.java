@@ -15,9 +15,7 @@
 package edu.rice.cs.hpc.data.experiment.scope;
 
 import edu.rice.cs.hpc.data.experiment.scope.filters.MetricValuePropagationFilter;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.AbstractFinalizeMetricVisitor;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
 import edu.rice.cs.hpc.data.experiment.source.SourceFile;
 import edu.rice.cs.hpc.data.util.IUserData;
 
@@ -37,8 +35,10 @@ import edu.rice.cs.hpc.data.util.IUserData;
 
 public class ProcedureScope extends Scope  implements IMergedScope 
 {
+private static final String TheProcedureWhoShouldNotBeNamed = "-";
+private static final String TheInlineProcedureLabel 	 	= "<inline>";
 
-
+final private boolean isFalseProcedure;
 /** The name of the procedure. */
 protected String procedureName;
 protected boolean isalien;
@@ -64,7 +64,8 @@ final static public String INLINE_NOTATION = "[I] ";
  ************************************************************************/
 	
 public ProcedureScope(RootScope root, SourceFile file, int first, int last, 
-		String proc, boolean _isalien, int cct_id, int flat_id, IUserData<String,String> userData)
+		String proc, boolean _isalien, int cct_id, int flat_id, 
+		IUserData<String,String> userData, boolean isFalseProcedure)
 {
 	super(root, file, first, last, cct_id, flat_id);
 	this.isalien = _isalien;
@@ -75,7 +76,17 @@ public ProcedureScope(RootScope root, SourceFile file, int first, int last,
 		if (newName != null) 
 			procedureName = newName;
 	}
-	this.objLoadModule = null;
+	if (isalien) {
+		if (procedureName.isEmpty() || procedureName.equals(TheProcedureWhoShouldNotBeNamed)
+				|| procedureName.equals(TheInlineProcedureLabel)) {
+			procedureName =  "inlined from " + getSourceCitation();
+		}
+		if (!procedureName.startsWith(INLINE_NOTATION))
+			procedureName = INLINE_NOTATION + procedureName;
+	}
+
+	this.objLoadModule 	  = null;
+	this.isFalseProcedure = isFalseProcedure;
 }
 
 
@@ -90,9 +101,10 @@ public ProcedureScope(RootScope root, SourceFile file, int first, int last,
  * @param _isalien
  */
 public ProcedureScope(RootScope root, LoadModuleScope loadModule, SourceFile file, 
-		int first, int last, String proc, boolean _isalien, int cct_id, int flat_id, IUserData<String,String> userData)
+		int first, int last, String proc, boolean _isalien, int cct_id, int flat_id, 
+		IUserData<String,String> userData, boolean isFalseProcedure)
 {
-	this(root, file, first, last,proc,_isalien, cct_id, flat_id, userData);
+	this(root, file, first, last,proc,_isalien, cct_id, flat_id, userData, isFalseProcedure);
 	//this.iScopeID = sid;
 	this.objLoadModule = loadModule;
 }
@@ -100,8 +112,19 @@ public ProcedureScope(RootScope root, LoadModuleScope loadModule, SourceFile fil
 public boolean equals(Object obj) {
 	if (obj instanceof ProcedureScope) {
 		ProcedureScope p = (ProcedureScope) obj;
-		return this.getName().equals(p.getName()) && this.getSourceFile().getName().equals(p.getSourceFile().getName());
-	} else return false;
+		boolean equal = this.getName().equals(p.getName());
+		if (equal) {
+			// corner case: somehow Eclipse needs to compare different tree item before it closes.
+			// of course, when it's closing, we remove databases and all references to enable
+			// garbage collection to gather unused storage
+			SourceFile mySrc = getSourceFile();
+			SourceFile pSrc  = p.getSourceFile();
+			if (mySrc != null && pSrc != null) {
+				return  mySrc.getName().equals(pSrc.getName());
+			}
+		}
+	} 
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,14 +140,7 @@ public boolean equals(Object obj) {
 	
 public String getName()
 {	
-	if (isalien) {
-		final String TheProcedureWhoShouldNotBeNamed = "-";
-		if (procedureName.equals(TheProcedureWhoShouldNotBeNamed)) {
-			return "inlined at " + this.getSourceCitation();
-		} 
-		String name = procedureName.isEmpty() ? "" : INLINE_NOTATION + procedureName;
-		return name;
-	} else return this.procedureName;
+	return procedureName;
 }
 
 
@@ -143,7 +159,8 @@ public Scope duplicate() {
 			this.isalien,
 			getCCTIndex(), // Laks 2008.08.26: add the sequence ID
 			this.flat_node_index,
-			null);
+			null,
+			this.isFalseProcedure);
 
 }
 
@@ -171,13 +188,17 @@ public int getSID() {
 	return this.iScopeID;
 } */
 
-public Object[] getAllChildren(AbstractFinalizeMetricVisitor finalizeVisitor, PercentScopeVisitor percentVisitor,
+public Object[] getAllChildren(/*AbstractFinalizeMetricVisitor finalizeVisitor, PercentScopeVisitor percentVisitor,*/
 		MetricValuePropagationFilter inclusiveOnly,
 		MetricValuePropagationFilter exclusiveOnly) {
 
 	return this.getChildren();
 }
 
+public boolean isFalseProcedure()
+{
+	return isFalseProcedure;
+}
 
 }
 

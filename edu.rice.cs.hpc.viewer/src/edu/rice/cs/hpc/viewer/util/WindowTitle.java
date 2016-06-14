@@ -13,8 +13,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
-import edu.rice.cs.hpc.viewer.util.IWindowTitle;
-import edu.rice.cs.hpc.viewer.util.BaseWindowTitle;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
 /***

@@ -183,7 +183,7 @@ public class MergeDataFiles {
 	// Making it explicitly what it was implicitly before to avoid 
 	// compatibility issues.
 	/** Magic marker for the end of the file **/
-	static private long MARKER_END_MERGED_FILE = 0xFFFFFFFFDEADF00Dl;
+	static private long MARKER_END_MERGED_FILE = 0xFFFFFFFFDEADF00DL;
 	
 	/***
 	 * insert a marker at the end of the file

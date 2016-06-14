@@ -7,7 +7,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import edu.rice.cs.hpc.common.util.ProcedureAliasMap;
 import edu.rice.cs.hpc.data.experiment.*; 
 import edu.rice.cs.hpc.viewer.framework.Activator;
-import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.bottomup.CallerScopeView;
 import edu.rice.cs.hpc.viewer.scope.flat.FlatScopeView;
 import edu.rice.cs.hpc.viewer.scope.topdown.ScopeView;
@@ -33,13 +33,14 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
  ******************************************************************************/
 public class ExperimentView {
 
+	static final private int MAX_VIEWS		 = 4;
 	static final private int VIEW_STATE_INIT = -1;
 	
 	private IWorkbenchPage objPage;		// workbench current page
 	/**
 	 * List of registered views in the current experiment
 	 */
-	protected BaseScopeView []arrScopeViews;
+	protected AbstractBaseScopeView []arrScopeViews;
 	
 	/**
 	 * Constructor for Data experiment. Needed to link with the view
@@ -70,7 +71,7 @@ public class ExperimentView {
 				// check if the filter is enabled
 				FilterMap filter = FilterMap.getInstance();
 				if (filter.isFilterEnabled()) {
-					experiment.filter(FilterMap.getInstance());
+					experiment.filter(filter);
 				}
 		        this.generateView(experiment);
 			} catch (java.lang.OutOfMemoryError e) 
@@ -148,21 +149,22 @@ public class ExperimentView {
 		return experiment;
 	}
 	
-	/**
-	 * Retrieve the list of all used views
-	 * @return list of views
-	 */
-	public BaseScopeView[] getViews() {
-		return this.arrScopeViews;
+	public void setView(int index, AbstractBaseScopeView view)
+	{
+		if (index>=0 && index<arrScopeViews.length)
+		{
+			arrScopeViews[index] = view;
+		}
 	}
 	
-	/***
-	 * set the list of views of this experiment
-	 * 
-	 * @param views
-	 */
-	public void setViews(BaseScopeView[] views) {
-		arrScopeViews = views;
+	public int getViewCount()
+	{
+		return arrScopeViews.length;
+	}
+	
+	public AbstractBaseScopeView getView(int index)
+	{
+		return arrScopeViews[index];
 	}
 	
 	/**
@@ -205,15 +207,14 @@ public class ExperimentView {
 
 		// next, we retrieve all children of the scope and display them in separate views
 		Object []rootChildren = experiment.getRootScopeChildren();
-		int nbChildren = rootChildren.length;
-		arrScopeViews = new BaseScopeView[nbChildren];
+		int nbChildren = Math.min(rootChildren.length, MAX_VIEWS);
+		arrScopeViews = new AbstractBaseScopeView[nbChildren];
 		
 		for(int k=0;nbChildren>k;k++)
 		{
 			RootScope child = (RootScope) rootChildren[k];
 			try {
-				BaseScopeView objView; 
-				objView = openView(objPage, child, viewIdx, db, VIEW_STATE_INIT);
+				AbstractBaseScopeView objView = openView(objPage, child, viewIdx, db, VIEW_STATE_INIT);
 				// every root scope type has its own view
 				arrScopeViews[k] = objView;
 			} catch (PartInitException e) {
@@ -226,7 +227,17 @@ public class ExperimentView {
 		wt.refreshAllTitles();
 	}
 	
-	
+	public int addView(AbstractBaseScopeView view) {
+		// at most, the number of views are MAX_VIEWS
+		// this works even if the database has only a flat view (in case of hprun-flat)
+		int lastIndex = Math.min(arrScopeViews.length, MAX_VIEWS-1);
+		
+		AbstractBaseScopeView []views = new AbstractBaseScopeView[lastIndex+1];
+		System.arraycopy(arrScopeViews, 0, views, 0, lastIndex);
+		views[lastIndex] = view;
+		arrScopeViews 	 = views; 
+		return lastIndex;
+	}
 	
 	/***
 	 * Standard method to open a scope view (cct, caller tree or flat tree)
@@ -241,16 +252,16 @@ public class ExperimentView {
 	 * @return	the view
 	 * @throws PartInitException
 	 */
-	static public BaseScopeView openView(IWorkbenchPage page, RootScope root, String secondaryID, 
+	static public AbstractBaseScopeView openView(IWorkbenchPage page, RootScope root, String secondaryID, 
 			Database db, int viewState ) 
 			throws PartInitException {
 		
-		BaseScopeView objView = null;
+		AbstractBaseScopeView objView = null;
 		
 		if (root.getType() == RootScopeType.CallingContextTree) {
 			int state = (viewState<=0? IWorkbenchPage.VIEW_ACTIVATE : viewState);
 			// using VIEW_ACTIVATE will cause this one to end up with focus (on top).
-			objView = (BaseScopeView) page.showView(ScopeView.ID , secondaryID, state); 
+			objView = (AbstractBaseScopeView) page.showView(ScopeView.ID , secondaryID, state); 
 			
 			if (viewState == VIEW_STATE_INIT) {
 				objView.setInput(db, root, false);
@@ -259,10 +270,10 @@ public class ExperimentView {
 		} else if (root.getType() == RootScopeType.CallerTree) {
 			if (viewState != VIEW_STATE_INIT) {
 				// the view has been closed. Activate again.
-				objView = (BaseScopeView) page.showView(CallerScopeView.ID , secondaryID, IWorkbenchPage.VIEW_ACTIVATE);
+				objView = (AbstractBaseScopeView) page.showView(CallerScopeView.ID , secondaryID, IWorkbenchPage.VIEW_ACTIVATE);
 			} else {
 				// default situation (or first creation)
-				objView = (BaseScopeView) page.showView(CallerScopeView.ID , secondaryID, IWorkbenchPage.VIEW_VISIBLE); 				
+				objView = (AbstractBaseScopeView) page.showView(CallerScopeView.ID , secondaryID, IWorkbenchPage.VIEW_VISIBLE); 				
 			}
 			// callers view is a bit peculiar: it creates its tree dynamically.
 			// we need then to reset the tree from scratch.
@@ -270,7 +281,7 @@ public class ExperimentView {
 
 		} else if (root.getType() == RootScopeType.Flat) {
 			int state = (viewState<=0? IWorkbenchPage.VIEW_VISIBLE : viewState);
-			objView = (BaseScopeView) page.showView(FlatScopeView.ID, secondaryID, state); 
+			objView = (AbstractBaseScopeView) page.showView(FlatScopeView.ID, secondaryID, state); 
 			if (viewState == VIEW_STATE_INIT) {
 				objView.setInput(db, root, false);
 			}

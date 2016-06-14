@@ -17,14 +17,14 @@ import org.eclipse.ui.handlers.RegistryToggleState;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.traceviewer.actions.OptionRecordsDisplay;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.BaseViewPaint;
 import edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 
 /******************************************************
@@ -46,14 +46,17 @@ public class DetailViewPaint extends BaseViewPaint {
 	
 	final private ProcessTimelineService ptlService;
 	final private boolean debug;
+	final private AtomicInteger currentLine, numDataCollected;
+	final private int numLines;
 	
-	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController _data,
-			ImageTraceAttributes _attributes, boolean _changeBound,
+	public DetailViewPaint(final GC masterGC, final GC origGC, SpaceTimeDataController data,
+			ImageTraceAttributes attributes, int numLines, boolean changeBound,
 			IWorkbenchWindow window, ISpaceTimeCanvas canvas, ExecutorService threadExecutor) 
 	{
-		super("Main trace view", _data, _attributes, _changeBound, window, canvas, threadExecutor);
+		super("Main trace view", data, attributes, changeBound, window, canvas, threadExecutor);
 		this.masterGC = masterGC;
 		this.origGC   = origGC;
+		this.numLines = numLines;
 
 		ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(
 				ISourceProviderService.class);
@@ -74,27 +77,27 @@ public class DetailViewPaint extends BaseViewPaint {
 		// initialize the size of maximum text
 		//	the longest text should be: ">99(>99)"
 		maxTextSize = masterGC.textExtent(TOO_MANY_RECORDS + "(" + TOO_MANY_RECORDS + ")");
+		
+		currentLine = new AtomicInteger(0);
+		numDataCollected = new AtomicInteger(0);
 	}
 
 	@Override
 	protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds) {
-
 		return true;
 	}
 
 	@Override
 	protected int getNumberOfLines() {
-		final ImageTraceAttributes attributes = controller.getAttributes();
-		return Math.min(attributes.numPixelsV, attributes.getProcessInterval() );
+		return numLines;
 	}
 
 	@Override
 	protected BaseTimelineThread getTimelineThread(ISpaceTimeCanvas canvas, double xscale,
-			double yscale, Queue<TimelineDataSet> queue, AtomicInteger timelineDone
-			, IProgressMonitor monitor) {
+			double yscale, Queue<TimelineDataSet> queue, IProgressMonitor monitor) {
 
-		return new TimelineThread(this.window, controller, ptlService, changedBounds,   
-				yscale, queue, timelineDone, monitor);
+		return new TimelineThread(controller, attributes, ptlService, changedBounds,   
+				yscale, queue, numDataCollected, numLines, monitor);
 	}
 
 	@Override
@@ -105,9 +108,12 @@ public class DetailViewPaint extends BaseViewPaint {
 
 	@Override
 	protected BasePaintThread getPaintThread(
-			Queue<TimelineDataSet> queue, int numLines, AtomicInteger timelineDone, Device device, int width) {
+			Queue<TimelineDataSet> queue, int numLines, 
+			Device device, int width, IProgressMonitor monitor) {
 
-		return new DetailPaintThread( controller, queue, numLines, timelineDone, device, width, maxTextSize, debug);
+		return new DetailPaintThread( controller, queue, numLines, 
+				numDataCollected, currentLine, 
+				device, width, maxTextSize, debug, monitor);
 	}
 
 	@Override
@@ -124,5 +130,11 @@ public class DetailViewPaint extends BaseViewPaint {
 		
 		imgDetailLine.image.dispose();
 		imgDetailLine.imageOriginal.dispose();
+	}
+
+	@Override
+	protected void endPainting(boolean isCanceled) {
+		// TODO Auto-generated method stub
+		
 	}
 }

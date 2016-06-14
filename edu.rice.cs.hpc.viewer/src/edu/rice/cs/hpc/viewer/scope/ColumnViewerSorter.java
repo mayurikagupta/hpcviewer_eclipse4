@@ -6,6 +6,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.graphics.Image;
@@ -17,6 +18,7 @@ import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.LineScope;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
+import edu.rice.cs.hpc.data.util.OSValidator;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 //======================================================
 // ................ SORTING ............................
@@ -40,6 +42,7 @@ public class ColumnViewerSorter extends ViewerComparator {
 	public void setMetric(BaseMetric newMetric) {
 		this.metric = newMetric;
 	}
+	
 	/**
 	 * Class to sort a column
 	 * @param viewer: the table tree
@@ -47,7 +50,7 @@ public class ColumnViewerSorter extends ViewerComparator {
 	 * @param newMetric: the metric
 	 * @param colNum: the position
 	 */
-	public ColumnViewerSorter(TreeViewer viewer, TreeColumn column, BaseMetric newMetric, int colNum) {
+	public ColumnViewerSorter(final TreeViewer viewer, TreeColumn column, BaseMetric newMetric, int colNum) {
 		this.column = column;
 		this.iColNumber = colNum;
 		this.viewer = viewer;
@@ -56,8 +59,25 @@ public class ColumnViewerSorter extends ViewerComparator {
 		// catch event when the user sort the column on the column header
 		this.column.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
+				Object []elements = null;
+				if (OSValidator.isMac()) {
+					// --------------------------------------------------------------------
+					//Eclipse Indigo bug on Mac OS: expanding a long call path will cause
+					// SWT to slowly sort tree items. Somehow Eclipse also expands other
+					// collapsed tree items as well.
+					// --------------------------------------------------------------------
+					// save the current expaded elements to be restored after the sort
+					elements = viewer.getExpandedElements();
+					
+					// collapse all the items
+					viewer.collapseAll();
+				}
 				// before sorting, we need to check if the first row is an element header 
 				// something like "aggregate metrics" or zoom-in item
+				Tree tree = ColumnViewerSorter.this.viewer.getTree();
+				if (tree.getItemCount()==0)
+					return; // no items: no need to sort
+				
 				TreeItem item = ColumnViewerSorter.this.viewer.getTree().getItem(0);
 				Image imgItem = item.getImage(0);
 				String []sText = Utilities.getTopRowItems(ColumnViewerSorter.this.viewer);
@@ -79,6 +99,9 @@ public class ColumnViewerSorter extends ViewerComparator {
 				// post-sorting 
 				if(sText != null) {
 					Utilities.insertTopRow(ColumnViewerSorter.this.viewer, imgItem, sText);
+				}
+				if (elements != null) {
+					viewer.setExpandedElements(elements);
 				}
 			}
 
@@ -185,10 +208,6 @@ public class ColumnViewerSorter extends ViewerComparator {
 		return 0;
 	}
 
-	public void sort(Viewer viewer,
-            Object[] elements) {
-		super.sort(viewer, elements);
-	}
 	
 
 }

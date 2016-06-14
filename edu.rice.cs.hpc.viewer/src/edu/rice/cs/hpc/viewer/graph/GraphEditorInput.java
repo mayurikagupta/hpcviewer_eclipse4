@@ -5,14 +5,14 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
 
-import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 public class GraphEditorInput implements IEditorInput {
 	private final Database _database;
 	private final Scope _scope;
-	private final MetricRaw _metric;
+	private final BaseMetric _metric;
 	
 	private final GraphType.PlotType _type;
 	/***
@@ -23,7 +23,7 @@ public class GraphEditorInput implements IEditorInput {
 	 * @param type
 	 * @param database
 	 */
-	public GraphEditorInput(Database database, Scope scope, MetricRaw metric, 
+	public GraphEditorInput(Database database, Scope scope, BaseMetric metric, 
 			GraphType.PlotType type, IWorkbenchWindow window) {
 		this._scope = scope;
 		this._metric = metric;
@@ -58,9 +58,9 @@ public class GraphEditorInput implements IEditorInput {
 	 * @param database
 	 * @return
 	 */
-	static public String getID(Scope scope, MetricRaw metric, GraphType.PlotType type, Database database) {
+	static public String getID(Scope scope, BaseMetric metric, GraphType.PlotType type, Database database) {
 		return Integer.toString(database.getWindowIndex()) + GraphType.toString(type) + ":" + 
-		scope.getCCTIndex()+":" + metric.getID();
+		scope.getCCTIndex()+":" + metric.getShortName();
 	}
 
 	
@@ -91,7 +91,7 @@ public class GraphEditorInput implements IEditorInput {
 		return this._scope;
 	}
 	
-	public MetricRaw getMetric() {
+	public BaseMetric getMetric() {
 		return this._metric;
 	}
 }

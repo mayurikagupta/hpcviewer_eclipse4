@@ -4,6 +4,7 @@ import java.io.File;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.merge.ExperimentMerger;
+import edu.rice.cs.hpc.data.experiment.merge.TreeSimilarity;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 
 public class ApplicationMerge {
@@ -49,9 +50,10 @@ public class ApplicationMerge {
 		if (exp2 == null) {
 			System.err.println("Cannot open database: " + args[1]);
 		}
-	
+		System.setProperty(TreeSimilarity.PROP_DEBUG, "true");
+		
 		try {
-			Experiment merge = ExperimentMerger.merge(exp1, exp2, RootScopeType.CallingContextTree, true);
+			ExperimentMerger.merge(exp1, exp2, RootScopeType.CallingContextTree);
 		} catch (Exception e) {
 			System.err.println("Fail to merge");
 			e.printStackTrace();

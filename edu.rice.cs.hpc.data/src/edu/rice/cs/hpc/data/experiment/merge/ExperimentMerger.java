@@ -12,6 +12,7 @@ package edu.rice.cs.hpc.data.experiment.merge;
 
 import java.io.File;
 import java.util.*;
+import java.util.Map.Entry;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.ExperimentConfiguration;
@@ -34,6 +35,7 @@ import edu.rice.cs.hpc.data.util.Constants;
 public class ExperimentMerger 
 {
 	static final private boolean with_raw_metrics = false;
+	static final private boolean with_derived_metrics = false;
 	
 	/**
 	 * Merging two experiments, and return the new experiment
@@ -46,12 +48,11 @@ public class ExperimentMerger
 	 * @return
 	 * @throws Exception 
 	 */
-	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type, boolean verbose) throws Exception {
+	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type) throws Exception {
 		
-		File file1 = exp1.getXMLExperimentFile();
-		String parent_dir = file1.getParentFile().getParent() + File.separator + "merged" + File.separator;
+		final String parent_dir = generateMergeName(exp1, exp2);
 
-		return merge(exp1, exp2, type, parent_dir, verbose);
+		return merge(exp1, exp2, type, parent_dir);
 	}
 	
 	/******
@@ -66,7 +67,7 @@ public class ExperimentMerger
 	 * @throws Exception 
 	 */
 	static public Experiment merge(Experiment exp1, Experiment exp2, RootScopeType type, 
-			String parent_dir, boolean verbose) throws Exception {
+			String parent_dir) throws Exception {
 		
 		// -----------------------------------------------
 		// step 1: create new base Experiment
@@ -110,6 +111,8 @@ public class ExperimentMerger
 		if (root1 == null) {
 			throw new Exception("Unable to find root type " + type + " in " + exp1.getDefaultDirectory());
 		}
+		createFlatTree(exp1, type, root1);
+		
 		root1.dfsVisitScopeTree(new DuplicateScopeTreesVisitor(rootScope));
 		
 		RootScope rootMerged = (RootScope) merged.getRootScopeChildren()[0];	
@@ -122,12 +125,62 @@ public class ExperimentMerger
 		if (root2 == null) {
 			throw new Exception("Unable to find root type " + type + " in " + exp2.getDefaultDirectory());
 		}
+		createFlatTree(exp2, type, root2);
+
 		final int metricCount = exp1.getMetricCount();
-		new TreeSimilarity(metricCount, rootMerged, root2, verbose);
+		new TreeSimilarity(metricCount, rootMerged, root2);
+		
+		merged.setMergedDatabase(true);
 		
 		return merged;
 	}
+
+	/****
+	 * generate a "virtual" merge experiment name
+	 * 
+	 * @param exp1
+	 * @param exp2
+	 * @return
+	 */
+	public static String generateMergeName(Experiment exp1, Experiment exp2)  
+	{
+		boolean need_to_find_name = true;
+		File dir  = exp1.getDefaultDirectory();
+		File path;
+
+		// find a unique name for the merged file
+		do {
+			String tmpDir = Long.toString(System.nanoTime());
+			path = new File(dir + File.separator + tmpDir);
+			
+			// normally there is no way two executions at the same nano second
+			// but I don't want to take a risk
+			need_to_find_name = path.exists();
+		} while (need_to_find_name);
+		
+		return path.getAbsolutePath();
+	}
 	
+	
+	/*******
+	 * create flat tree if needed. <br/>
+	 * The latest version of hpcviewer, flat tree is generated dynamically when needed.
+	 * For merging, we need to force to create the flat trees and then merge them.
+	 * 
+	 * @param exp
+	 * @param type
+	 * @param rootFlat
+	 * @return
+	 */
+	private static RootScope createFlatTree(Experiment exp, RootScopeType type, RootScope rootFlat)
+	{
+		if (!rootFlat.hasChildren() && type == RootScopeType.Flat) {
+			// create flat tree if it is not created yet
+			final RootScope callingContextViewRootScope = exp.getRootScope(RootScopeType.CallingContextTree);
+			rootFlat = exp.createFlatView(callingContextViewRootScope, rootFlat);
+		}
+		return rootFlat;
+	}
 	
 	/***
 	 * combine metrics from exp 1 and exp 2
@@ -160,15 +213,61 @@ public class ExperimentMerger
 		// ----------------------------------------------------------------
 		// step 2: append the second metrics, and reset the index and the key
 		// ----------------------------------------------------------------
+		HashMap<String, String> mapIndex = new HashMap<String, String>();
+		ArrayList<DerivedMetric> listDerivedMetrics = new ArrayList<DerivedMetric>(2);
+		
 		for (int i=0; i<m2.length; i++) {
 			final BaseMetric m = m2[i].duplicate();
 
 			// change the short name (or ID) of the metric since the old ID is already
 			// taken by previous experiment
 			final int index_new = m1_last_index + m.getIndex();
-			m.setShortName( String.valueOf(index_new) );
+			final String old_id = m.getShortName();
+			final String new_id = String.valueOf(index_new); 
+			m.setShortName( new_id );
 			
-			addMetric(m, m1_last + i +1, exp, 2, metricList);
+			final BaseMetric mm = addMetric(m, m1_last + i +1, exp, 2, metricList);
+			mapIndex.put(old_id, new_id);
+			
+			if (mm instanceof DerivedMetric) {
+				listDerivedMetrics.add((DerivedMetric) mm);
+				
+			}
+		}
+		
+		// ----------------------------------------------------------------
+		// step 3: set the list of metric into the experiment
+		// ----------------------------------------------------------------
+		exp.setMetrics(metricList);
+		
+		if (with_derived_metrics) {
+			// ----------------------------------------------------------------
+			// step 4a: rename the derived metric formulae
+			// ----------------------------------------------------------------
+			String []formula = new String[m2.length];
+			int i = 0;
+
+			for(DerivedMetric m : listDerivedMetrics) {
+				formula[i] = m.getFormula();
+				String ID  = m.getShortName();
+				
+				Iterator<Entry<String, String>> iterator = mapIndex.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Map.Entry<String, String> pair = iterator.next();
+					// avoid recursive substitution
+					if (!ID.equals(pair.getValue()))
+						formula[i] = formula[i].replace("$"+pair.getKey(), "$"+pair.getValue());
+				}
+				i++;
+			}
+			// ----------------------------------------------------------------
+			// step 4b: set the formula into the derived metrics
+			// ----------------------------------------------------------------
+			i = 0;
+			for(BaseMetric m : listDerivedMetrics) {
+				((DerivedMetric)m).setExpression(formula[i]);
+				i++;
+			}
 		}
 		
 		return metricList;
@@ -183,7 +282,7 @@ public class ExperimentMerger
 	 * @param exp    : experiment to which the metric is hosted
 	 * @param metricList : the list of metrics
 	 */
-	private static void addMetric(BaseMetric source, int metric_index, 
+	private static BaseMetric addMetric(BaseMetric source, int metric_index, 
 			Experiment exp, int experiment_index, List<BaseMetric> metricList)
 	{
 		// add metric into the merged list
@@ -197,6 +296,7 @@ public class ExperimentMerger
 		
 		setMetricCombinedName(experiment_index, mm);
 		metricList.add(mm);
+		return mm;
 	}
 	
 	
@@ -207,7 +307,7 @@ public class ExperimentMerger
 	 * @param raws2
 	 * @return
 	 */
-	private static MetricRaw[] buildMetricRaws( MetricRaw raws1[], MetricRaw raws2[]) 
+	private static MetricRaw[] buildMetricRaws( BaseMetric raws1[], BaseMetric raws2[]) 
 	{
 		MetricRaw rawList[] = new MetricRaw[ raws1.length + raws2.length ];
 		

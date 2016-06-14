@@ -41,6 +41,7 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.metric.Metric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricType;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
@@ -369,9 +370,11 @@ public class MetricPropertyDialog extends TitleAreaDialog
 			return;
 		
 		if (metric instanceof DerivedMetric) {
-
-			ExtDerivedMetricDlg dialog = new ExtDerivedMetricDlg( getShell(), experiment, 
-					experiment.getRootScope().getSubscope(0) );
+			// TODO: hack fix: we need to get any scope in the tree.
+			// to get the first root if the safest we can have.
+			RootScope root = (RootScope) experiment.getRootScopeChildren()[0];
+			ExtDerivedMetricDlg dialog = new ExtDerivedMetricDlg( getShell(), 
+					experiment,	root );
 			
 			DerivedMetric dm = (DerivedMetric) metric;
 			dialog.setMetric(dm);
@@ -384,8 +387,8 @@ public class MetricPropertyDialog extends TitleAreaDialog
 			}
 			
 		} else {
-			InputDialog inDlg = new InputDialog(getShell(), "Edit metric displayed name", 
-					"Enter the new display name metric", metric.getDisplayName(), null);
+			InputDialog inDlg = new InputDialog(getShell(), "Edit metric display name", 
+					"Enter the new display name", metric.getDisplayName(), null);
 			if (inDlg.open() == Dialog.OK) {
 				String name = inDlg.getValue();
 				updateMetricName(metric, name);

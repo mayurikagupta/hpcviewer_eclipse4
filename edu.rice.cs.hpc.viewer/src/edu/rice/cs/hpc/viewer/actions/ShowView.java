@@ -1,5 +1,7 @@
 package edu.rice.cs.hpc.viewer.actions;
 
+import java.util.ArrayList;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -23,6 +25,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -38,7 +41,8 @@ import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 public class ShowView extends AbstractHandler {
 	
 	private IWorkbenchWindow window;
-	//@Override
+	
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
 		window= HandlerUtil.getActiveWorkbenchWindow(event);
@@ -60,23 +64,30 @@ public class ShowView extends AbstractHandler {
 					exp.getXMLExperimentFile().getParent() + ") ");
 			
 			final ExperimentView ev = db.getExperimentView();
-			BaseScopeView []views = ev.getViews();
+			int numViews = ev.getViewCount();
 			
-			TreeNode []viewNode = new TreeNode[views.length];
-			
+			ArrayList<TreeNode> listOfNodes = new ArrayList<TreeNode>(numViews);
 			// gather all the views of this database
-			for(int j=0; j<views.length; j++) {
-				TreeItemNode item = new TreeItemNode(ev, j, views[j]);
-				viewNode[j] = new TreeNode(item);
-				viewNode[j].setParent(dbNode[i]);
+			for(int j=0; j<numViews; j++) {
+				AbstractBaseScopeView view = ev.getView(j);
+				// only the traditional views (cct, callers and flat) can be resurrected.
+				// thread view can be disposed and thrown away
+				if (view instanceof BaseScopeView) {
+					TreeItemNode item = new TreeItemNode(ev, j, view);
+					TreeNode viewNode = new TreeNode(item);
+					viewNode.setParent(dbNode[i]);
+					listOfNodes.add(viewNode);
+				}
 			}
-			dbNode[i].setChildren(viewNode);
+			TreeNode []nodes  = new TreeNode[listOfNodes.size()];
+			listOfNodes.toArray(nodes);
+			dbNode[i].setChildren(nodes);
 		}
 		
 		// ------------------------------------------------------------
 		// show dialog box so that users can choose which view to show
 		// ------------------------------------------------------------
-		final DatabaseLabelProvider dbLabelProvider = new DatabaseLabelProvider();
+		final DatabaseLabelProvider dbLabelProvider = new DatabaseLabelProvider(window);
 		
 		ViewTreeDialog dlg = new ViewTreeDialog(window.getShell(),
 				dbLabelProvider, new TreeNodeContentProvider());
@@ -91,30 +102,37 @@ public class ShowView extends AbstractHandler {
 					
 					if (item instanceof TreeItemNode) {
 						TreeItemNode itemNode = (TreeItemNode) item;
-						BaseScopeView view = itemNode.view;
-						try {
-							IViewSite site = (IViewSite) view.getSite();
-							IWorkbenchPage page = window.getActivePage();
+						AbstractBaseScopeView view = itemNode.view;
 
+						IViewSite site = (IViewSite) view.getSite();
+						IWorkbenchPage page = window.getActivePage();
+						
+						if (isViewDisposed(view)) {
+							try {
+								// ------------------------------------------------------------
+								// The view has been disposed, we need to recreate it again
+								// from the beginning.
+								// ------------------------------------------------------------
+								AbstractBaseScopeView newView = ExperimentView.openView(page, 
+										view.getRootScope(), site.getSecondaryId(), 
+										view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
+								
+								itemNode.ev.setView(itemNode.index, newView);
+								
+								// when a view is closed, we lose the information of hide/show columns
+								// at the moment, the only thing to fix this, is to reset the column status
+								
+								newView.setInput(view.getDatabase(), view.getRootScope(), false);
+		   
+							} catch (PartInitException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						} else {
 							// ------------------------------------------------------------
-							// Activate the view
+							// if the view already exists, we just need to activate
 							// ------------------------------------------------------------
-							BaseScopeView newView = ExperimentView.openView(page, 
-									view.getRootScope(), site.getSecondaryId(), 
-									view.getDatabase(), IWorkbenchPage.VIEW_ACTIVATE);
-							
-							BaseScopeView []views = itemNode.ev.getViews();
-							views[itemNode.index] = newView;
-							itemNode.ev.setViews(views);
-							
-							// when a view is closed, we lose the information of hide/show columns
-							// at the moment, the only thing to fix this, is to reset the column status
-							
-							newView.setInput(view.getDatabase(), view.getRootScope(), false);
-	   
-						} catch (PartInitException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							page.activate(view);
 						}
 					}
 				}
@@ -134,32 +152,37 @@ public class ShowView extends AbstractHandler {
 	 * Label provider for the tree node item
 	 *
 	 */
-	private class DatabaseLabelProvider 
+	static private class DatabaseLabelProvider 
 		extends BaseLabelProvider implements ILabelProvider
 	{
 		final private WindowTitle wt = new WindowTitle();
+		final private IWorkbenchWindow window;
 		
-		//@Override
+		DatabaseLabelProvider(IWorkbenchWindow window) {
+			this.window = window;
+		}
+		
+		@Override
 		public Image getImage(Object element) {
 			Object o = ((TreeNode)element).getValue();
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = (BaseScopeView) ((TreeItemNode)o).view;
+				AbstractBaseScopeView view = ((TreeItemNode)o).view;
 				return view.getTitleImage();
 			}
 			return null;
 		}
 
-		//@Override
+		@Override
 		public String getText(Object element) {
 			
 			TreeNode node = (TreeNode)element; 
 			Object o = node.getValue();
 			
 			if (o instanceof TreeItemNode) {
-				BaseScopeView view = (BaseScopeView) ((TreeItemNode)o).view;
+				AbstractBaseScopeView view = ((TreeItemNode)o).view;
 				String title = wt.setTitle(window, view);
 
-				if (view.getTreeViewer().getTree().isDisposed()) {
+				if (isViewDisposed(view)) {
 					title += " *closed*"; 
 				}
 				return title;
@@ -168,17 +191,22 @@ public class ShowView extends AbstractHandler {
 		}
 	}
 	
+	
+	static private boolean isViewDisposed(AbstractBaseScopeView view) {
+		return view.getTreeViewer().getTree().isDisposed();
+	}
+	
 	/***
 	 * 
 	 * class to store the information of views
 	 *
 	 */
-	private class TreeItemNode {
+	static private class TreeItemNode {
 		private ExperimentView ev;
 		private int index;
-		private BaseScopeView view;
+		private AbstractBaseScopeView view;
 		
-		public TreeItemNode(ExperimentView ev, int index, BaseScopeView view) {
+		public TreeItemNode(ExperimentView ev, int index, AbstractBaseScopeView view) {
 			this.ev = ev;
 			this.index = index;
 			this.view = view;
@@ -207,7 +235,7 @@ public class ShowView extends AbstractHandler {
 	 * private class to show all "created "views, whether it's opened or not
 	 *
 	 */
-	private class ViewTreeDialog extends ElementTreeSelectionDialog
+	static private class ViewTreeDialog extends ElementTreeSelectionDialog
 	{
 		/***
 		 * create a view tree dialog

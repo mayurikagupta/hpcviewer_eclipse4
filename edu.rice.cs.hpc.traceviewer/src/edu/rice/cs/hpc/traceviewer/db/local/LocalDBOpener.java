@@ -1,17 +1,17 @@
 package edu.rice.cs.hpc.traceviewer.db.local;
 
 import java.io.File;
-import org.eclipse.jface.action.IStatusLineManager;
-import org.eclipse.swt.widgets.Shell;
+
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
 import edu.rice.cs.hpc.data.experiment.extdata.FileDB2;
 import edu.rice.cs.hpc.data.experiment.extdata.IFileDB;
 import edu.rice.cs.hpc.data.util.Util;
-import edu.rice.cs.hpc.traceviewer.db.AbstractDBOpener;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.AbstractDBOpener;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
 import edu.rice.cs.hpc.traceviewer.data.version3.FileDB3;
 
 /*******************************************************************
@@ -50,10 +50,8 @@ public class LocalDBOpener extends AbstractDBOpener
 	 * (org.eclipse.ui.IWorkbenchWindow, org.eclipse.jface.action.IStatusLineManager)
 	 */
 	public SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window,
-			final IStatusLineManager statusMgr) throws InvalExperimentException, Exception {
-		
-		final Shell shell = window.getShell();
-		
+			final IProgressMonitor statusMgr) throws InvalExperimentException, Exception {
+			
 		// Laks 2014.03.10: needs to comment the call to removeInstance
 		// this call causes the data to be deleted but the GC+Color instances still exist
 		// the allocated GC+Color can be disposed later in SpaceTimeDataController class
@@ -65,8 +63,7 @@ public class LocalDBOpener extends AbstractDBOpener
 		// ---------------------------------------------------------------------
 		
 		
-		statusMgr.setMessage("Opening trace data...");
-		shell.update();
+		statusMgr.setTaskName("Opening trace data...");
 
 		// ---------------------------------------------------------------------
 		// dispose resources if the data has been allocated
@@ -90,6 +87,7 @@ public class LocalDBOpener extends AbstractDBOpener
 		default:
 			throw new InvalExperimentException("Trace data version is not unknown: " + version);
 		}
+		//fileDB.open(directory, 0, 0);
 		
 		// prepare the xml experiment and all extended data
 		SpaceTimeDataControllerLocal stdc = new SpaceTimeDataControllerLocal(

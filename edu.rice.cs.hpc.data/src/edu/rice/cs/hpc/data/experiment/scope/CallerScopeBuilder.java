@@ -56,7 +56,7 @@ public class CallerScopeBuilder {
 					}
 					
 				}	else if (next instanceof CallSiteScope) {
-					enclosingCS = (CallSiteScope) next;
+					enclosingCS = next;
 					mycaller = ((CallSiteScope)enclosingCS).getProcedureScope(); 
 				}
 				

@@ -143,14 +143,14 @@ public class ExperimentManager {
 					if (vw != null)
 					{
 						Database db = vw.getDb(vw.getDatabasePath(sFile));
-						
+					
 						if (db == null) {						
 							// check if we can open the database successfully
-							bContinue = (this.setExperiment(sFile, flag) == false);
+							bContinue = (!setExperiment(sFile, flag));
 						} else {
 							MessageDialog.openError(window.getShell(), "Database is already opened", 
-									"The database is already opened in this window.\n" +
-									"There is no need to open the same database twice in the same window.");
+								"The database is already opened in this window.\n" +
+								"There is no need to open the same database twice in the same window.");
 							bContinue = false;
 						}
 					}

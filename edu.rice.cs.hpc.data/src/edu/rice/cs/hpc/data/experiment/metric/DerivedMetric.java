@@ -21,13 +21,15 @@ public class DerivedMetric extends BaseMetric {
 	// formula expression
 	private Expression expression;
 	// the total aggregate value
-	private double dRootValue = 0.0;
+	//private double dRootValue = 0.0;
 	// map function
 	private ExtFuncMap fctMap;
 	// map variable 
 	private MetricVarMap varMap;
 
-	private Experiment experiment;
+	private IMetricManager experiment;
+	
+	final private RootScope root;
 	
 	//===================================================================================
 	// CONSTRUCTORS
@@ -47,30 +49,31 @@ public class DerivedMetric extends BaseMetric {
 	 * @param annotationType
 	 * @param objType
 	 */
-	public DerivedMetric(Experiment experiment, Expression e, String sName, String sID, int index, AnnotationType annotationType, MetricType objType) {
+	public DerivedMetric(RootScope root, IMetricManager experiment, String expression, 
+			String sName, String sID, 
+			int index, AnnotationType annotationType, MetricType objType) {
 		
 		// no root scope information is provided, we'll associate this metric to CCT root scope 
 		// the partner of this metric is itself (derived metric has no partner)
 		super(sID, sName, true, null, annotationType, index, index, objType);
 		
-		this.expression = e;
 		this.experiment = experiment;
 		
 		// set up the functions
 		this.fctMap = new ExtFuncMap();
-		
-		RootScope root = (RootScope) experiment.getRootScope().getSubscope(0);
-		
+		this.root 	= root;		
 		BaseMetric []metrics = experiment.getMetrics(); 
 		this.fctMap.init(metrics);
 
 		// set up the variables
-		this.varMap = new MetricVarMap(experiment);
+		this.varMap = new MetricVarMap(root, experiment);
+		this.varMap.setMetric(this);
+		
+		setExpression(expression);
 
 		// Bug fix: always compute the aggregate value 
-		this.dRootValue = getDoubleValue(root);
-		if(this.dRootValue == 0.0)
-			this.annotationType = AnnotationType.NONE ;
+		/*if(Double.compare(dRootValue, 0.0d) == 0)
+			this.annotationType = AnnotationType.NONE ;*/
 	}
 	
 	/****
@@ -78,14 +81,19 @@ public class DerivedMetric extends BaseMetric {
 	 * 
 	 * @param expr : the new expression
 	 */
-	public void setExpression( Expression expr ) {
-		this.expression = expr;
-		
+	public void setExpression( String expr ) {
+		expression = ExpressionTree.parse(expr);
+		rootValue  = setRootValue(root);
 		// new formula has been set, refresh the root value used for computing percent
-		RootScope root = (RootScope) experiment.getRootScope().getSubscope(0);
-		dRootValue = getDoubleValue(root);
+		//dRootValue = getDoubleValue(root);
 	}
 
+	static public boolean evaluateExpression(String expression, 
+			MetricVarMap varMap, ExtFuncMap funcMap) {
+		Expression exp = ExpressionTree.parse(expression);
+		exp.eval(varMap, funcMap);
+		return true;
+	}
 	
 	
 	//===================================================================================
@@ -96,7 +104,7 @@ public class DerivedMetric extends BaseMetric {
 	 * @param scope: the current scope
 	 * @return the object Double if there is a value, null otherwise
 	 */
-	public double getDoubleValue(Scope scope) {
+	public double getDoubleValue(IMetricScope scope) {
 		this.varMap.setScope(scope);
 		return expression.eval(this.varMap, this.fctMap);
 	}
@@ -106,24 +114,34 @@ public class DerivedMetric extends BaseMetric {
 	 * Return a MetricValue
 	 */
 	@Override
-	public MetricValue getValue(Scope scope) {
+	public MetricValue getValue(IMetricScope scope) {
 		double dVal;
+		// corner case
 		// if the scope is a root scope, then we return the aggregate value
 		if(scope instanceof RootScope) {
-			dVal = dRootValue;
+			if (rootValue == null) {
+				rootValue = setRootValue((RootScope)scope);
+			}
+			return rootValue;
 		} else {
 			// otherwise, we need to recompute the value again via the equation
 			dVal = getDoubleValue(scope);
 			
 			// ugly test to check whether the value exist or not
-			if(dVal == 0.0d)
+			if(Double.compare(dVal, 0.0d) == 0)
 				return MetricValue.NONE;	// the value is not available !
 		}
 		if(this.getAnnotationType() == AnnotationType.PERCENT){
-			return new MetricValue(dVal, ((float) dVal/this.dRootValue));
+			MetricValue myrootValue = getValue(root);
+			return new MetricValue(dVal, ((float) dVal/myrootValue.getValue()));
 		} else {
 			return new MetricValue(dVal);
 		}
+	}
+	
+	public MetricValue getRawValue(IMetricScope s)
+	{
+		return getValue(s);
 	}
 
 	/****
@@ -131,13 +149,18 @@ public class DerivedMetric extends BaseMetric {
 	 * 
 	 * @return
 	 */
-	public Expression getFormula() {
-		return expression;
+	public String getFormula() {
+		return expression.toString();
 	}
 
 	@Override
 	public BaseMetric duplicate() {
-		return new DerivedMetric(experiment, expression, displayName, shortName, index, annotationType, metricType);
+		final DerivedMetric copy = new DerivedMetric(root, experiment, expression.toString(), displayName, 
+				shortName, index, annotationType, metricType);
+		
+		// TODO: hack, we need to conserve the format of the metric.
+		copy.displayFormat = displayFormat;
+		return copy;
 	}
 	
 	/****
@@ -149,6 +172,13 @@ public class DerivedMetric extends BaseMetric {
 	{
 		this.experiment = experiment;
 		// updating as well the variable mapping to metrics
-		varMap.setExperiment(experiment);
+		varMap.setMetricManager(experiment);
+	}
+	
+	private MetricValue setRootValue(RootScope rootScope) 
+	{
+		double rootVal = getDoubleValue(rootScope);
+		double rootAnn = 1.0d;
+		return new MetricValue(rootVal, rootAnn);
 	}
 }

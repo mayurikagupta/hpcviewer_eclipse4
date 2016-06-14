@@ -1,42 +1,50 @@
 package edu.rice.cs.hpc.viewer.graph;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
 import org.swtchart.Chart;
 import org.swtchart.Range;
-import org.swtchart.ext.InteractiveChart;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.MetricRaw;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
-import edu.rice.cs.hpc.viewer.metric.ThreadLevelDataManager;
+import edu.rice.cs.hpc.viewer.scope.thread.ThreadView;
 import edu.rice.cs.hpc.viewer.util.WindowTitle;
 import edu.rice.cs.hpc.viewer.window.Database;
 
 
-/**
+/**************************************************************************************
  * Base class for hpcviewer editor to display graph
- *  
+ *  <p>
  * The class implements IViewerEditor, so it can be renamed, manipulated and changed
- * 	by the viewer manager
- */
-public abstract class GraphEditorBase extends EditorPart implements IViewerEditor {
-	
+ * 	by the viewer manager</p>
+ **************************************************************************************/
+public abstract class GraphEditorBase extends EditorPart implements IViewerEditor 
+{
 	// chart is used to plot graph or histogram on canvas. each editor has its own chart
     private Chart chart;
-    protected ThreadLevelDataManager threadData;
+    protected IThreadDataCollection threadData;
     
-	@Override
+    @Override
 	public void doSave(IProgressMonitor monitor) {
 		// TODO Auto-generated method stub
 	}
@@ -57,7 +65,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		{
 			final GraphEditorInput editorInput = (GraphEditorInput) input;
 			final Database database 		   = editorInput.getDatabase();
-			threadData = database.getThreadLevelDataManager();
+			threadData = database.getThreadDataCollection();
 		}
 	}
 
@@ -85,7 +93,7 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 	 * Due to SWT Chart bug, we need to adjust the range once the create-part-control
 	 * 	finishes its layout.
 	 */
-	public void finalize() {
+	public void editorFinalize() {
 		IAxisSet axisSet = this.getChart().getAxisSet();
 		axisSet.adjustRange();
 
@@ -107,21 +115,55 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		if (input == null || !(input instanceof GraphEditorInput) )
 			throw new RuntimeException("Invalid input for graph editor");
 		
-		GraphEditorInput editor_input = (GraphEditorInput) input;
-		String title = editor_input.getName();
-		
-		this.setPartName( title );
+		String title = getEditorPartName();
+		setEditorPartName( title );
 
 		// set the window title with a possible db number
 		WindowTitle wt = new WindowTitle();
-		wt.setEditorTitle(this.getEditorSite().getWorkbenchWindow(), this); //, exp, editorName);
+		final IWorkbenchWindow window = getEditorSite().getWorkbenchWindow(); 
+		wt.setEditorTitle(window, this); //, exp, editorName);
 
 		//----------------------------------------------
 		// chart creation
 		//----------------------------------------------
-		chart = new InteractiveChart(parent, SWT.NONE);
+		chart = new GraphChart(parent, SWT.NONE);
 		chart.getTitle().setText( title );
+		final MenuManager menuManager = new MenuManager("Show-view");
+		
+		((GraphChart)chart).setChartSelectionListener(new IChartSelectionListener() {
+			
+			@Override
+			public void selection(UserSelectionData data) {
+				menuManager.removeAll();
+				menuManager.createContextMenu(chart);
 
+				try {
+					// show the menu with the real thread label
+					ArrayList<Integer> threads = new ArrayList<Integer>(1);
+					threads.add(data.index);
+					
+					final ArrayList<Integer> list = translateUserSelection(threads);
+					final double []labels = threadData.getRankLabels();
+					final double thread_label = labels[list.get(0)];
+					
+					menuManager.add(new Action("Show thread " + thread_label) {
+						public void run() {
+							// display the view
+							ThreadView.showView(window, getExperiment(), list);
+						}
+					});
+	            	final Menu menu = menuManager.getMenu();
+	            	// adjust the appearance of the menu, make it closer to the cursor
+	            	// but not to distract the user
+					final Point point = chart.toDisplay(new Point(data.event.x+40, data.event.y+10));
+					menu.setLocation(point);
+	            	menu.setVisible(true);
+	            	
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 
 		//----------------------------------------------
 		// formatting axis
@@ -136,10 +178,11 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 		//----------------------------------------------
 		// plot data
 		//----------------------------------------------
+		GraphEditorInput editor_input = (GraphEditorInput) input;
 		Scope scope = editor_input.getScope();
-		MetricRaw metric = editor_input.getMetric();
+		BaseMetric metric = editor_input.getMetric();
 		
-		this.plotData(scope, metric);
+		this.plotData(scope, (MetricRaw) metric);
 	}
 
 
@@ -175,5 +218,17 @@ public abstract class GraphEditorBase extends EditorPart implements IViewerEdito
 	 * @param metric: the raw metric to plot
 	 */
 	protected abstract void plotData(Scope scope, MetricRaw metric );
+	
+	/****
+	 * Translate a set of thread-index selections into the original set of
+	 * thread-index selection.<br/>
+	 * It is possible that the child class change the index of x-axis. This
+	 * method will then translate from the current selected index to the original
+	 * index so that it can be displayed properly by {@link ThreadView}. 
+	 *  
+	 * @param selections : a set of selected index (usually only one item)
+	 * @return the translated set of indexes
+	 */
+	protected abstract ArrayList<Integer> translateUserSelection(ArrayList<Integer> selections); 
 
 }

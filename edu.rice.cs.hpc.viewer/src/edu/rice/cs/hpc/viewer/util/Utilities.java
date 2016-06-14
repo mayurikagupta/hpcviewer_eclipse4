@@ -37,9 +37,10 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
 import edu.rice.cs.hpc.viewer.editor.SourceCodeEditor;
+import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.resources.Icons;
-import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.ScopeTreeViewer;
 import edu.rice.cs.hpc.viewer.window.Database;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
@@ -189,7 +190,7 @@ public class Utilities {
 			COLOR_TOP.dispose();
 			
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 	}
 	
@@ -217,9 +218,9 @@ public class Utilities {
 		final TreeItemManager objItemManager = new TreeItemManager();
 		
 		// first, we need to refresh the visible view
-		final ArrayList<BaseScopeView> visible_view = Utilities.getTopView(window);
+		final ArrayList<AbstractBaseScopeView> visible_view = Utilities.getTopView(window);
 		if (visible_view != null && visible_view.size()>0) {
-			for (BaseScopeView view : visible_view) {
+			for (AbstractBaseScopeView view : visible_view) {
 				Utilities.resetView(objItemManager, view.getTreeViewer());
 			}
 		}
@@ -231,7 +232,8 @@ public class Utilities {
 				continue;		// not open just skip it
 			}
 
-			final BaseScopeView arrViews[] = db.getExperimentView().getViews();
+			final ExperimentView ev  = db.getExperimentView(); 
+			final int numViews = ev.getViewCount();
 			
 			// next, using helper thread to refresh other views
 			window.getShell().getDisplay().asyncExec( new Runnable() {
@@ -239,9 +241,9 @@ public class Utilities {
 					
 					// refresh all the views except the visible one 
 					// we will prioritize the visible view to be refreshed first
-					for(int i=0;i<arrViews.length;i++) {
-						if (!visible_view.contains(arrViews[i])) {
-							ScopeTreeViewer tree = (ScopeTreeViewer) arrViews[i].getTreeViewer();
+					for(int i=0;i<numViews;i++) {
+						if (!visible_view.contains( ev.getView(i))) {
+							ScopeTreeViewer tree = ev.getView(i).getTreeViewer();
 							
 							// reset the view
 							Utilities.resetView(objItemManager, tree);
@@ -256,16 +258,16 @@ public class Utilities {
 	 * Find the first visible scope view (the view can be active or not)
 	 * @return the visible view, null if there is no view
 	 */
-	static ArrayList<BaseScopeView> getTopView(IWorkbenchWindow window) {
+	static ArrayList<AbstractBaseScopeView> getTopView(IWorkbenchWindow window) {
 		IWorkbenchPage page = window.getActivePage();
 		IViewReference [] viewRefs = page.getViewReferences();
-		ArrayList<BaseScopeView> listViews = new ArrayList<BaseScopeView>(viewRefs.length);
+		ArrayList<AbstractBaseScopeView> listViews = new ArrayList<AbstractBaseScopeView>(viewRefs.length);
 		
 		for(int i=0;i<viewRefs.length;i++) {
 			IWorkbenchPart part = viewRefs[i].getPart(false);
 			if (page.isPartVisible(part)) {
-				if (part instanceof BaseScopeView) {
-					listViews.add((BaseScopeView)part);
+				if (part instanceof AbstractBaseScopeView) {
+					listViews.add((AbstractBaseScopeView)part);
 				}
 			}
 		}
@@ -299,7 +301,7 @@ public class Utilities {
 	 * activate a listener to reset Row Height for Windows only
 	 * @param tree
 	 */
-	static public void listenerToResetRowHeight ( TreeViewer tree ) {
+	static public Listener listenerToResetRowHeight ( TreeViewer tree ) {
 		if (OSValidator.isWindows()) { 
 			Tree treeItem = tree.getTree();
 			// resize the table row height using a MeasureItem listener
@@ -315,7 +317,9 @@ public class Utilities {
 				} // end handleEvent
 			}; // end measurementListener
 			treeItem.addListener(SWT.MeasureItem, measurementListener);
+			return measurementListener;
 		}
+		return null;
 	}
 	
 	/**
@@ -420,7 +424,7 @@ public class Utilities {
 	static public Image getScopeNavButton(Scope scope) {
 		if (scope instanceof CallSiteScope) {
 			CallSiteScope scopeCall = (CallSiteScope) scope;
-        	LineScope lineScope = (LineScope) (scopeCall).getLineScope();
+        	LineScope lineScope = (scopeCall).getLineScope();
 			if (((CallSiteScope) scope).getType() == CallSiteScopeType.CALL_TO_PROCEDURE) {
 				if(Utilities.isFileReadable(lineScope))
 					return Icons.getImage(Icons.Image_CallTo);
@@ -461,8 +465,8 @@ public class Utilities {
     static public boolean isFileReadable(Scope scope) {
     	// check if the source code availability is already computed
     	if(scope.iSourceCodeAvailability == Scope.SOURCE_CODE_UNKNOWN) {
-    		SourceFile newFile = ((SourceFile)scope.getSourceFile());
-    		if (newFile != null) {
+    		SourceFile newFile = (scope.getSourceFile());
+    		if (newFile != null && !newFile.getName().isEmpty()) {
         		if( (newFile != SourceFile.NONE)
             			|| ( newFile.isAvailable() )  ) {
             			if (newFile instanceof FileSystemSourceFile) {
@@ -516,9 +520,9 @@ public class Utilities {
 			// multiple databases are opened:
 			// need to select an experiment to show
 			IWorkbenchPart part = window.getActivePage().getActivePart();
-			if (part instanceof BaseScopeView)
+			if (part instanceof AbstractBaseScopeView)
 			{
-				experiment = ((BaseScopeView)part).getExperiment();
+				experiment = ((AbstractBaseScopeView)part).getExperiment();
 				
 			} else if (part instanceof SourceCodeEditor)
 			{

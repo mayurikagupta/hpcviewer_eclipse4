@@ -40,6 +40,10 @@ public abstract class BaseExperiment implements IExperiment
 	
 	private EnumMap<Db_File_Type, String> db_filenames;
 	
+	private int min_cctid, max_cctid;
+	private int filterNumScopes = 0, filterStatus;
+	
+	
 	/***
 	 * the root scope of the experiment
 	 * 
@@ -242,7 +246,7 @@ public abstract class BaseExperiment implements IExperiment
 	}
 
 	public File getXMLExperimentFile() {
-		return databaseRepresentation.getXMLFile().getFile();
+		return databaseRepresentation.getFile();
 	}
 
 
@@ -260,10 +264,10 @@ public abstract class BaseExperiment implements IExperiment
 	/*************************************************************************
 	 * Filter the cct 
 	 * <p>caller needs to call postprocess to ensure the callers tree and flat
-	 * tree are alsi filtered </p>
+	 * tree are also filtered </p>
 	 * @param filter
 	 *************************************************************************/
-	public void filter(IFilterData filter)
+	public int filter(IFilterData filter)
 	{
 		// TODO :  we assume the first child is the CCT
 		final RootScope rootCCT = (RootScope) rootScope.getChildAt(0);
@@ -275,8 +279,42 @@ public abstract class BaseExperiment implements IExperiment
 		if (rootCCT.getType() == RootScopeType.CallingContextTree) {
 			filter_finalize(rootCCT, filter);
 		}
+		filterNumScopes = visitor.numberOfFilteredScopes();
+		filterStatus	= visitor.getFilterStatus();
+		
+		return filterNumScopes;
 	}
 
+	/****
+	 * return the number of matched scopes from the filter.<br/>
+	 * Note that this is NOT the number of removed scopes, but the number of
+	 * scopes that match the filter pattern.
+	 * @return int
+	 */
+	public int getNumberOfFilteredScopes() {
+		return filterNumScopes;
+	}
+	
+	public int getFilterStatus() {
+		return filterStatus;
+	}
+	
+	public void setMinMaxCCTID(int min, int max)
+	{
+		this.min_cctid = min;
+		this.max_cctid = max;
+	}
+	
+	public int getMinCCTID()
+	{
+		return min_cctid;
+	}
+	
+	public int getMaxCCTID()
+	{
+		return max_cctid;
+	}
+	
 	/************************************************************************
 	 * In case the experiment has a CCT, continue to create callers tree and
 	 * flat tree for the finalization.

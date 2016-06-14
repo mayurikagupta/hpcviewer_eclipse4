@@ -7,13 +7,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Device;
+
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.BaseDataVisualization;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 
 /*****************************************************************
  *
@@ -25,15 +28,16 @@ import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
  *****************************************************************/
 public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 
-	final protected Device device;
+	//final protected Device device;
 	final protected int width;
+	final private IProgressMonitor monitor;
 
 	final private Queue<TimelineDataSet> list;
 	final private List<ImagePosition> listOfImages;
 	final private int numberOfTotalLines;
 	
 	final protected SpaceTimeDataController stData;
-	final private AtomicInteger timelineDone;
+	final private AtomicInteger numDataCollected, currentPaint;
 	
 	/****
 	 * constructor of the class, requiring a queue of list of data (per line) to be
@@ -49,20 +53,18 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @param width : the width of the view
 	 */
 	public BasePaintThread( SpaceTimeDataController stData, Queue<TimelineDataSet> list, 
-			int numberOfTotalLines, AtomicInteger paintDone,
-			Device device, int width) {
+			int numberOfTotalLines, AtomicInteger dataCollected, AtomicInteger currentPaint,
+			Device device, int width, IProgressMonitor monitor) {
 		
-		Assert.isNotNull(device);
 		Assert.isNotNull(list);
 		
-		this.list = list;
+		this.stData 			= stData;		
+		this.width   			= width;
+		this.monitor 			= monitor;
+		this.list 				= list;
 		this.numberOfTotalLines = numberOfTotalLines;
-		this.timelineDone = paintDone;
-		
-		this.device = device;
-		this.stData = stData;
-		
-		this.width = width;
+		this.numDataCollected 	= dataCollected;
+		this.currentPaint		= currentPaint;
 		listOfImages = new ArrayList<ImagePosition>(list.size());
 	}
 	
@@ -73,12 +75,15 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 */
 	public List<ImagePosition> call() throws Exception {
 
-		while( ! list.isEmpty() 				 		      // while there are tasks to do 
-				||								 		      // or  
-				numberOfTotalLines>getNumberOfCreatedData()   // the data collection threads have not finished 
-				|| 											  // or	
-				timelineDone.get()>0 ) 					  	  // the data preparation threads haven't finished the job
+		while( /*! list.isEmpty() 				 		 // while there are tasks to do 
+				|| 						*/				 // or	
+				currentPaint.get() < numberOfTotalLines  // the current painting is not done yet
+				|| 											// or
+				numDataCollected.get()<numberOfTotalLines )  // the data preparation threads haven't finished the job
 		{
+			if (monitor.isCanceled()) {
+				return listOfImages;
+			}
 			// ------------------------------------------------------------------
 			// get the task to do from the list and compute the height and the position
 			// if the list is empty, it means the data collection threads haven't finished 
@@ -90,13 +95,18 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 				Thread.sleep(40);
 				continue;
 			}
+			if (setDataToPaint == TimelineDataSet.NULLTimeline) {
+				// empty trace
+				currentPaint.incrementAndGet();
+				continue;
+			}
 			final int height = setDataToPaint.getHeight();
 			final int position = setDataToPaint.getLineNumber();
 			
 			// ------------------------------------------------------------------
 			// initialize the painting, the derived class has to create image ready
 			// ------------------------------------------------------------------
-			initPaint(device, width, height);
+			initPaint(/*device,*/ width, height);
 
 			// ------------------------------------------------------------------
 			// a line can contains many trace data (one trace data equals one rectangle)
@@ -116,6 +126,8 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 			final ImagePosition imgPos = finalizePaint(position);
 			
 			listOfImages.add(imgPos);
+			currentPaint.incrementAndGet();
+			//System.out.println("    bpt "+cp+" / " + numberOfTotalLines + "  col data: " + numDataCollected);
 		}
 
 		return listOfImages;
@@ -129,7 +141,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @param width : the width of the image
 	 * @param height : the height of the image
 	 */
-	abstract protected void initPaint(Device device, int width, int height);
+	abstract protected void initPaint(/*Device device, */int width, int height);
 	
 	/*****
 	 * the actual method to paint a trace image
@@ -147,9 +159,7 @@ public abstract class BasePaintThread implements Callable<List<ImagePosition>> {
 	 * @return
 	 */
 	abstract protected ImagePosition finalizePaint(int linenum);
-	
-	abstract protected int getNumberOfCreatedData();
-	
+		
 	/***
 	 * basic method to paint on a gc
 	 * 

@@ -6,42 +6,45 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.ui.IWorkbenchWindow;
-
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.DataPreparation;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
-import edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
 
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
+import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
 
 public class TimelineThread 
 	extends BaseTimelineThread
 {
+	final private int totalLines;
+	final private ProcessTimelineService traceService;
+
 	/**Stores whether or not the bounds have been changed*/
 	private boolean changedBounds;
-	
-	final private ProcessTimelineService traceService;
 	
 	/***********************************************************************************************************
 	 * Creates a TimelineThread with SpaceTimeData _stData; the rest of the parameters are things for drawing
 	 * @param changedBounds - whether or not the thread needs to go get the data for its ProcessTimelines.
 	 ***********************************************************************************************************/
-	public TimelineThread(IWorkbenchWindow window, SpaceTimeDataController _stData, ProcessTimelineService traceService,
+	public TimelineThread(SpaceTimeDataController stData, ImageTraceAttributes attributes,
+			ProcessTimelineService traceService,
 			boolean _changedBounds, double _scaleY, Queue<TimelineDataSet> queue, 
-			AtomicInteger numTimelines, IProgressMonitor monitor)
+			AtomicInteger currentLine, int totalLines, IProgressMonitor monitor)
 	{
-		super(_stData, _scaleY, queue, numTimelines,_stData.isEnableMidpoint(), monitor);
+		super(stData, attributes, _scaleY, queue, currentLine, stData.isEnableMidpoint(), monitor);
 		changedBounds = _changedBounds;		
-		this.traceService = traceService;		
+		this.traceService = traceService;
+		this.totalLines	  = totalLines;
 	}
 	
 	
 	@Override
-	protected ProcessTimeline getNextTrace() {
-		return stData.getNextTrace(changedBounds);
+	protected ProcessTimeline getNextTrace(AtomicInteger currentLine) {
+		return stData.getNextTrace(currentLine, totalLines, attributes, changedBounds, monitor);
 	}
 
 	
@@ -53,7 +56,12 @@ public class TimelineThread
 			if (trace.isEmpty()) {
 				
 				trace.readInData();
-				traceService.setProcessTimeline(trace.line(), trace);
+				if (!traceService.setProcessTimeline(trace.line(), trace)) {
+					// something wrong happens, perhaps data races ?
+					monitor.setCanceled(true);
+					monitor.done();
+					return false;
+				}
 			}
 			trace.shiftTimeBy(stData.getMinBegTime());
 		}

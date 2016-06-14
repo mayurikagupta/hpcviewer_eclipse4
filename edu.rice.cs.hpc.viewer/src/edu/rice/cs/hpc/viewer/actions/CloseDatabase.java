@@ -10,6 +10,7 @@ import java.util.List;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -81,13 +82,16 @@ public class CloseDatabase extends AbstractHandler {
 			ListSelectionDialog dlg = new ListSelectionDialog(window.getShell(), dbList, 
 				new ArrayContentProvider(), new LabelProvider(), "Select the databases to close:");
 			dlg.setTitle("Select Databases");
-			dlg.open();
-			Object[] selectedDatabases = dlg.getResult();
+			if (dlg.open() == Dialog.OK) {
+				Object[] selectedDatabases = dlg.getResult();
 
-			if ((selectedDatabases == null) || (selectedDatabases.length <= 0)) {
+				if ((selectedDatabases == null) || (selectedDatabases.length <= 0)) {
+					return null;
+				}
+				databasesToClose = selectedDatabases;
+			} else {
 				return null;
 			}
-			databasesToClose = selectedDatabases;
 		}
 
 		
@@ -95,6 +99,13 @@ public class CloseDatabase extends AbstractHandler {
 		// close the databases, and all editors and views associated with them
 		// -----------------------------------------------------------------------
 		for (Object selectedDatabase: databasesToClose) {
+			
+			// remove the database from our database manager information
+			int dbNum = vWin.removeDatabase(selectedDatabase.toString());
+			if (dbNum < 0) {
+				// can't close parts for an entry we could not find
+				continue;
+			}
 
 			// close any open editor windows for this database
 			final org.eclipse.ui.IEditorReference editors[] = curPage.getEditorReferences();
@@ -138,13 +149,6 @@ public class CloseDatabase extends AbstractHandler {
 						}
 					}
 				}
-			}
-			
-			// remove the database from our database manager information
-			int dbNum = vWin.removeDatabase(selectedDatabase.toString());
-			if (dbNum < 0) {
-				// can close views for an entry we could not find
-				continue;
 			}
 		}
 		WindowTitle wt = new WindowTitle();

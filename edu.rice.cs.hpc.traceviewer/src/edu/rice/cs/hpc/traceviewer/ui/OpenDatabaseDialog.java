@@ -2,7 +2,6 @@ package edu.rice.cs.hpc.traceviewer.ui;
 
 import java.util.EnumMap;
 
-import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -29,8 +28,8 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import edu.rice.cs.hpc.common.util.UserInputHistory;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo;
-import edu.rice.cs.hpc.traceviewer.db.DatabaseAccessInfo.DatabaseField;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo;
+import edu.rice.cs.hpc.traceviewer.data.db.DatabaseAccessInfo.DatabaseField;
 import edu.rice.cs.hpc.traceviewer.framework.Activator;
 
 /*******************************************************
@@ -73,7 +72,6 @@ public class OpenDatabaseDialog extends Dialog
 	//This is the most convenient and flexible way to pass around the data.
 	//private String[]  args  = null;
 	
-	private final IStatusLineManager status;
 	private Button okButton;
 	private String errorMessage;//empty string means no error
 	private Button checkboxTunneling;
@@ -93,10 +91,9 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param parentShell
 	 * @param inStatus
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus,
+	public OpenDatabaseDialog(Shell parentShell, 
 			boolean useLocalDatabase) { 
 		super(parentShell);
-		status=inStatus;
 		errorMessage="";
 		this.useLocalDatabase = useLocalDatabase;
 	}
@@ -108,10 +105,9 @@ public class OpenDatabaseDialog extends Dialog
 	 * @param inStatus
 	 * @param error message
 	 */
-	public OpenDatabaseDialog(Shell parentShell, final IStatusLineManager inStatus, 
+	public OpenDatabaseDialog(Shell parentShell, 
 			String _errorMessage, boolean useLocalDatabase){
 		super(parentShell);
-		status=inStatus;
 		setErrorMessage(_errorMessage);
 		this.useLocalDatabase = useLocalDatabase;
 	}
@@ -148,9 +144,6 @@ public class OpenDatabaseDialog extends Dialog
 	protected Control createDialogArea(Composite parent) {
 
 		getShell().setText("Open a Database");
-
-		if (status != null)
-			status.setMessage("Select a local or remote directory containing traces");
 
 		Composite outerComposite = (Composite) super.createDialogArea(parent);
 
@@ -211,7 +204,7 @@ public class OpenDatabaseDialog extends Dialog
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				showLocalBrowser();
+				showLocalBrowser(comboBoxes[FieldDatabasePath].getText());
 			}
 
 			@Override
@@ -358,44 +351,52 @@ public class OpenDatabaseDialog extends Dialog
 	@Override
 	public int open()
 	{
-		if (useLocalDatabase) {
+		// special treatment for local database: we need to display
+		//  automatically the directory dialog, unless if we need
+		//  to show an error message.
+		if (useLocalDatabase && errorMessage == null) {
 			// do not block if we use local database
 			super.setBlockOnOpen(false);
 			super.open();
 			
-			showLocalBrowser();
-			if (dbInfo != null && dbInfo.getDatabasePath() != null) {
-				return Window.OK;
+			if (showLocalBrowser(null)) {
+				if (dbInfo != null && dbInfo.getDatabasePath() != null) {					
+					return Window.OK;
+				}
 			}
-			else {
-				return Window.CANCEL;
-			}
+			// user clicks cancel, we can block this dialog again
+			super.setBlockOnOpen(true);
 		}
-		else {
-			return super.open();
-		}
+		return super.open();
 	}
 	
 	/****
 	 * Display a directory dialog box and update the variable
 	 */
-	private void showLocalBrowser()
+	private boolean showLocalBrowser(String path)
 	{
 		DirectoryDialog dialog;
 
 		dialog = new DirectoryDialog(getShell());
 		dialog.setMessage("Please select a directory containing execution traces.");
 		dialog.setText("Select Data Directory");
+		
+		if (path != null) {
+			dialog.setFilterPath(path);
+		}
 
+		// database is null if the user click cancel
 		final String database = dialog.open();
-
-		if (database == null)
-			// user click cancel
-			return;
-		comboBoxes[FieldDatabasePath].setText(database);
+		final boolean retval  = (database != null);
+		
+		if (retval) {
+			comboBoxes[FieldDatabasePath].setText(database);
+			okPressed();
+		}
 
 		// automatically close the dialog box
-		okPressed();
+		//okPressed();
+		return (retval);
 	}
 	
 	/*********

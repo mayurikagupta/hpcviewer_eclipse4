@@ -3,20 +3,37 @@
  */
 package edu.rice.cs.hpc.data.experiment.metric;
 
+import edu.rice.cs.hpc.data.experiment.metric.format.IMetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValueFormatFactory;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValuePredefinedFormat;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
-/**
- * @author laksonoadhianto
+/********************************************************************
+ * Basic class for metric description
  *
- */
+ ********************************************************************/
 public abstract class BaseMetric {
 
 	//-------------------------------------------------------------------------------
+	// CONSTANTS
+	//-------------------------------------------------------------------------------
+
+	static final public int PARTNER_UNKNOWN = -1;
+
+	final private String EMPTY_SUFFIX = "   ";
+
+	//-------------------------------------------------------------------------------
+	// DATA STRUCTURE
+	//-------------------------------------------------------------------------------
+
+	/** Valid types of Annotations to be used with metric values */
+	static public enum AnnotationType { NONE, PERCENT, PROCESS };
+	
+	//-------------------------------------------------------------------------------
 	// DATA
 	//-------------------------------------------------------------------------------
-	/** Valid types of Annotations to be used with metric values */
-	public enum AnnotationType { NONE, PERCENT, PROCESS };
-
+ 
 	/** The short name of this metric, used within an experiment's XML file. 
 	 *  We shouldn't change the short name as it's assigned by hpcprof to compute
 	 *  derived incremental metric */
@@ -46,9 +63,10 @@ public abstract class BaseMetric {
 
 	protected double  sampleperiod;
 
-	private char unit;
+	protected MetricValue rootValue;
 
-	final private String EMPTY_SUFFIX = "   ";
+	private char unit;
+	
 	//-------------------------------------------------------------------------------
 	// CONSTRUCTOR
 	//-------------------------------------------------------------------------------
@@ -56,12 +74,15 @@ public abstract class BaseMetric {
 
 	/*************************************************************************
 	 * 
-	 * @param sID: Unique ID of the metric
-	 * @param sDisplayName: the name of the title
-	 * @param displayed: will metric be displayed ?
-	 * @param format: format of the display
-	 * @param annotationType: show the percent or process number ?
-	 * @param index: index in the table
+	 * @param sID : Unique ID of the metric
+	 * @param sDisplayName : the name of the title
+	 * @param displayed : will metric be displayed ?
+	 * @param format : format of the display
+	 * @param annotationType : show the percent or process number ?
+	 * @param index : index in the table
+	 * @param partner_index : index of the partner metric. 
+	 * 		IT HAS TO BE NEGATIVE IF IT DOESNT HAVE A PARTNER !!
+	 * @param type : type of the metric
 	 *************************************************************************/
 	public BaseMetric(String sID, String sDisplayName, boolean displayed, String format, 
 			AnnotationType annotationType, int index, int partner_index, MetricType type) 
@@ -80,13 +101,7 @@ public abstract class BaseMetric {
 		
 		// format
 		if (format == null) {
-			if (annotationType == AnnotationType.PERCENT) {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 1, "#0.0%", 1);
-			} else if (annotationType == AnnotationType.PROCESS) {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, true, MetricValueFormat.FIXED, 5, 0, "<0>", 1);
-			} else {
-				this.displayFormat = new MetricValueFormat(true, MetricValueFormat.FLOAT, 8, 2, false, 0, 0, 0, null, 1);
-			}
+			displayFormat = getFormatBasedOnAnnotation(annotationType);
 		} else {
 			this.displayFormat = new MetricValuePredefinedFormat(format);
 		}
@@ -121,7 +136,8 @@ public abstract class BaseMetric {
 	
 	/*****
 	 * get the partner metric index
-	 * @return
+	 * 
+	 * @return the index partner, negative if it has no partner
 	 */
 	public int getPartner() {
 		return partner_index;
@@ -208,6 +224,7 @@ public abstract class BaseMetric {
 	public void setAnnotationType( AnnotationType annType ) 
 	{
 		annotationType = annType;
+		displayFormat = getFormatBasedOnAnnotation(annotationType);
 	}
 	
 	/**
@@ -224,9 +241,12 @@ public abstract class BaseMetric {
 	 * Return the text to display based on the metric value
 	 * @param mv: the value of a metric
 	 *************************************************************************/
-	public String getMetricTextValue(MetricValue mv_) {
+	public String getMetricTextValue(MetricValue mv) {
+		
+		if (mv == null)
+			return null;
+		
 		String sText;
-		MetricValue mv = mv_;
 		
 		// enforce bounds for presentation
 		if (mv.value > 9.99e99) mv.value = Float.POSITIVE_INFINITY;
@@ -234,9 +254,9 @@ public abstract class BaseMetric {
 		else if (Math.abs(mv.value) < 1.00e-99)  mv.value = (float) 0.0;
 		
 		// if not a special case, convert the number to a string
-		if (mv.value == 0.0 || mv == MetricValue.NONE || !MetricValue.isAvailable(mv) ) sText = "";
-		else if (mv.value == Float.POSITIVE_INFINITY) sText = "Infinity";
-		else if (mv.value == Float.NEGATIVE_INFINITY) sText = "-Infinity";
+		if (Float.compare(mv.value, 0.0f) == 0 || mv == MetricValue.NONE || !MetricValue.isAvailable(mv) ) sText = "";
+		else if (Float.compare(mv.value, Float.POSITIVE_INFINITY)==0) sText = "Infinity";
+		else if (Float.compare(mv.value, Float.NEGATIVE_INFINITY)==0) sText = "-Infinity";
 		else if (Float.isNaN(mv.value)) sText = "NaN";
 		else {
 			sText = getDisplayFormat().format(mv);
@@ -310,10 +330,12 @@ public abstract class BaseMetric {
 	//=================================================================================
 	/*************************************************************************
 	 * method to return the value of a given scope. To be implemented by derived class.
-	 * @param s
-	 * @return
+	 * @param s : scope of the metric value
+	 * @return a metric value
 	 *************************************************************************/
-	abstract public MetricValue getValue(Scope s);
+	abstract public MetricValue getValue(IMetricScope s);
+	
+	abstract public MetricValue getRawValue(IMetricScope s);
 
 	/***
 	 * Method to duplicate itself (cloning)
@@ -332,6 +354,19 @@ public abstract class BaseMetric {
 	 */
 	private boolean isUnitEvent() {
 		return this.unit == 'e';
+	}
+	
+	private IMetricValueFormat getFormatBasedOnAnnotation(AnnotationType annotationType) {
+		
+		IMetricValueFormat displayFormat;
+		if (annotationType == AnnotationType.PERCENT) {
+			displayFormat = MetricValueFormatFactory.createFormatPercent();
+		} else if (annotationType == AnnotationType.PROCESS) {
+			displayFormat = MetricValueFormatFactory.createFormatProcess(); 
+		} else {
+			displayFormat = MetricValueFormatFactory.createFormatDefault(); 
+		}
+		return displayFormat;
 	}
 
 	/**

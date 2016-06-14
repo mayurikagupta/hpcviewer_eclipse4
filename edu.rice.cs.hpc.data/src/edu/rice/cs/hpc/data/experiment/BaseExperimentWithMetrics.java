@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
+import edu.rice.cs.hpc.data.experiment.metric.IMetricManager;
 
 
 /****************************************************************************
@@ -13,6 +15,7 @@ import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
  *
  ****************************************************************************/
 public abstract class BaseExperimentWithMetrics extends BaseExperiment 
+implements IMetricManager
 {
 	/***** A list of metric descriptor   */
 	protected List<BaseMetric> metrics;
@@ -85,6 +88,22 @@ public abstract class BaseExperimentWithMetrics extends BaseExperiment
 		return null;	
 	}
 	
+	//////////////////////////////////////////////////////////////////////////
+	//Compute Derived Metrics												//
+	//////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Create a derived metric based on formula expression
+	 * @param objMetric : a new derived metric
+	 * @return 
+	 */
+	@Override
+	public void addDerivedMetric(DerivedMetric objMetric) {
+
+		this.metrics.add(objMetric);
+	}
+
+
 
 	//////////////////////////////////////////////////////////////////////////
 	//ACCESS TO SEARCH PATH												    //

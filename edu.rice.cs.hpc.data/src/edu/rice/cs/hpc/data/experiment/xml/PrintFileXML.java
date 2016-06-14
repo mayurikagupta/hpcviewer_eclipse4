@@ -34,7 +34,9 @@ public class PrintFileXML {
 	 * @param experiment
 	 **--------------------------------------------------------------------------------**/
 	public void print(PrintStream objStream, Experiment experiment) {
-		RootScope flatRoot = (RootScope) experiment.getRootScope(RootScopeType.Flat);
+		RootScope cctRoot  = experiment.getRootScope(RootScopeType.CallingContextTree);
+		RootScope flatRoot = experiment.getRootScope(RootScopeType.Flat);
+		experiment.createFlatView(cctRoot, flatRoot);
 		if (flatRoot != null) {
 			
 			//---------------------------------------------------------------------------------
@@ -182,8 +184,8 @@ public class PrintFileXML {
 	    //---------------------------------------------------------
 		// finding and opeing DTD file (quite painful for jar file
 	    //---------------------------------------------------------
-
-		String hpc_dir = System.getenv("HPCVIEWER_DIR_PATH");
+		
+		String hpc_dir = System.getProperty("HPCVIEWER_DIR_PATH");
 		if (hpc_dir == null) return;
 		
 		InputStream objFile = null;

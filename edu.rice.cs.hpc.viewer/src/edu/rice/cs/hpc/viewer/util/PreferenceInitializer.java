@@ -19,7 +19,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		//store.setDefault(PreferenceConstants.P_FONT_VIEW, Utilities.fontMetric.toString());
 		store.setDefault(PreferenceConstants.P_PATH,"");
-		store.setDefault(PreferenceConstants.P_THRESHOLD,"0.5");
+		store.setDefault(PreferenceConstants.P_THRESHOLD, 
+				String.valueOf(PreferenceConstants.P_THRESHOLD_DEFAULT));
 		store.setDefault(PreferenceConstants.P_CALLER_VIEW, true);
 	}
 

@@ -54,7 +54,8 @@ protected String groupName;
 	
 public GroupScope(RootScope root, String groupname)
 {
-	super(root, null, Scope.NO_LINE_NUMBER, Scope.NO_LINE_NUMBER, Scope.idMax++, Scope.idMax);
+	// the ID needs to be defined further
+	super(root, null, Scope.NO_LINE_NUMBER, Scope.NO_LINE_NUMBER, -1, -1);
 	this.groupName = groupname;
 //	this.id = "GroupScope";
 }

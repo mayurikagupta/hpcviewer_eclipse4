@@ -4,12 +4,12 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeCallerView;
 import edu.rice.cs.hpc.data.experiment.scope.IMergedScope;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
-import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+//import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.filters.ExclusiveOnlyMetricPropagationFilter;
 import edu.rice.cs.hpc.data.experiment.scope.filters.InclusiveOnlyMetricPropagationFilter;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.FinalizeMetricVisitorWithBackup;
-import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
+//import edu.rice.cs.hpc.data.experiment.scope.visitors.FinalizeMetricVisitorWithBackup;
+//import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 
 /************************************************************************
@@ -23,8 +23,8 @@ public class CallerViewContentProvider extends AbstractContentProvider
 {
 	private ExclusiveOnlyMetricPropagationFilter exclusiveOnly;
 	private InclusiveOnlyMetricPropagationFilter inclusiveOnly;
-	private PercentScopeVisitor percentVisitor;
-	private FinalizeMetricVisitorWithBackup finalizeVisitor;
+	//private PercentScopeVisitor percentVisitor;
+	//private FinalizeMetricVisitorWithBackup finalizeVisitor;
 	
 	public CallerViewContentProvider()
 	{
@@ -47,7 +47,7 @@ public class CallerViewContentProvider extends AbstractContentProvider
     	if(parentElement instanceof IMergedScope) {
     		// normal mode
     		IMergedScope parent = ((IMergedScope) parentElement);
-    		results = parent.getAllChildren(finalizeVisitor, percentVisitor, inclusiveOnly, exclusiveOnly);
+    		results = parent.getAllChildren(inclusiveOnly, exclusiveOnly);
         	
     	} else if (parentElement instanceof Scope) {
     		Scope scope = (Scope) parentElement;
@@ -87,8 +87,8 @@ public class CallerViewContentProvider extends AbstractContentProvider
     	exclusiveOnly = new ExclusiveOnlyMetricPropagationFilter(experiment);
     	inclusiveOnly = new InclusiveOnlyMetricPropagationFilter(experiment);
     	
-    	RootScope root = experiment.getCallerTreeRoot();
-    	percentVisitor = new PercentScopeVisitor(experiment.getMetricCount(), root);
-    	finalizeVisitor = new FinalizeMetricVisitorWithBackup(experiment.getMetrics());
+    	//RootScope root = experiment.getCallerTreeRoot();
+/*    	percentVisitor = new PercentScopeVisitor(experiment.getMetricCount(), root);
+    	finalizeVisitor = new FinalizeMetricVisitorWithBackup(experiment.getMetrics());*/
     }    
 }

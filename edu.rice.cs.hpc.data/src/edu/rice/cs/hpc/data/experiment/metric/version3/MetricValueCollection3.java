@@ -54,12 +54,15 @@ public class MetricValueCollection3 implements IMetricValueCollection
 					{
 						if (values[i] != MetricValue.NONE)
 						{
-							MetricValue mv = root.getMetricValue(i);
-							if (mv != MetricValue.NONE)
-							{
-								float percent = 100 * (values[i].getValue()/mv.getValue());
-								MetricValue.setAnnotationValue(values[i], percent);
+							float annotationValue = 1.0f;
+							if (!(scope instanceof RootScope)) {
+								MetricValue mv = root.getMetricValue(i);
+								if (mv != MetricValue.NONE)
+								{
+									annotationValue = values[i].getValue()/mv.getValue();
+								}
 							}
+							MetricValue.setAnnotationValue(values[i], annotationValue);
 						}
 					}
 					return values[index];

@@ -68,7 +68,7 @@
          </property>
          <property
                name="aboutText"
-               value="hpctracecviewer is a user interface for analyzing a database of   &#x0A;performance metrics in conjunction with an application&apos;s source code.&#x0A;&#x0A;hpctraceviewer is part of Rice University&apos;s HPCToolkit project.  Development of&#x0A;HPCToolkit is principally funded by the Department of Energy&apos;s Office of &#x0A;Science as part of the SciDAC Center for Scalable Application Development&#x0A;Software and the Performance Engineering Research Institute. &#x0A;&#x0A;Release 5.4.0  (C) Copyright 2015, Rice University.">
+               value="hpcviewer is a user interface for analyzing a database of &#x0A;performance metrics in conjunction with an application&apos;s source code.&#x0A;&#x0A;hpcviewer is part of Rice University&apos;s HPCToolkit project. Development of &#x0A;HPCToolkit is principally funded by the Department of Energy&apos;s Office of &#x0A;Science as part of the SciDAC Center for Scalable Application Development &#x0A;Software (CScADS), the Performance Engineering Research Institute (PERI) &#x0A;and Performance Insight For Programmers and Exascale Runtimes (PIPER).&#x0A;&#x0A;Release 5.4.2  (C) Copyright 2016, Rice University.">
          </property>
          <property
                name="startupProgressRect"
@@ -125,6 +125,11 @@
                class="org.eclipse.ui.handlers.RegistryToggleState:false"
                id="org.eclipse.ui.commands.toggleState">
          </state>
+      </command>
+      <command
+            defaultHandler="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+            id="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+            name="Refresh">
       </command>
    </extension>
    <extension
@@ -245,6 +250,26 @@
             </command>
          </menu>
       </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:hpcdepthview.view">
+         <command
+               commandId="edu.rice.cs.hpc.traceviewer.actions.Refresh"
+               icon="icons/refresh-16.png"
+               label="Refresh"
+               style="push"
+               tooltip="Refresh data and repaint the views">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="edu.rice.cs.hpc.traceviewer.services.DataService.data">
+                  <equals
+                        value="ENABLED">
+                  </equals>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.services">
@@ -256,13 +281,6 @@
          </variable>
          <variable
                name="edu.rice.cs.hpc.traceviewer.services.DataService.update"
-               priorityLevel="workbench">
-         </variable>
-      </sourceProvider>
-      <sourceProvider
-            provider="edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService">
-         <variable
-               name="edu.rice.cs.hpc.traceviewer.services.ProcessTimelineService.data"
                priorityLevel="workbench">
          </variable>
       </sourceProvider>

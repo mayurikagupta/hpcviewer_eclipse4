@@ -52,15 +52,8 @@ public class LoopScope extends Scope
 public LoopScope(RootScope root, SourceFile file, int first, int last, int cct_id, int flat_id)
 {
 	super(root, file, first, last, cct_id, flat_id);
-//	this.id = "LoopScope";
 }
 
-public LoopScope(RootScope root, SourceFile file, int first, int last)
-{
-	super(root, file, first, last, Scope.idMax, Scope.idMax);
-	Scope.idMax++;
-//	this.id = "LoopScope";
-}
 
 public Scope duplicate() {
     return new LoopScope(this.root,  this.sourceFile,  

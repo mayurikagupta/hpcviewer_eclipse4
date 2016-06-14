@@ -1,11 +1,9 @@
 package edu.rice.cs.hpc.viewer.framework;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 
-import edu.rice.cs.hpc.filter.view.FilterView;
 import edu.rice.cs.hpc.viewer.scope.bottomup.CallerScopeView;
 import edu.rice.cs.hpc.viewer.scope.flat.FlatScopeView;
 import edu.rice.cs.hpc.viewer.scope.topdown.ScopeView;
@@ -42,7 +40,6 @@ public class Perspective implements IPerspectiveFactory {
 			objLayout[i].addView(CallerScopeView.ID + ":" + i);
 			objLayout[i].addView(FlatScopeView.ID + ":" + i);
 		}
-		layout.addView(FilterView.ID, SWT.RIGHT, .5f, editorArea);
 	}
 	
 	// This method allows an external package to add views to the layout folders created above.

@@ -15,7 +15,7 @@
 package edu.rice.cs.hpc.data.experiment.source;
 
 
-import edu.rice.cs.hpc.data.experiment.source.EmptySourceFile;
+
 
 import java.io.File;
 import java.io.InputStream;

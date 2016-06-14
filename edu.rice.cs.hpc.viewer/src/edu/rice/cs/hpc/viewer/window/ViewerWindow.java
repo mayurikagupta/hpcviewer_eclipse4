@@ -14,6 +14,8 @@ import org.eclipse.ui.handlers.RegistryToggleState;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.filter.service.FilterMap;
 import edu.rice.cs.hpc.filter.service.FilterStateProvider;
 import edu.rice.cs.hpc.viewer.actions.DebugShowCCT;
@@ -91,30 +93,50 @@ public class ViewerWindow {
 
 	private void filterAllDatabases(boolean filter)
 	{
-		// filter the experiment
-		Experiment []experiments = getExperiments();
-		if (experiments != null)
-		{
-			for (Experiment experiment : experiments)
+		for (Database db: dbObj) {
+			if (db == null)
+				continue;
+			Experiment experiment = db.getExperiment();
+			// filter the experiment if it is not null and it is in original form
+			// (it isn't a merged database)
+			if (experiment != null && !experiment.isMergedDatabase()) 
 			{
-				if (filter) 
-				{
-					// filtering is needed
-					experiment.filter(FilterMap.getInstance());
-				} else 
-				{
-					// filter is disabled, we need to reopen the database
-					try {
-						experiment.reopen();
-					} catch (Exception e) {
-						e.printStackTrace();
+				try {
+					// ---------------------------------------
+					// conserve the added metrics
+					// ---------------------------------------
+					ArrayList<DerivedMetric> metrics = new ArrayList<DerivedMetric>(1);
+					for (BaseMetric metric : experiment.getMetrics()) {
+						if (metric instanceof DerivedMetric) {
+							metrics.add((DerivedMetric) metric);
+						}
 					}
+					// ---------------------------------------
+					// filtering 
+					// ---------------------------------------
+					experiment.reopen();
+					experiment.filter(FilterMap.getInstance());
+					
+					// ---------------------------------------
+					// put the derived metrics back
+					// ---------------------------------------
+					for (DerivedMetric metric: metrics) {
+						experiment.addDerivedMetric(metric);
+					}
+					
+					// ---------------------------------------
+					// reset experiment
+					// ---------------------------------------
+					db.setExperiment(experiment);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
-			final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);
-			DatabaseState databaseState = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
-			databaseState.refreshDatabase(filter);
 		}
+		final ISourceProviderService service = (ISourceProviderService) winObj.getService(ISourceProviderService.class);
+		DatabaseState databaseState = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
+		databaseState.refreshDatabase(filter);
 	}
 	
 	/**

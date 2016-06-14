@@ -31,15 +31,16 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.SelectionEvent;
+
+import com.graphbuilder.math.ExpressionParseException;
 // hpcviewer
 import edu.rice.cs.hpc.common.util.UserInputHistory;
-import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.*;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric.AnnotationType;
+import edu.rice.cs.hpc.data.experiment.metric.format.IMetricValueFormat;
+import edu.rice.cs.hpc.data.experiment.metric.format.MetricValuePredefinedFormat;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
-// math expression
-import com.graphbuilder.math.*;
-import com.graphbuilder.math.func.*;
 
 /**
  * @author la5
@@ -66,15 +67,19 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	
 	// ------------ Metric and math variables
 	private String []arrStrMetrics;
-	private Expression expFormula;
+	private String expFormula;
+	
 	private final ExtFuncMap fctMap;
 	private final MetricVarMap varMap;
+	private final RootScope root;
+	
 	private DerivedMetric metric;
 	
 	// ------------- Others
 	static private final String HISTORY_FORMULA = "formula";			//$NON-NLS-1$
 	static private final String HISTORY_METRIC_NAME = "metric_name";	//$NON-NLS-1$
-	private Experiment experiment;
+	
+	private IMetricManager metricManager;
 	private Point expression_position;
 	
 	// ------------- object for storing history of formula and metric names
@@ -89,16 +94,17 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	 * @param parentShell
 	 * @param listOfMetrics
 	 */
-	public ExtDerivedMetricDlg(Shell parentShell, Experiment exp) {
-		this(parentShell, exp, null);
+	public ExtDerivedMetricDlg(Shell parentShell, IMetricManager mm, RootScope root) {
+		this(parentShell, mm, root, root);
 	}
 	
-	public ExtDerivedMetricDlg(Shell parent, Experiment exp, Scope s) {
+	public ExtDerivedMetricDlg(Shell parent, IMetricManager mm, RootScope root, Scope s) {
 		super(parent);
-		experiment = exp;
-		this.setMetrics(exp.getMetrics());
-		this.fctMap = new ExtFuncMap(exp.getMetrics());
-		this.varMap = new MetricVarMap ( s, exp );
+		metricManager = mm;
+		this.root  = root;
+		this.setMetrics(mm.getMetrics());
+		this.fctMap = new ExtFuncMap(mm.getMetrics());
+		this.varMap = new MetricVarMap ( root, s, mm );
 	}
 	
 	  //==========================================================
@@ -173,7 +179,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	    	cbExpression.setToolTipText("A spreadsheet-like formula using other metrics (variables), arithmetic operators, functions, and numerical constants");
 
 	    	if (metric != null) {
-				cbExpression.setText( metric.getFormula().toString() );
+				cbExpression.setText( metric.getFormula() );
 	    	}
 	    	
 			GridLayoutFactory.fillDefaults().numColumns(2).generateLayout(nameArea);
@@ -254,17 +260,13 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	    	lblFunc.setText("Functions:");
 	    	
 	    	final Combo cbFunc = new Combo(grpInsertion, SWT.READ_ONLY);
-	    	fctMap.loadDefaultFunctions();
-	    	Function arrFct[] = fctMap.getFunctions();
 	    	
 	    	// create the list of the name of the function
 	    	// list of the name  of the function and its arguments
-	    	final String []arrFunctions = new String[arrFct.length];
+	    	final String []arrFunctions = fctMap.getFunctionNamesWithType();
 	    	// the list of the name of the function to be inserted
 	    	final String []arrFuncNames = fctMap.getFunctionNames();
-	    	for(int i=0;i<arrFct.length;i++) {
-	    		arrFunctions[i] = arrFct[i].toString();
-	    	}
+
 	    	// insert the name of the function into the combo box
 	    	if(arrFunctions != null && arrFunctions.length>0) {
 	    		cbFunc.setItems(arrFunctions);
@@ -359,21 +361,29 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			});
 			btnDefaultFormat.setSelection(true);
 
+			// when we are provided a metric, we should select the correct option based
+			// on the type of the metric. i.e., we need to make sure:
+			// - percent option is checked
+			// - type of metric is correctly selected
+			
 			if (metric != null) {
 				boolean bPercent = metric.getAnnotationType() == BaseMetric.AnnotationType.PERCENT;
 				btnPercent.setSelection( bPercent );
 				
 				IMetricValueFormat format = metric.getDisplayFormat();
+				// check if the metric has a custom format. If it is the case, check if it only displays
+				// percentage (with specific format) or user-customized format
 				if (format instanceof MetricValuePredefinedFormat) {
 					String strFormat = ((MetricValuePredefinedFormat)format ).getFormat();
 					txtFormat.setText( strFormat  );
 					
 					if (strFormat.equals( FORMAT_PERCENT )) {
-						btnPercentFormat.setSelection(true);
-						
-						// only one option is allowed. If one is enabled, the other is disabled
-						btnDefaultFormat.setSelection(false);
+						btnPercentFormat.setSelection(true);						
+					} else {
+						btnCustomFormat.setSelection(true);
 					}
+					// only one option is allowed. If one is enabled, the other is disabled
+					btnDefaultFormat.setSelection(false);
 				}
 			}
 			
@@ -385,8 +395,6 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 					+ "Example: '%6.2f ' will display 6 digit floating-points with 2 digit precision. ");
 			
 			GridLayoutFactory.fillDefaults().numColumns(2).generateLayout(cCustomFormat);
-			
-			//GridLayoutFactory.fillDefaults().numColumns(1).generateLayout(cFormat);
 			
 			// item for expansion bar
 			ExpandItem eiOptions = new ExpandItem(barOptions, SWT.NONE, 0);
@@ -416,7 +424,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 		  StringBuffer sBuff = new StringBuffer(sText);
 
 		  // insert the metric variable ( i.e.: $ + metric index)
-		  final String sMetricIndex = signToPrepend + experiment.getMetric(selection_index).getShortName() ; 
+		  final String sMetricIndex = signToPrepend + metricManager.getMetric(selection_index).getShortName() ; 
 		  sBuff.insert(iSelIndex, sMetricIndex );
 		  cbExpression.setText(sBuff.toString());
 
@@ -433,13 +441,12 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	   */
 	  private boolean checkExpression() {
 		  boolean bResult = false;
-			String sExpression = this.cbExpression.getText();
-			if(sExpression.length() > 0) {
+		  	expFormula = this.cbExpression.getText();
+			if(expFormula.length() > 0) {
 				try {
-					expFormula = ExpressionTree.parse(sExpression);
-					bResult = evaluateExpression ( this.expFormula );
+					bResult = DerivedMetric.evaluateExpression(expFormula, varMap, fctMap);
 				} catch (ExpressionParseException e) {
-					MessageDialog.openError(this.getShell(), "Invalid expression", e.getDescription());
+					MessageDialog.openError(getShell(), "Error: incorrect expression", e.getDescription());
 				}
 			} else {
 				MessageDialog.openError(this.getShell(), "Error: empty expression", 
@@ -480,24 +487,6 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 		  return bResult;
 	  }
 	  
-	  /**
-	   * Run the evaluation 
-	   * @param objExpression
-	   * @return
-	   */
-	  private boolean evaluateExpression ( Expression objExpression ) {
-			try {
-				objExpression.eval( varMap, fctMap);
-				// if there is no exception, we assume everything goes fine
-				return true;
-				
-			} catch(java.lang.Exception e) {
-				// should throw an exception
-				MessageDialog.openError( this.getShell(), "Error: incorrect expression", e.getMessage());
-			}
-
-			return false;
-		}
 	  
 	  
 	  /*****
@@ -526,15 +515,15 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			  
 			  // create a new metric
 			  
-			  int metricLastIndex   = experiment.getMetricCount() -1;
-			  BaseMetric metricLast = experiment.getMetric(metricLastIndex);
+			  int metricLastIndex   = metricManager.getMetricCount() -1;
+			  BaseMetric metricLast = metricManager.getMetric(metricLastIndex);
 			  
 			  String metricLastID = metricLast.getShortName();
 			  metricLastIndex = Integer.valueOf(metricLastID) + 1;
 			  metricLastID = String.valueOf(metricLastIndex);
 
-			  metric = new DerivedMetric(experiment, expFormula, 
-					  cbName.getText(), metricLastID, experiment.getMetricCount(), 
+			  metric = new DerivedMetric(root, metricManager, expFormula, 
+					  cbName.getText(), metricLastID, metricManager.getMetricCount(), 
 					  annType, MetricType.INCLUSIVE);
 			  
 		  } else {
@@ -574,7 +563,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 	   * 
 	   * @param listOfMetrics
 	   */
-	  public void setMetrics(BaseMetric []listOfMetrics) {
+	  private void setMetrics(BaseMetric []listOfMetrics) {
 		  int nbMetrics = listOfMetrics.length;
 		  this.arrStrMetrics = new String[nbMetrics];
 		  for(int i=0;i<nbMetrics;i++) {

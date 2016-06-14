@@ -4,8 +4,9 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.viewer.editor.IViewerEditor;
-import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
+import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.window.ViewerWindow;
 import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 
@@ -56,20 +57,22 @@ public class BaseWindowTitle implements IWindowTitle {
 	 */
 	public String setTitle(IWorkbenchWindow window, IViewPart view) { 
 
-		if (view instanceof BaseScopeView) {
-			String sTitle = ((BaseScopeView) view).getRootScope().getRootName();
-			if (ViewerWindowManager.getNumberOfDatabases(window) <= 1) {
-				((BaseScopeView) view).setViewTitle(sTitle);
+		if (view instanceof AbstractBaseScopeView) {
+			final RootScope root = ((AbstractBaseScopeView) view).getRootScope();
+			if (root != null) {
+				String sTitle = root.getRootName();
+				if (ViewerWindowManager.getNumberOfDatabases(window) <= 1) {
+					((AbstractBaseScopeView) view).setViewTitle(sTitle);
+					return sTitle;
+				}
+				final AbstractBaseScopeView scopeView = (AbstractBaseScopeView) view;
+				final Experiment experiment = scopeView.getExperiment();
+				ViewerWindow vw = ViewerWindowManager.getViewerWindow(window);
+				int dbNum = 1 + vw.getDbNum(experiment);
+				sTitle = dbNum + "-" + sTitle + "("+experiment.getName()+")";
+				((AbstractBaseScopeView) view).setViewTitle(sTitle);
 				return sTitle;
 			}
-			final BaseScopeView scopeView = (BaseScopeView) view;
-			final Experiment experiment = scopeView.getExperiment();
-			ViewerWindow vw = ViewerWindowManager.getViewerWindow(window);
-			int dbNum = 1 + vw.getDbNum(experiment);
-			sTitle = dbNum + "-" + sTitle + "("+experiment.getName()+")";
-			((BaseScopeView) view).setViewTitle(sTitle);
-			return sTitle;
-
 		}
 		return null;
 	}

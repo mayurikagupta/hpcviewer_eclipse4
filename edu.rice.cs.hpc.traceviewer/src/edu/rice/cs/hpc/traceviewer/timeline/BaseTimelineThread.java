@@ -7,11 +7,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.DataPreparation;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 
 /*****************************************************************************
  * 
@@ -34,19 +36,24 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	final private double scaleY;	
 	final protected boolean usingMidpoint;
 	final private Queue<TimelineDataSet> queue;
-	final private AtomicInteger numTimelines;
-	final private IProgressMonitor monitor;
+	final private AtomicInteger currentLine;
+	final protected IProgressMonitor monitor;
+	protected final ImageTraceAttributes attributes;
+	
 
 	public BaseTimelineThread(SpaceTimeDataController stData,
+			ImageTraceAttributes attributes,
 			double scaleY, Queue<TimelineDataSet> queue, 
-			AtomicInteger numTimelines, boolean usingMidpoint, IProgressMonitor monitor)
+			AtomicInteger currentLine, 
+			boolean usingMidpoint, IProgressMonitor monitor)
 	{
 		this.stData 	   = stData;
 		this.scaleY 	   = scaleY;
 		this.usingMidpoint = usingMidpoint;
 		this.queue 		   = queue;
-		this.numTimelines  = numTimelines;
+		this.currentLine   = currentLine;
 		this.monitor 	   = monitor;
+		this.attributes	   = attributes;
 	}
 	
 	@Override
@@ -56,11 +63,11 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	 */
 	public Integer call() throws Exception {
 
-		ProcessTimeline trace = getNextTrace();
+		ProcessTimeline trace = getNextTrace(currentLine);
 		Integer numTraces = 0;
-		final double pixelLength = (stData.getAttributes().getTimeInterval())/(double)stData.getPixelHorizontal();
-		final long timeBegin = stData.getAttributes().getTimeBegin();
-
+		final double pixelLength = (attributes.getTimeInterval())/(double)attributes.numPixelsH;
+		final long timeBegin = attributes.getTimeBegin();
+		
 		while (trace != null)
 		{
 			// ---------------------------------
@@ -89,12 +96,18 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 				
 				final TimelineDataSet dataSet = data.getList();
 				queue.add(dataSet);				
+			} else {
+				// empty trace, we need to notify the BasePaintThread class
+				// of this anomaly by adding NullTimeline
+				queue.add(TimelineDataSet.NULLTimeline);
+				//System.out.println("init incorrect at " + trace.line());
 			}
-			numTimelines.decrementAndGet();
-			if (!monitor.isCanceled())
-				monitor.worked(1);
+			if (monitor.isCanceled())
+				return null;
 			
-			trace = getNextTrace();
+			monitor.worked(1);
+			
+			trace = getNextTrace(currentLine);
 			numTraces++;
 			
 			// ---------------------------------
@@ -102,8 +115,9 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 			// ---------------------------------
 			finalize();
 		}
+		//System.out.println("BTT q: " + queue.size() + " line:" + currentLine.get() +" tot: " + numTraces);
 		// terminate the monitor progress bar (if any) when there's no more work to do 
-		monitor.done();
+		//monitor.done();
 		return numTraces;
 	}
 
@@ -112,7 +126,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	 * 
 	 * @return
 	 ****/
-	abstract protected ProcessTimeline getNextTrace();
+	abstract protected ProcessTimeline getNextTrace(AtomicInteger currentLine);
 	
 	abstract protected boolean init(ProcessTimeline trace) throws IOException;
 	

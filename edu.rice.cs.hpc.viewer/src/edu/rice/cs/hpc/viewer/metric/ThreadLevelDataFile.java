@@ -1,13 +1,13 @@
 package edu.rice.cs.hpc.viewer.metric;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.eclipse.jface.action.IStatusLineManager;
 
-import edu.rice.cs.hpc.common.ui.TimelineProgressMonitor;
-import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.experiment.extdata.FileDB2;
 import edu.rice.cs.hpc.data.util.Constants;
 
@@ -24,16 +24,19 @@ public class ThreadLevelDataFile extends FileDB2
 	static private final int HEADER_LONG	=	32;
 	static int recordSz = Constants.SIZEOF_LONG + Constants.SIZEOF_LONG;
 
-	final private IStatusLineManager statusMgr;
+	private ExecutorService threadExecutor;
+	private int num_threads;
 	
 	public ThreadLevelDataFile(IStatusLineManager statusMgr)
 	{
-		this.statusMgr = statusMgr;
 	}
 	
 	public void open(String filename) throws IOException
 	{
 		super.open(filename, HEADER_LONG, recordSz);
+		final int numWork = getNumberOfRanks();
+		num_threads = Math.min(numWork, Runtime.getRuntime().availableProcessors());
+		threadExecutor = Executors.newFixedThreadPool( num_threads ); 
 	}
 	/**
 	 * return all metric values of a specified node and metric index
@@ -47,19 +50,11 @@ public class ThreadLevelDataFile extends FileDB2
 	{
 	
 		final double []metrics = new double[getNumberOfRanks()];
-		TimelineProgressMonitor monitor = null;
-		if (statusMgr != null) {
-			monitor = new TimelineProgressMonitor(statusMgr);
-		}
+
+		ExecutorCompletionService<Integer> ecs = new ExecutorCompletionService<Integer>(threadExecutor);
 
 		final int numWork = getNumberOfRanks();
-		int num_threads = Math.min(numWork, Runtime.getRuntime().availableProcessors());
 		final int numWorkPerThreads = (int) Math.ceil((float)numWork / (float)num_threads);
-		ArrayList<DataReadThread> listThreads = new ArrayList<DataReadThread>(num_threads);
-		
-		if (monitor != null) {
-			monitor.beginProgress(numWork, "Reading data ...", "Metric raw data", Util.getActiveShell());
-		}
 		
 		// --------------------------------------------------------------
 		// assign each thread for a range of files to gather the data
@@ -70,51 +65,57 @@ public class ThreadLevelDataFile extends FileDB2
 			final int end = Math.min(start+numWorkPerThreads, numWork);
 			
 			DataReadThread thread = new DataReadThread(nodeIndex, metricIndex, numMetrics, start, end,
-					monitor, metrics);
-			thread.start();
-			listThreads.add(thread);
+					this, metrics);
+			ecs.submit(thread);
 		}
 		
 		// --------------------------------------------------------------
 		// wait until all threads finish
 		// --------------------------------------------------------------
-		while (!listThreads.isEmpty()) {
+		for (int i=0; i<num_threads; i++) {
 			try {
-				for (DataReadThread thread : listThreads) {
-					try {
-						Thread.sleep(30);
-						if (monitor != null) {
-							monitor.reportProgress();
-						}
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					if (!thread.isAlive()) {
-						// The thread has done his job
-						// remove it from the list
-						listThreads.remove(thread);
-						
-						// this break is ugly, but needed to avoid using the "old" list
-						// we will use the "new" list in the next while iteration
-						break;
-					}
-				}
-			} catch (ConcurrentModificationException e) {
-				// we just remove a thread while iterating a list
-				// it's considered as normal behavior. nothing to do.
-				System.err.println(e.getMessage());
+				ecs.take().get();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
-		if (monitor != null) {
-			monitor.endProgress();
-		}
-		
 		return metrics;
 	}
 
 
+	public double[] getScopeMetrics(int thread_index, int metricIndex, int num_metrics) throws IOException
+	{
+		long offset = getOffsets()[thread_index];
+		int num_cct = getNumberOfCCT(thread_index, num_metrics);
+		double []values = new double[num_cct];
+		for (int i=0; i<num_cct; i++)
+		{
+			long position = getFilePosition(i+1, metricIndex, num_metrics);
+			values[i] = getDouble(offset + position);
+		}
+		return values;
+	}
+	
+	@Override
+	public void dispose()
+	{
+		threadExecutor.shutdown();
+		super.dispose();
+	}
+	
+	private int getNumberOfCCT(int thread_id, int num_metrics)
+	{
+		long []offsets = getOffsets();
+		long offset1 = offsets[thread_id];
+		long offset2 = thread_id == offsets.length-1 ? offsets[thread_id-1] : offsets[thread_id + 1];
+		
+		long distance = Math.abs(offset2-offset1);
+		int num_cct = (int) (distance / (num_metrics * Constants.SIZEOF_LONG));
+		
+		return num_cct;
+	}
+	
 	/**
 	 * get a position for a specific node index and metric index
 	 * @param nodeIndex
@@ -122,7 +123,7 @@ public class ThreadLevelDataFile extends FileDB2
 	 * @param num_metrics
 	 * @return
 	 */
-	private long getFilePosition(long nodeIndex, int metricIndex, int num_metrics) {
+	static private long getFilePosition(long nodeIndex, int metricIndex, int num_metrics) {
 		return ((nodeIndex-1) * num_metrics * Constants.SIZEOF_LONG) + (metricIndex * Constants.SIZEOF_LONG) +
 			// header to skip
 			HEADER_LONG;
@@ -133,14 +134,14 @@ public class ThreadLevelDataFile extends FileDB2
 	 * Thread helper class to read a range of files
 	 *
 	 */
-	private class DataReadThread extends Thread 
+	static private class DataReadThread implements Callable<Integer> 
 	{
 		final private long _nodeIndex;
 		final private int _metricIndex;
 		final private int _numMetrics;
 		final private int _indexFileStart, _indexFileEnd;
-		final private TimelineProgressMonitor _monitor;
 		final private double _metrics[];
+		final private ThreadLevelDataFile data;
 		
 		/***
 		 * Initialization for reading a range of file from indexFileStart to indexFileEnd
@@ -157,34 +158,34 @@ public class ThreadLevelDataFile extends FileDB2
 		 * @param metrics:		output to gather metrics
 		 */
 		public DataReadThread(long nodeIndex, int metricIndex, int numMetrics,
-				int indexFileStart, int indexFileEnd, TimelineProgressMonitor monitor,
+				int indexFileStart, int indexFileEnd, ThreadLevelDataFile data,
 				double metrics[]) {
 			_nodeIndex = nodeIndex;
 			_metricIndex = metricIndex;
 			_numMetrics = numMetrics;
 			_indexFileStart = indexFileStart;
 			_indexFileEnd = indexFileEnd;
-			_monitor = monitor;
 			_metrics = metrics;
+			this.data = data;
 		}
 		
-		public void run() {
+
+		@Override
+		public Integer call() throws Exception {
 			final long pos_relative = getFilePosition(_nodeIndex, _metricIndex, _numMetrics);
-			final long offsets[] = getOffsets();
+			final long offsets[] = data.getOffsets();
 			
 			for (int i=_indexFileStart; i<_indexFileEnd; i++) {
 				final long pos_absolute = offsets[i] + pos_relative;
 				try {
-					_metrics[i] = (double)getDouble(pos_absolute);
+					_metrics[i] = data.getDouble(pos_absolute);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 					break;
 				}
-				if (_monitor != null) {
-					_monitor.announceProgress();
-				}
 			}
+			return Integer.valueOf(_indexFileEnd);
 		}
 	}
 }

@@ -150,7 +150,8 @@ public final class MetricValue
 
 	public static boolean isAvailable(MetricValue m)
 	{
-		return ( (m != MetricValue.NONE) && getAvailable(m) && (m.value != 0.0) );
+		return ( (m != MetricValue.NONE) && getAvailable(m) && 
+				Float.compare(m.value, 0)!=0 );
 	}
 
 

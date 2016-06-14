@@ -2,7 +2,6 @@ package edu.rice.cs.hpc.data.experiment.merge;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
@@ -23,10 +22,10 @@ import edu.rice.cs.hpc.data.experiment.scope.visitors.ResetCounterVisitor;
  * 
  *
  ******************************************************/
-public class TreeSimilarity {
-
-	final private boolean debug = false;
-	private boolean verbose = false;
+public class TreeSimilarity 
+{
+	final static public String PROP_DEBUG = "merge.debug";
+	final static private boolean debug = Boolean.getBoolean(PROP_DEBUG);
 	
 	int numNodes = 0;
 	int numMerges = 0;
@@ -46,10 +45,8 @@ public class TreeSimilarity {
 	 * @param source: the source root scope
 	 * 
 	 */
-	public TreeSimilarity(int offset, RootScope target, RootScope source, boolean verbose)
+	public TreeSimilarity(int offset, RootScope target, RootScope source)
 	{
-		this.verbose = verbose;
-		
 		// reset counter
 		IScopeVisitor visitor = new ResetCounterVisitor();
 		source.dfsVisitScopeTree(visitor);
@@ -63,11 +60,11 @@ public class TreeSimilarity {
 		mergeTree(target, source, offset);
 		
 		// compute the merged metric percentage
-		PercentScopeVisitor percentVisitor = new PercentScopeVisitor(offset, 
+		PercentScopeVisitor percentVisitor = new PercentScopeVisitor(0, 
 				((Experiment)target.getExperiment()).getMetricCount(), target);
 		target.dfsVisitScopeTree(percentVisitor);
 		
-		if (verbose) {
+		if (debug) {
 			float mergePercent = (float) (numMerges * 100.0 / numNodes);
 			float unmergePercent = (float) (numUnmerges * 100.0 / numNodes);
 			
@@ -108,8 +105,7 @@ public class TreeSimilarity {
 			{
 				addSubTree(target, childSource, metricOffset);
 			}
-			if (verbose)
-				numUnmerges += sortedSource.length;
+			numUnmerges += sortedSource.length;
 			return;
 		}
 		
@@ -140,8 +136,7 @@ public class TreeSimilarity {
 								i, sortedSource, metricOffset) ;
 						if (candidate != null)
 						{
-							if (verbose)
-								numMerges += 2;
+							numMerges += 2;
 							
 							// DFS: recursively, merge the children if they are similar
 							// the recursion will stop when all children are different
@@ -165,23 +160,18 @@ public class TreeSimilarity {
 			if (childSource.isCounterZero())
 			{
 				addSubTree(target, childSource, metricOffset);
-				if (verbose) {
-					numUnmerges++;
-				}
+				numUnmerges++;
 			}
 		}
 		
-		if (verbose) 
+		for (Scope s: sortedTarget)
 		{
-			for (Scope s: sortedTarget)
+			if (s.isCounterZero())
 			{
-				if (s.isCounterZero())
-				{
-					numUnmerges++;
-				}
+				numUnmerges++;
 			}
-			numNodes += (sortedSource.length + sortedTarget.length);
 		}
+		numNodes += (sortedSource.length + sortedTarget.length);
 	}
 	
 	/*****
@@ -231,8 +221,7 @@ public class TreeSimilarity {
 								}
 								if (candidate != null)
 								{
-									if (verbose)
-										numMerges += 2;
+									numMerges += 2;
 									
 									// we merged the kid, so we need to merge just the metric to the parent
 									Scope parent = candidate.target.getParentScope();
@@ -280,13 +269,6 @@ public class TreeSimilarity {
 		}
 	}
 	
-	/*****
-	 * data to store the sorted children of a scope (so we don't need to recreate again)
-	 *  every time we invoke the scope
-	 */
-	final private HashMap<String, Scope[]> mapScopeChildren = new HashMap<String, Scope[]>();
-	
-	
 	/****
 	 * retrieve the sorted list of the children of a given scope
 	 * This function will use a cache if a list is already computed or not
@@ -296,18 +278,10 @@ public class TreeSimilarity {
 	 */
 	private Scope[] getSortedChildren(Scope scope)
 	{
-		String key = ((Experiment)scope.getExperiment()).getXMLExperimentFile().getAbsolutePath() +
-				": " + scope.getCCTIndex();
-		Scope []sortedChildren = mapScopeChildren.get(key);
-		if (sortedChildren != null)
-			return sortedChildren;
-		
 		Object []children = scope.getChildren();
 		if (children == null)
 			return null;
-		
-		sortedChildren = sortArrayOfNodes(children);
-		mapScopeChildren.put(key, sortedChildren);
+		Scope []sortedChildren = sortArrayOfNodes(children);
 		
 		return sortedChildren;
 	}
@@ -400,9 +374,7 @@ public class TreeSimilarity {
 					}
 				}
 			}
-			if (verbose) {
-				numSiblingMatches++;
-			}
+			numSiblingMatches++;
 			setMergedNodes(scope1, candidate, metricOffset);
 			
 			return new CoupleNodes(scope1, candidate, similar);
@@ -689,14 +661,21 @@ public class TreeSimilarity {
 	private float getAnnotationValue(Scope s)
 	{
 		final MetricValue mv = s.getMetricValue(0);
-		if (MetricValue.isAnnotationAvailable(mv)) 
+/*		if (MetricValue.isAnnotationAvailable(mv)) 
 		{
 			return MetricValue.getAnnotationValue(mv);
 		}
-		else 
+		else */
 		{
-			return MetricValue.getValue(mv);
+			float v 			= mv.getValue();
+			MetricValue root_mv = s.getRootScope().getMetricValue(0);
+			float rv 		    = root_mv.getValue();
+			if (Float.compare(rv, 0.0f)!=0) {
+				return v/rv;
+			}
 		}
+		// no annotation is available. Should we return the value ?
+		return mv.getValue();
 	}
 	
 	/****
@@ -720,7 +699,6 @@ public class TreeSimilarity {
 	private void mergeMetrics(Scope target, Scope source, int metricOffset)
 	{
 		source.copyMetrics(target, metricOffset);
-		//target.accumulateMetric(source, 0, metricOffset, emptyFilter);
 	}
 	
 	
@@ -738,7 +716,7 @@ public class TreeSimilarity {
 	 */
 	private class CompareScope implements Comparator<Scope> 
 	{
-		////@Override
+		@Override
 		public int compare(Scope s1, Scope s2) {
 			return (int) (s2.getMetricValue(0).getValue() - s1.getMetricValue(0).getValue());
 		}

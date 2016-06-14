@@ -6,6 +6,7 @@ import com.graphbuilder.math.ExpressionTree;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperimentWithMetrics;
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.scope.IMetricScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import com.graphbuilder.math.FuncMap;
 
@@ -33,7 +34,6 @@ public class AggregateMetric extends BaseMetric {
 	// map variable 
 	private MetricVarMap finalizeVarMap;
 	private CombineAggregateMetricVarMap combineVarMap;
-
 	
 	/**
 	 * @see BaseMetric
@@ -43,12 +43,15 @@ public class AggregateMetric extends BaseMetric {
 
 		super( sID, sDisplayName, displayed, format, annotationType, index, partner, type);
 		
-		this.fctMap = new FuncMap();
-		this.fctMap.loadDefaultFunctions();
+		fctMap = new FuncMap();
+		fctMap.loadDefaultFunctions();
 		
 		// set up the variables
-		this.finalizeVarMap = new MetricVarMap();
-		this.combineVarMap = new CombineAggregateMetricVarMap();
+		finalizeVarMap = new MetricVarMap();
+		finalizeVarMap.setMetric(this);
+		
+		combineVarMap = new CombineAggregateMetricVarMap();
+		combineVarMap.setMetric(this);
 	}
 
 
@@ -79,24 +82,11 @@ public class AggregateMetric extends BaseMetric {
 	 * @param exp
 	 *******/
 	public void init(BaseExperimentWithMetrics exp) {
-		this.finalizeVarMap.setExperiment((Experiment)exp);
-		this.combineVarMap.setExperiment((Experiment)exp);
+		this.finalizeVarMap.setMetricManager((Experiment)exp);
+		this.combineVarMap.setMetricManager((Experiment)exp);
 	}
 	
 	
-	/********
-	 * Assign the value of a scope based on the formula of a given type
-	 * @param type
-	 * @param scope
-	 *******/
-	public void finalize(Scope scope) {
-		Expression exp = this.formulaFinalize;
-		
-		if (exp != null) {
-			this.finalizeVarMap.setScope(scope);
-			this.setScopeValue(exp, this.finalizeVarMap, scope);
-		}
-	}
 	
 	/******
 	 * combining the metric from another view (typically cct) to this view
@@ -139,7 +129,7 @@ public class AggregateMetric extends BaseMetric {
 			double dValue = expression.eval(var_map, this.fctMap);
 			// ugly checking if the value is zero or not. There is no zero comparison in
 			// Java double, so we assume we can compare it with 0.0d
-			if (dValue == 0.0d)
+			if (Double.compare(dValue, 0.0d) == 0)
 				mv = MetricValue.NONE;
 			else
 				mv = new MetricValue(dValue);
@@ -156,11 +146,42 @@ public class AggregateMetric extends BaseMetric {
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.data.experiment.metric.BaseMetric#getValue(edu.rice.cs.hpc.data.experiment.scope.Scope)
 	 */
-	public MetricValue getValue(Scope s) {
+	public MetricValue getValue(IMetricScope scope) {
+		MetricValue value = MetricValue.NONE;
+		if (formulaFinalize != null) {
+			this.finalizeVarMap.setScope(scope);
+			try {
+				double dValue = formulaFinalize.eval(finalizeVarMap, fctMap);
+				// ugly checking if the value is zero or not. There is no zero comparison in
+				// Java double, so we assume we can compare it with 0.0d
+				if (Double.compare(dValue, 0.0d) != 0) {
+					value = new MetricValue(dValue);
+					if (getAnnotationType() == AnnotationType.PERCENT) {
+						if (rootValue == null)
+							rootValue = scope.getRootMetricValue(this);
+						if (rootValue != MetricValue.NONE) {
+							float percent = (float) (dValue / rootValue.getValue());
+							MetricValue.setAnnotationValue(value, percent);
+						}
+					}
+				}
+			} catch(java.lang.Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			// metric has no finalize formula
+			// get whatever the combine formula has ?
+			value = getRawValue(scope);
+		}
+		return value;
+	}
+
+	@Override
+	public MetricValue getRawValue(IMetricScope s) {
 		MetricValue mv = s.getMetricValue(this.index);
 		return mv;
 	}
-
+	
 	@Override
 	/*
 	 * (non-Javadoc)

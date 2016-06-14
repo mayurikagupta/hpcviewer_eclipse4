@@ -27,10 +27,11 @@ import edu.rice.cs.hpc.traceviewer.operation.BufferRefreshOperation;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
 import edu.rice.cs.hpc.traceviewer.operation.ZoomOperation;
 import edu.rice.cs.hpc.traceviewer.painter.AbstractTimeCanvas;
-import edu.rice.cs.hpc.traceviewer.painter.ImageTraceAttributes;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Frame;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.Position;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.Frame;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
+import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 
@@ -89,13 +90,11 @@ implements IOperationHistoryListener
 
 	private void refreshWithCondition()
 	{
-		if (imageBuffer == null){
+		if (getBuffer() == null){
 			// ------------------------------------------------------------------------
 			// ------------------------------------------------------------------------
-			if (detailData != null) {
-				rebuffer(detailData);
-				return;
-			}
+			rebuffer(detailData);
+			return;
 		}
 		
 		// ------------------------------------------------------------------------
@@ -104,7 +103,7 @@ implements IOperationHistoryListener
 		// it's in hidden state, and then it turns visible. 
 		// this will cause misalignment in the view
 		// ------------------------------------------------------------------------
-		final Rectangle r1 = imageBuffer.getBounds();
+		final Rectangle r1 = getBuffer().getBounds();
 		final Rectangle r2 = getClientArea();
 		
 		if (!(r1.height == r2.height && r1.width == r2.width))
@@ -131,16 +130,16 @@ implements IOperationHistoryListener
 		// ------------------------------------------------------------------------------------------
 		// let use GC instead of ImageData since GC allows us to draw lines and rectangles
 		// ------------------------------------------------------------------------------------------
-		if (imageBuffer != null) {
-			imageBuffer.dispose();
-		}
+		initBuffer();
 		final int viewWidth = getBounds().width;
 		final int viewHeight = getBounds().height;
 
 		if (viewWidth == 0 || viewHeight == 0)
 			return;
 
-		imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
+		final Image imageBuffer = new Image(getDisplay(), viewWidth, viewHeight);
+		setBuffer(imageBuffer);
+		
 		GC buffer = new GC(imageBuffer);
 		buffer.setBackground(Constants.COLOR_WHITE);
 		buffer.fillRectangle(0, 0, viewWidth, viewHeight);
@@ -167,8 +166,10 @@ implements IOperationHistoryListener
 			for (int y = 0; y < detailData.height; ++y)
 			{
 				int pixelValue = detailData.getPixel(x,y);
-				if (sortedColorMap.containsKey(pixelValue))
-					sortedColorMap.put( pixelValue , sortedColorMap.get(pixelValue)+1 );
+				
+				Integer count  = sortedColorMap.get(pixelValue);
+				if (count != null)
+					sortedColorMap.put( pixelValue , count+1 );
 				else
 					sortedColorMap.put( pixelValue , 1);
 			}
@@ -184,10 +185,11 @@ implements IOperationHistoryListener
 			{
 				final Integer pixel = it.next();
 				final RGB rgb = detailData.palette.getRGB(pixel);
+
 				final Color c = new Color(getDisplay(), rgb);
 				final Integer numCounts = sortedColorMap.get(pixel);
-				final int height = Math.round(numCounts * yScale);
-				
+				final int height = (int) Math.ceil(numCounts * yScale);
+
 				buffer.setBackground(c);
 				
 				// if this is the last color, we should draw from the current position to the end
@@ -196,8 +198,9 @@ implements IOperationHistoryListener
 				
 				if (it.hasNext())
 					buffer.fillRectangle(xOffset, yOffset-height, (int) Math.max(1, xScale), height);
-				else
+				else {
 					buffer.fillRectangle(xOffset, 0, (int) Math.max(1, xScale), viewHeight-h);
+				}
 				yOffset -= height;
 				c.dispose();
 				
@@ -283,21 +286,16 @@ implements IOperationHistoryListener
 		protected String getText(Event event) {
 			if (mapStatistics != null ) 
 			{
-				// ------------------------------------------------
-				// copy the area pointed by the mouse to an image
-				// ------------------------------------------------
-				final Image image = new Image(event.display, 1, 1);
-				GC gc = new GC(SummaryTimeCanvas.this);
-				gc.copyArea(image, event.x, event.y);
-				final ImageData data = image.getImageData();
-				gc.dispose();
+				Image img = SummaryTimeCanvas.this.getBuffer();
+				if (img == null) 
+					return null;
 				
-				// ------------------------------------------------
-				// get the pixel of the image 
-				// ------------------------------------------------
-				int pixel = data.getPixel(0, 0); 
-				image.dispose();
-
+				ImageData imgData = img.getImageData();
+				if (imgData == null) 
+					return null;
+				
+				int pixel = imgData.getPixel(event.x, event.y);
+				
 				// ------------------------------------------------
 				// get the number of counts of this pixel
 				// ------------------------------------------------
@@ -308,6 +306,7 @@ implements IOperationHistoryListener
 					// compute the percentage
 					// ------------------------------------------------
 					float percent = (float)100.0 * ((float)stat / (float) totPixels);
+
 					if (percent > 0) {
 						final String percent_str = String.format("%.2f %%", percent);
 						return percent_str;

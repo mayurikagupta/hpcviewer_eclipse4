@@ -25,7 +25,7 @@ Release 5.4.0  (C) Copyright 2015, Rice University.
    <launcherArgs>
       <programArgs>-consoleLog
       </programArgs>
-      <vmArgs>-Dosgi.requiredJavaVersion=1.5 -XX:MaxPermSize=256m -Xms40m -Xmx1812m -Dosgi.locking=none
+      <vmArgs>-Dosgi.requiredJavaVersion=1.6 -XX:MaxPermSize=256m -Xms40m -Xmx1812m -Dosgi.locking=none
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
@@ -48,7 +48,6 @@ Release 5.4.0  (C) Copyright 2015, Rice University.
             winLargeHigh="/edu.rice.cs.hpc.viewer/icons/hpcviewer-icon-48x48-32bit.bmp"/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
@@ -89,6 +88,7 @@ if advised of the possibility of such damage.
    </license>
 
    <plugins>
+      <plugin id="com.graphbuilder"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="edu.rice.cs.hpc.common"/>
       <plugin id="edu.rice.cs.hpc.data"/>
@@ -171,8 +171,11 @@ if advised of the possibility of such damage.
       <plugin id="org.eclipse.ui"/>
       <plugin id="org.eclipse.ui.editors"/>
       <plugin id="org.eclipse.ui.ide"/>
+      <plugin id="org.eclipse.ui.ide.source"/>
       <plugin id="org.eclipse.ui.workbench"/>
       <plugin id="org.eclipse.ui.workbench.texteditor"/>
+      <plugin id="org.swtchart"/>
+      <plugin id="org.swtchart.ext"/>
       <plugin id="org.tukaani.xz"/>
       <plugin id="org.w3c.css.sac"/>
       <plugin id="org.w3c.dom.events"/>

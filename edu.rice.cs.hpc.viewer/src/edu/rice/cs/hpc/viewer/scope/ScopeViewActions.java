@@ -3,10 +3,10 @@ package edu.rice.cs.hpc.viewer.scope;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreePath;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.dialogs.Dialog;
 
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Composite;
@@ -18,11 +18,10 @@ import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.metric.*;
+import edu.rice.cs.hpc.viewer.framework.Activator;
 import edu.rice.cs.hpc.viewer.metric.*;
+import edu.rice.cs.hpc.viewer.util.PreferenceConstants;
 import edu.rice.cs.hpc.viewer.util.Utilities;
-import edu.rice.cs.hpc.viewer.window.Database;
-import edu.rice.cs.hpc.viewer.window.ViewerWindow;
-import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
 /**
  * Class to manage the actions of the tree view such as zooms, flattening,
  * resize the columns, etc. This class will add additional toolbar on the top
@@ -34,8 +33,13 @@ import edu.rice.cs.hpc.viewer.window.ViewerWindowManager;
  * @author laksono
  *
  */
-public abstract class ScopeViewActions extends ScopeActions /* implements IToolbarManager*/ {
-    //-------------- DATA
+public abstract class ScopeViewActions /*extends ScopeActions /* implements IToolbarManager*/ 
+{
+	// constants
+	static public double fTHRESHOLD = PreferenceConstants.P_THRESHOLD_DEFAULT; 
+	static final private int MESSAGE_TIMEOUT = 8000; // time out when showing a message
+
+	//-------------- DATA
     protected ScopeTreeViewer 	treeViewer;		  	// tree 
     protected RootScope 		myRootScope;		// the root scope of this view
 
@@ -45,7 +49,9 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
     public interface IActionType {};
     public enum ActionType implements IActionType {ZoomIn, ZoomOut} ;
 	
-	protected IWorkbenchWindow objWindow;
+	protected IWorkbenchWindow 	objWindow;
+	protected IScopeActionsGUI 	objActionsGUI;
+    protected Shell				objShell;
 	
     /**
      * Constructor: create actions and the GUI (which is a coolbar)
@@ -53,12 +59,14 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
      * @param parent composite
      */
     public ScopeViewActions(Shell shell, IWorkbenchWindow window, Composite parent, CoolBar coolbar) {
-    	super(shell, parent, coolbar);
-    	
+    	//super(shell, parent, coolbar);
+    	objShell = shell;
     	this.objWindow  = window;
     	createGUI(parent, coolbar);
 		// need to instantiate the zoom class after the creation of GUIs
 		objZoom = new ScopeZoom(treeViewer, (ScopeViewActionsGUI) this.objActionsGUI);
+		ScopedPreferenceStore objPref = (ScopedPreferenceStore)Activator.getDefault().getPreferenceStore();
+		fTHRESHOLD = objPref.getFloat(PreferenceConstants.P_THRESHOLD);
     }
 
     /**
@@ -87,6 +95,10 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
     	this.objActionsGUI.setTreeViewer(tree);
     	this.objZoom.setViewer(tree);
     }
+
+	public void setColumnStatus(boolean []status) {
+		this.objActionsGUI.setColumnsStatus(status);
+	}
 
     /**
 	 * find the hot call path
@@ -189,7 +201,7 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 		}
          public void run() {
              try{
-            	 sleep(5000);
+            	 sleep(MESSAGE_TIMEOUT);
              } catch(InterruptedException e) {
             	 e.printStackTrace();
              }
@@ -225,7 +237,13 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 		// remove the msg in 5 secs
 		RestoreMessageThread thrRestoreMessage = new RestoreMessageThread();
 		thrRestoreMessage.start();
-
+	}
+	
+	public void showWarningMessage(String strMsg) {
+		objActionsGUI.showWarningMessagge(strMsg);
+		// remove the msg in 5 secs
+		RestoreMessageThread thrRestoreMessage = new RestoreMessageThread();
+		thrRestoreMessage.start();
 	}
 	
 	/**
@@ -265,7 +283,7 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 			int iLevel = 0;
 			HotCallPath objHot = this.getHotCallPath(arrPath[0], item, current, metric, iLevel);
 			this.treeViewer.setSelection(new TreeSelection(objHot.path), true);
-			if(objHot.is_found == false) {
+			if(!objHot.is_found) {
 				this.showErrorMessage("No hot child.");
 			}
 		} else {
@@ -349,63 +367,17 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 		if (this.myRootScope == null)
 			return;
 		
-		final Experiment exp = (Experiment) this.myRootScope.getExperiment();
-		
 		// prepare the dialog box
-		ExtDerivedMetricDlg dlg = new ExtDerivedMetricDlg(this.objShell, exp);
+		ExtDerivedMetricDlg dlg = new ExtDerivedMetricDlg(this.objShell, 
+				getMetricManager(), myRootScope);
 
 		// display the dialog box
 		if(dlg.open() == Dialog.OK) {
 
 			final DerivedMetric objMetric = dlg.getMetric();
 			
-			exp.addDerivedMetric(objMetric);
-						
-			// get our database file and the experiment index assigned for it
-			String dbPath = exp.getDefaultDirectory().getAbsolutePath();
-			ViewerWindow vWin = ViewerWindowManager.getViewerWindow(this.objWindow);
-			if (vWin == null) {
-				System.out.printf("ScopeViewActions.addExtNewMetric: ViewerWindow class not found\n");
-				return;
-			}
-			int dbNum = vWin.getDbNum(exp);
-			if (dbNum < 0) {
-				System.out.printf("ScopeViewActions.addExtNewMetric: Database for path " + dbPath + " not found\n");
-				return;
-			}
-
-			// get the views created for our database
-			Database db = vWin.getDb(dbPath);
-			if (db == null) {
-				System.out.printf("ScopeViewActions.addExtNewMetric: Database class not found\n");
-				return;
-			}
-			
-			for(BaseScopeView view: db.getExperimentView().getViews()) {
-				
-				ScopeTreeViewer objTreeViewer = view.getTreeViewer();
-				
-				objTreeViewer.getTree().setRedraw(false);
-				TreeViewerColumn colDerived = objTreeViewer.addTreeColumn(objMetric,  false);
-				
-				// update the viewer, to refresh its content and invoke the provider
-				// bug SWT https://bugs.eclipse.org/bugs/show_bug.cgi?id=199811
-				// we need to hold the UI to draw until all the data is available
-				// 2012.09.21: do not refresh. It crashes on linux/gtk/ppc
-				//objTreeViewer.refresh();	// we refresh to update the data model of the table
-				
-				// notify the GUI that we have added a new column
-				ScopeViewActions objAction = view.getViewActions();
-				objAction.addTreeColumn(colDerived.getColumn());
-				//this.objActionsGUI.addMetricColumns(colDerived); 
-				objTreeViewer.getTree().setRedraw(true);
-				// adjust the column width 
-				//colDerived.getColumn().pack();
-				
-				// instead of refresh, we use update which will reset the input and
-				//	reinitialize the table. It isn't elegant, but works in all platforms
-				view.updateDisplay();
-			}
+			getMetricManager().addDerivedMetric(objMetric);
+			addMetricColumn(objMetric);
 		}
 	}
 
@@ -461,39 +433,20 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
 		final TreeColumn []columns = treeViewer.getTree().getColumns();
 		sbText.append( "\"" + objScope.getName() + "\"" );
 		
-		final Experiment exp = (Experiment) objScope.getExperiment();
-		
 		for(int j=1; j<columns.length; j++) 
 		{
 			if (columns[j].getWidth()>0) {
-				// the column is not hidden
-				BaseMetric metric = exp.getMetric(j-1); // bug fix: the metric starts from 0
-				sbText.append(sSeparator + metric.getMetricTextValue(objScope));
+				Object obj = columns[j].getData();
+				if (obj != null && obj instanceof BaseMetric) {
+					// the column is not hidden
+					BaseMetric metric = (BaseMetric) obj;
+							//exp.getMetric(j-1); // bug fix: the metric starts from 0
+					sbText.append(sSeparator + metric.getMetricTextValue(objScope));
+				}
 			}
 		}
 	}
 	
-	/**
-	 * Function to copy all visible nodes into a buffer string
-	 * @param elements
-	 * @param sSeparator
-	 * @return
-	 */
-	public String getContent(TreePath []elements, String sSeparator) {
-    	StringBuffer sbText = new StringBuffer();
-		for (int i=0; i<elements.length; i++ ) {
-			TreePath item = elements[i];
-			int nbSegments = item.getSegmentCount();
-			for ( int j=0; j<nbSegments; j++ ) {
-				Object o = item.getSegment(j);
-				if (o instanceof Scope) {
-					this.getContent((Scope)o, sSeparator, sbText);
-				}
-			}
-			sbText.append(Utilities.NEW_LINE);
-		}
-		return sbText.toString();
-	}
 	
 	//--------------------------------------------------------------------------
 	// BUTTONS CHECK
@@ -551,9 +504,11 @@ public abstract class ScopeViewActions extends ScopeActions /* implements IToolb
      */
     public abstract void checkStates ( Scope nodeSelected );
     
-    public abstract void checkStates();
-    
     protected abstract void registerAction( IActionType type );
+        
+    protected abstract IMetricManager getMetricManager();
+    
+    protected abstract void addMetricColumn(DerivedMetric metric);
     
     //===========================================================================
     //------------------- ADDITIONAL CLASSES ------------------------------------

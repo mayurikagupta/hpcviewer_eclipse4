@@ -37,6 +37,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.window.ToolTip;
@@ -60,17 +61,16 @@ import edu.rice.cs.hpc.viewer.window.Database;
  * - calling context view (top down)
  * - callers view (bottom-down)
  * - flat view (static)
- * - thread scope view (not implemented yet, but it will shows metric of a thread)
+ * - thread scope view (not implemented yet, but it will show thread-level metrics)
  *
  */
 abstract public class AbstractBaseScopeView  extends ViewPart 
 {	
-	protected ScopeTreeViewer 	treeViewer;		  	// tree for the caller and callees
-    
-	protected Database 	database;		// experiment data	
-	protected RootScope 		myRootScope;		// the root scope of this view
+	protected ScopeTreeViewer 	 treeViewer;		// tree for the caller and callees
+	protected Database 			 database;			// experiment data	
+	protected RootScope 		 myRootScope;		// the root scope of this view
 	protected ColumnViewerSorter sorterTreeColumn;	// sorter for the tree
-    protected ScopeViewActions objViewActions;	// actions for this scope view
+    protected ScopeViewActions 	 objViewActions;	// actions for this scope view
 	
     private EditorManager editorSourceCode;	// manager to display the source code
 	private Clipboard cb = null;
@@ -100,7 +100,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 				{
 					if (sourceValue instanceof Boolean)
 					{
-						Boolean state = (Boolean) sourceValue;
+						boolean state = ((Boolean) sourceValue).booleanValue();
 						enableFilter(state);
 					}
 				}
@@ -121,7 +121,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * Display the source code of the node in the editor area
      * @param node the current OR selected node
      */
-    private void displayFileEditor(Scope scope) {
+    void displayFileEditor(Scope scope) {
     	if(editorSourceCode == null) {
     		this.editorSourceCode = new EditorManager(this.getSite());
     	}
@@ -210,7 +210,6 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         // ---- additional feature
         mgr.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 
-
         // Laks 2009.06.22: add new feature to copy selected line to the clipboard
         mgr.add(acCopy);
 
@@ -239,7 +238,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         if(scope instanceof CallSiteScope) {
         	// get the call site scope
         	CallSiteScope callSiteScope = (CallSiteScope) scope;
-        	LineScope lineScope = (LineScope) callSiteScope.getLineScope();
+        	LineScope lineScope = callSiteScope.getLineScope();
         	// setup the menu
         	sMenuTitle = "Callsite "+lineScope.getToolTip();
         	ScopeViewTreeAction acShowCallsite = new ScopeViewTreeAction(sMenuTitle, lineScope){
@@ -269,7 +268,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	// only selected items that are copied into clipboard
     	TreeItem []itemsSelected = this.treeViewer.getTree().getSelection();
     	// convert the table into a string
-    	String sText = this.objViewActions.getContent(itemsSelected, "\t");
+    	String sText = this.objViewActions.getContent(itemsSelected, " \t");
     	// send the string into clipboard
     	TextTransfer textTransfer = TextTransfer.getInstance();
     	if (this.cb == null)
@@ -302,10 +301,9 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     
     /**
      * Actions/menus for Scope view tree.
-     * @author laksono
      *
      */
-    protected class ScopeViewTreeAction extends Action {
+    static protected class ScopeViewTreeAction extends Action {
     	protected Scope scope;
     	public ScopeViewTreeAction(String sTitle, Scope scopeCurrent) {
     		super(sTitle);
@@ -331,8 +329,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		// Laks 2009.06.22: add multi-selection for enabling copying into clipboard 
     	treeViewer = new ScopeTreeViewer(aParent,SWT.BORDER|SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.MULTI);
     	// set the attributes
-    	AbstractContentProvider treeContentProvider = getScopeContentProvider(); 
-    	treeViewer.setContentProvider(treeContentProvider);
+    	treeViewer.setContentProvider(getScopeContentProvider());
         treeViewer.getTree().setHeaderVisible(true);
         treeViewer.getTree().setLinesVisible(true);
         
@@ -367,7 +364,8 @@ abstract public class AbstractBaseScopeView  extends ViewPart
          * On MAC it doesn't matter which button, but on Windows, we need to make sure !
          */
         gc = new GC(this.treeViewer.getTree().getDisplay());
-        treeViewer.getTree().addListener(SWT.MouseDown, new ScopeMouseListener(gc, this.getSite().getPage())); 
+        final IWorkbenchPage page = getSite().getPage();
+        treeViewer.getTree().addListener(SWT.MouseDown, new ScopeMouseListener(this, page, gc, treeViewer)); 
         
         // bug #132: https://outreach.scidac.gov/tracker/index.php?func=detail&aid=132&group_id=22&atid=169
         // need to capture event of "collapse" tree then check if the button state should be updated or not.
@@ -375,9 +373,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         	public void treeCollapsed(TreeExpansionEvent event) {
         		objViewActions.checkNodeButtons();
         	}
-        	public void treeExpanded(TreeExpansionEvent event){
-        		
-        	}
+        	public void treeExpanded(TreeExpansionEvent event){}
         });
         
 		Utilities.listenerToResetRowHeight( treeViewer );
@@ -405,7 +401,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		        } else {
 		        	// selection on wrong node
 		        	objViewActions.disableButtons();
-		        	objViewActions.checkStates();
+		        	objViewActions.checkStates(null);
 		        }
 		      }
 		}); 
@@ -476,8 +472,21 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * @see org.eclipse.ui.part.WorkbenchPart#dispose()
      */
     public void dispose() {
+		disactivateListeners();
+		
     	if (gc != null)
     		gc.dispose();
+    }
+    
+    /*****
+     * remove listener registered in this view
+     */
+    private void disactivateListeners()
+    {
+		final ISourceProviderService service   = (ISourceProviderService)Util.getActiveWindow().
+				getService(ISourceProviderService.class);
+		DatabaseState serviceProvider  = (DatabaseState) service.getSourceProvider(DatabaseState.DATABASE_NEED_REFRESH);
+		serviceProvider.removeSourceProviderListener(listener);
     }
     
     //======================================================
@@ -488,26 +497,24 @@ abstract public class AbstractBaseScopeView  extends ViewPart
      * Update the data input for Scope View, depending also on the scope
      */
     public void setInput(Database db, RootScope scope, boolean keepColumnStatus) {
-    	initDatabase(db, scope, keepColumnStatus);
-    	updateDisplay();
-    }
-    
-    /***
-     * initialize view without creating the tree and the metric columns
-     * 
-     * @param db
-     * @param scope
-     */
-    public void initDatabase(Database db, RootScope scope, boolean keepColumnStatus) {
     	database = db;
     	myRootScope = scope;// try to get the aggregate value
 
+    	if (database.getExperiment().isMergedDatabase()) {
+    		// a merged database doesn't need to have a refresh listener
+    		disactivateListeners();
+    	}
+    	
         // tell the action class that we have built the tree
-        this.objViewActions.setTreeViewer(treeViewer);
+        objViewActions.setTreeViewer(treeViewer);
         
         initTableColumns(keepColumnStatus);
+        
+        // notify the children class to update the display
+    	updateDisplay();
     }
     
+   
     
     //======================================================
     // ................ MISC ............................
@@ -595,23 +602,28 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     //======================================================
 
     
-    /***
+    /*********************************************************
      * 
      * class to handle mouse up and down event in scope tree
      *
-     */
-    public class ScopeMouseListener implements Listener {
+     *********************************************************/
+    static private class ScopeMouseListener implements Listener {
 
     	final private GC gc;
+    	final private TreeViewer treeViewer;
     	final private IWorkbenchPage page;
+    	final private AbstractBaseScopeView view;
     	
     	/**
     	 * initialization with the gc of the tree
     	 * @param gc of the tree
     	 */
-    	public ScopeMouseListener(final GC gc, IWorkbenchPage page) {
+    	public ScopeMouseListener(AbstractBaseScopeView view, 
+    			IWorkbenchPage page, GC gc, TreeViewer treeViewer) {
     		this.gc = gc;
+    		this.treeViewer = treeViewer;
     		this.page = page;
+    		this.view = view;
     	}
     	
     	/*
@@ -621,7 +633,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	public void handleEvent(Event event) {
 
     		// tell the children to handle the mouse click
-    		mouseDownEvent(event);
+    		view.mouseDownEvent(event);
 
     		if(event.button != 1) {
     			// yes, we only allow the first button
@@ -649,7 +661,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	            if(scope instanceof CallSiteScope) {
     	            	// get the call site scope
     	            	CallSiteScope callSiteScope = (CallSiteScope) scope;
-    	            	LineScope lineScope = (LineScope) callSiteScope.getLineScope();
+    	            	LineScope lineScope = callSiteScope.getLineScope();
     	            	displaySourceCode(lineScope);
     	            } else {
     	            }
@@ -690,7 +702,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 			// display the source code if the view is not maximized
     		int state = page.getPartState( page.getActivePartReference() );
     		if (state != IWorkbenchPage.STATE_MAXIMIZED) {
-    			displayFileEditor( scope );
+    			view.displayFileEditor( scope );
     		}
     	}
     }

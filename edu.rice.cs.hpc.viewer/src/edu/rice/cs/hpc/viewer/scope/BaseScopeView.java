@@ -6,9 +6,11 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import edu.rice.cs.hpc.data.experiment.Experiment;
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
-import edu.rice.cs.hpc.filter.service.FilterMap;
+import edu.rice.cs.hpc.data.experiment.scope.visitors.FilterScopeVisitor;
+
 
 /**
  * 
@@ -23,17 +25,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     //======================================================
     // ................ METHODS  ..........................
     //======================================================
-	public BaseScopeView()
-	{
-		super();
-	}
 	
-	@Override
-    public void dispose() 
-    {
-    	//serviceProvider.removeSourceProviderListener(listener);
-    	super.dispose();
-    }
     /// ---------------------------------------------
     /// filter feature
     /// ---------------------------------------------
@@ -49,12 +41,22 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
     		return;
     	
     	Experiment experiment = getExperiment();
+    	if (experiment == null || myRootScope == null)
+    		return;
+    	
 		RootScopeType rootType = myRootScope.getType();
 		
 		// reassign root scope
 		myRootScope = experiment.getRootScope(rootType);
+		
 		// update the content of the view
-		updateDisplay();
+		refreshTree(myRootScope);
+		
+        // ------------------------------------------------------------
+    	// check the status of filter. 
+        // if the filter may incur misleading information, we should warn users
+        // ------------------------------------------------------------
+        checkFilterStatus(experiment);
     }
     
 
@@ -80,7 +82,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         this.updateDatabase(myExperiment);
 
         // Update root scope
-        if (myRootScope.getChildCount() > 0) {
+        if (myRootScope != null && myRootScope.getChildCount() > 0) {
             treeViewer.setInput(myRootScope);
             
             this.objViewActions.updateContent(getExperiment(), myRootScope);
@@ -94,9 +96,15 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             this.treeViewer.getTree().setSelection(objItem);
             // reset the button
             this.objViewActions.checkNodeButtons();
+            
+            // ------------------------------------------------------------
+        	// check the status of filter. 
+            // if the filter may incur misleading information, we should warn users
+            // ------------------------------------------------------------
+            checkFilterStatus(myExperiment);
         } else {
         	// empty experiment data (it should be a warning instead of an error. The error should be on the profile side).
-        	this.objViewActions.showErrorMessage("Warning: empty database.");
+        	// this.objViewActions.showErrorMessage("Warning: empty database.");
         }
    	}
 
@@ -110,15 +118,44 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         	Tree tree = treeViewer.getTree();
         	if (tree != null && !tree.isDisposed())
         	{
-        		AbstractContentProvider provider = (AbstractContentProvider) treeViewer.getContentProvider();
-        		FilterMap filter = FilterMap.getInstance();
-        		provider.setEnableFilter(filter.isFilterEnabled());
-        		
         		initTableColumns(tree, keepColumnStatus);
         	}
         }
 	}
 
+	/***
+	 * check if the filter incurs omitted scopes or not
+	 * 
+	 * @param myExperiment : the current experiment
+	 */
+	private void checkFilterStatus(Experiment myExperiment) 
+	{
+    	if (myExperiment != null) {
+    		int filterStatus = myExperiment.getFilterStatus();
+    		switch (filterStatus) {
+    			case FilterScopeVisitor.STATUS_FAKE_PROCEDURE:
+    				objViewActions.showWarningMessage("Warning: the result of filter may incur incorrect information in Callers View and Flat View.");
+    				break;
+    			case FilterScopeVisitor.STATUS_OK:
+    	    		int filtered = myExperiment.getNumberOfFilteredScopes();
+    	    		if (filtered>0) {
+    	    			// show the information how many scopes matched with the filer
+    	    			// this is important to warn users that filtering may hide some scopes 
+    	    			// that can be useful for analysis.
+        	    		String msg = "At least there ";
+        	    		if (filtered == 1) {
+        	    			msg += "is one scope";
+        	    		}  else {
+        	    			msg += "are " + filtered + " scopes";
+        	    		}
+    	    			objViewActions.showInfoMessage(msg + " matched with the filter.");
+    	    		}
+	    			break;
+    		}
+    	}
+
+	}
+	
 	/******
 	 * The same version as {@link BaseScopeView.initTableColumns} but without
 	 * 	worrying if the tree has been disposed or not.
@@ -128,11 +165,12 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 */
 	private void initTableColumns(Tree tree, boolean keepColumnStatus) 
 	{
-        final Experiment myExperiment = database.getExperiment();        
-        int nbMetrics = myExperiment.getMetricCount();
-        boolean status[] = new boolean[nbMetrics];
+        final Experiment myExperiment = database.getExperiment();
+        final int numMetric			  = myExperiment.getMetricCount();
 
         int iColCount = tree.getColumnCount();
+        boolean status[] = new boolean[numMetric];
+
         if(iColCount>1) {
         	TreeColumn []columns = tree.getColumns();
         	
@@ -141,7 +179,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         	// Hence, we have to retrieve the information of column width before the dispose action
         	for(int i=1;i<iColCount;i++) {        		
         		// bug fix: for callers view activation, we have to reserve the current status
-        		if (keepColumnStatus) {
+        		if (keepColumnStatus && i-1<status.length) {
         			int width = columns[i].getWidth();
         			status[i-1] = (width > 0);
         		}
@@ -158,26 +196,29 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         sorterTreeColumn.setMetric(myExperiment.getMetric(0));
 
         // dirty solution to update titles
-        TreeViewerColumn []colMetrics = new TreeViewerColumn[nbMetrics];
+        TreeViewerColumn []colMetrics = new TreeViewerColumn[numMetric];
         {
             // Update metric title labels
-            String[] titles = new String[nbMetrics+1];
+            String[] titles = new String[numMetric+1];
             titles[0] = "Scope";	// unused element. Already defined
             // add table column for each metric
-        	for (int i=0; i<nbMetrics; i++)
+        	for (int i=0; i<numMetric; i++)
         	{
-        		titles[i+1] = myExperiment.getMetric(i).getDisplayName();	// get the title
-        		colMetrics[i] = this.treeViewer.addTreeColumn(myExperiment.getMetric(i), (i==0));
-        		
-        		// bug fix: for view initialization, we need to reset the status of hide/view
-        		if (!keepColumnStatus) {
-            		status[i] = myExperiment.getMetric(i).getDisplayed();
+        		final BaseMetric metric = myExperiment.getMetric(i);
+        		if (metric != null) {
+            		titles[i+1] = metric.getDisplayName();	// get the title
+            		colMetrics[i] = this.treeViewer.addTreeColumn(metric, (i==0));
+            		
+            		// bug fix: for view initialization, we need to reset the status of hide/view
+            		if (!keepColumnStatus) {
+                		status[i] = metric.getDisplayed();
+            		}
         		}
         	}
             treeViewer.setColumnProperties(titles); // do we need this ??
         }
         // update the root scope of the actions !
-        this.objViewActions.updateContent(myExperiment, (RootScope)this.myRootScope);
+        this.objViewActions.updateContent(myExperiment, this.myRootScope);
     	this.objViewActions.objActionsGUI.setColumnsStatus(status);
 
 	}
@@ -186,5 +227,14 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
      * @param new_database
      */
     abstract protected void updateDatabase(Experiment new_database);
+    
+    /***
+     * Method to be implemented by the child class.<br/>
+     * This method is called when a filter is applied, and the view needs
+     * to be refreshed with the new root tree.
+     * 
+     * @param root : the new root tree
+     */
+    abstract protected void refreshTree(RootScope root);
 
 }

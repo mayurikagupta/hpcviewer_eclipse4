@@ -3,18 +3,21 @@ package edu.rice.cs.hpc.traceviewer.main;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.data.db.BaseDataVisualization;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.painter.BasePaintThread;
 import edu.rice.cs.hpc.traceviewer.painter.ImagePosition;
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
+
 
 /*****************************************************************
  * 
@@ -50,10 +53,11 @@ public class DetailPaintThread
 	 * @param debugMode : flag whether we need to show text information
 	 */
 	public DetailPaintThread( SpaceTimeDataController stData, Queue<TimelineDataSet> list, int numLines,
-			AtomicInteger paintDone, Device device, int width, Point maxTextSize, boolean debugMode) {
+			AtomicInteger numDataCollected, AtomicInteger paintDone, Device device, int width, 
+			Point maxTextSize, boolean debugMode,
+			IProgressMonitor monitor) {
 		
-		super(stData, list, numLines, paintDone, device, width);
-		
+		super(stData, list, numLines, numDataCollected, paintDone, device, width, monitor);
 		this.maxTextSize = maxTextSize;
 		this.debugMode = debugMode;
 	}
@@ -94,8 +98,8 @@ public class DetailPaintThread
 	}
 
 	@Override
-	protected void initPaint(Device device, int width, int height) {
-
+	protected void initPaint(/*Device device, */int width, int height) {
+		Display device = Display.getDefault();
 		lineFinal = new Image(device, width, height);
 		lineOriginal = new Image(device, width, 1);
 		
@@ -117,7 +121,7 @@ public class DetailPaintThread
 		// paint the text on the real image
 		final DetailDataVisualization dataDetail = (DetailDataVisualization) data;
 		paintText(gcFinal, data.x_start, data.x_end, height,
-				data.depth, data.color, dataDetail.sample_counts);		
+				data.depth, data.color, dataDetail.sample_counts);
 	}
 
 	@Override
@@ -130,10 +134,4 @@ public class DetailPaintThread
 
 		return imgPos;
 	}
-
-	@Override
-	protected int getNumberOfCreatedData() {
-
-		return stData.getNumberOfLines();
-	}	
 }

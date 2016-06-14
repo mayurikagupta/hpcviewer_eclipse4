@@ -6,13 +6,14 @@ import java.io.IOException;
 import edu.rice.cs.hpc.data.db.DataThread;
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.BaseExperiment.Db_File_Type;
+import edu.rice.cs.hpc.data.experiment.extdata.AbstractThreadDataCollection;
 
 /*******************************************************************
  * 
  * Class to manage a collection of metric plot data for database v.3
  *
  *******************************************************************/
-public class ThreadDataCollection3 implements IThreadDataCollection 
+public class ThreadDataCollection3 extends AbstractThreadDataCollection
 {
 	private DataPlot   data_plot;
 	private DataThread data_thread;
@@ -89,5 +90,12 @@ public class ThreadDataCollection3 implements IThreadDataCollection
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public double[] getScopeMetrics(int thread_id, int MetricIndex,
+			int numMetrics) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

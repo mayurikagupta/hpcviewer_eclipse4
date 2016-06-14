@@ -3,30 +3,25 @@ package edu.rice.cs.hpc.traceviewer.painter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.progress.UIJob;
-
 import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
-import edu.rice.cs.hpc.traceviewer.spaceTimeData.SpaceTimeDataController;
 import edu.rice.cs.hpc.traceviewer.timeline.BaseTimelineThread;
+import edu.rice.cs.hpc.traceviewer.data.controller.SpaceTimeDataController;
+import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.TimelineDataSet;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
 import edu.rice.cs.hpc.traceviewer.util.Utility;
@@ -40,29 +35,32 @@ import edu.rice.cs.hpc.traceviewer.util.Utility;
  * 
  *
  *******************************************************/
-public abstract class BaseViewPaint extends UIJob
+public abstract class BaseViewPaint extends Job
 {
 	protected boolean changedBounds;
 	
-	protected final IWorkbenchWindow window;
+	private final IWorkbenchWindow window;
 	
 	protected SpaceTimeDataController controller;
 
 	final private ExecutorService threadExecutor;
 	final private ISpaceTimeCanvas canvas;
+	
+	final protected ImageTraceAttributes attributes;
 
 	/**
 	 * Constructor to paint a view (trace and depth view)
-	 * @param controller: the object used to launch the mode-specific prep before painting
 	 * 
-	 * @param _data: global data of the traces
-	 * @param _attributes: the attribute of the trace view
-	 * @param _changeBound: true or false if it requires changes of bound
-	 * @param _statusMgr: used for displaying the status
-	 * @param _monitor: progress monitor
+	 * @param title name of this view (job title purpose)
+	 * @param _data global data of the traces
+	 * @param _attributes the attribute of the trace view
+	 * @param _changeBound true or false if it requires changes of bound
+	 * @param window
+	 * @param canvas
+	 * @param threadExecutor executor
 	 */
 
-	public BaseViewPaint(String title, SpaceTimeDataController _data, ImageTraceAttributes _attributes, boolean _changeBound, 
+	public BaseViewPaint(String title, SpaceTimeDataController _data, ImageTraceAttributes attributes, boolean _changeBound, 
 			IWorkbenchWindow window, ISpaceTimeCanvas canvas, ExecutorService threadExecutor) 
 	{
 		super(title);
@@ -73,6 +71,9 @@ public abstract class BaseViewPaint extends UIJob
 		this.window 		= (window == null ? Util.getActiveWindow() : window);
 		this.canvas 		= canvas;
 		this.threadExecutor = threadExecutor;
+		this.attributes		= attributes;
+		
+		setRule(new MutexRule(this));
 	}
 	
 
@@ -81,11 +82,11 @@ public abstract class BaseViewPaint extends UIJob
 	 * @see org.eclipse.ui.progress.UIJob#runInUIThread(org.eclipse.core.runtime.IProgressMonitor)
 	 */
 	@Override
-	public IStatus runInUIThread(IProgressMonitor monitor) {
+	public IStatus run(IProgressMonitor monitor) {
 		IStatus status = Status.OK_STATUS;
 		
-		BusyIndicator.showWhile(getDisplay(), getThread());
-		if (!paint(canvas, monitor))
+		//BusyIndicator.showWhile(getDisplay(), getThread());
+		if (!paint( monitor))
 		{
 			status = Status.CANCEL_STATUS;
 		}
@@ -101,14 +102,13 @@ public abstract class BaseViewPaint extends UIJob
 	 *	@param canvas   		 The SpaceTimeDetailCanvas that will be painted on.
 	 *  @return boolean true of the pain is successful, false otherwise
 	 ***********************************************************************************/
-	public boolean paint(ISpaceTimeCanvas canvas, IProgressMonitor monitor)
+	public boolean paint(IProgressMonitor monitor)
 	{	
 		// depending upon how zoomed out you are, the iteration you will be
 		// making will be either the number of pixels or the processors
 		int linesToPaint = getNumberOfLines();
 		Debugger.printDebug(2, "BVP-begin " + linesToPaint + " lines");
 
-		final ImageTraceAttributes attributes = controller.getAttributes();
 		// -------------------------------------------------------------------
 		// hack fix: if the number of horizontal pixels is less than 1 we
 		// return immediately, otherwise it throws an exception
@@ -117,9 +117,9 @@ public abstract class BaseViewPaint extends UIJob
 			return false;
 		
 		// -------------------------------------------------------------------
-		// initialize the painting (to be implemented by the instance
+		// initialize the painting (to be implemented by the instance)
 		// -------------------------------------------------------------------
-		int launch_threads = Utility.getNumThreads(linesToPaint);
+		int launch_threads = Utility.getNumThreads(Math.min(linesToPaint, 4));
 		if (!startPainting(linesToPaint, launch_threads, changedBounds))
 			return false;
 
@@ -136,8 +136,8 @@ public abstract class BaseViewPaint extends UIJob
 			launchDataGettingThreads(changedBounds, launch_threads);
 			
 		} catch (Exception e) {
-			MessageDialog.openError(window.getShell(), "Error while reading data", 
-					e.getMessage());
+			/*MessageDialog.openError(window.getShell(), "Error while reading data", 
+					e.getMessage());*/
 			e.printStackTrace();
 			
 			// shutdown the monitor to end the progress bar
@@ -162,13 +162,7 @@ public abstract class BaseViewPaint extends UIJob
 		// -------------------------------------------------------------------
 		
 		Debugger.printTimestampDebug("Rendering beginning (" + canvas.toString()+")");
-
-		// reset the line number to paint
-		controller.resetCounters();
 		
-		//final List<Future<Integer>> threads = new ArrayList<Future<Integer>>();
-		final AtomicInteger timelineDone = new AtomicInteger(linesToPaint);
-
 		final double xscale = canvas.getScalePixelsPerTime();
 		final double yscale = Math.max(canvas.getScalePixelsPerRank(), 1);
 		
@@ -176,7 +170,7 @@ public abstract class BaseViewPaint extends UIJob
 		
 		for (int threadNum = 0; threadNum < launch_threads; threadNum++) {
 			final BaseTimelineThread thread = getTimelineThread(canvas, xscale, yscale, queue, 
-					timelineDone, monitor);
+					monitor);
 			ecs.submit(thread);
 		}
 		
@@ -192,7 +186,7 @@ public abstract class BaseViewPaint extends UIJob
 		//	 	 the canvas
 		// -------------------------------------------------------------------
 
-		Debugger.printDebug(1, canvas.toString() + " BVP --- lp: " + linesToPaint + ", tld: " + timelineDone + ", qs: " + queue.size());
+		Debugger.printDebug(1, canvas.toString() + " BVP --- lp: " + linesToPaint + ", qs: " + queue.size());
 		Debugger.printTimestampDebug("Rendering mostly finished. (" + canvas.toString()+")");
 		
 		if (OSValidator.isUnix()) 
@@ -200,62 +194,61 @@ public abstract class BaseViewPaint extends UIJob
 			// -------------------------------------------------------------------
 			// sequential painting for Unix/Linux platform
 			// -------------------------------------------------------------------
-			final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
-					Display.getCurrent(), attributes.numPixelsH);
-			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, 1);
-			doSingleThreadPainting(canvas, thread);
+			executePaint(ecs, launch_threads, 1, queue, linesToPaint, monitor);
 		} else
 		{
 			// -------------------------------------------------------------------
 			// painting to the buffer "concurrently" if numPaintThreads > 1
 			// -------------------------------------------------------------------
-			final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
-
-			for (int threadNum=0; threadNum < launch_threads; threadNum++) 
-			{
-				final BasePaintThread thread = getPaintThread(queue, linesToPaint, timelineDone,
-						Display.getCurrent(), attributes.numPixelsH);
-				if (thread != null) {
-					final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
-					threadsPaint.add(submit);
-				}
-			}
-			// -------------------------------------------------------------------
-			// Finalize the painting (to be implemented by the instance)
-			// -------------------------------------------------------------------
-			ArrayList<Integer> result = new ArrayList<Integer>();
-			waitDataPreparationThreads(ecs, result, launch_threads);
-			endPainting(canvas, threadsPaint);
+			executePaint(ecs, launch_threads, launch_threads, 
+					queue, linesToPaint, monitor);
 		}		
 		Debugger.printTimestampDebug("Rendering finished. (" + canvas.toString()+")");
 		monitor.done();
 		changedBounds = false;
 
-		return true;
+		return !monitor.isCanceled();
 	}
 	
 	/****
-	 * perform a data painting with only a single thread.
-	 * this method doesn't need collection or painting finalization since only one
-	 * thread is involved.
+	 * run jobs for collecting data and painting the image
 	 * 
-	 * @param canvas
-	 * @param paintThread
+	 * @param ecs : completion service from data collection job
+	 * @param num_threads : number of threads for collecting data (see ecs)
+	 * @param num_paint_threads : number of threads for paiting
+	 * @param queue : the data to be collected
+	 * @param linesToPaint : number of lines to paint
+	 * @param timelineDone : atomic integer for number of lines collected
+	 * @param monitor : UI progress monitor 
 	 */
-	private void doSingleThreadPainting(ISpaceTimeCanvas canvas, BasePaintThread paintThread)
+	private void executePaint(ExecutorCompletionService<Integer> ecs,
+			int num_threads, int num_paint_threads, Queue<TimelineDataSet> queue, 
+			int linesToPaint, IProgressMonitor monitor) 
 	{
-		try {
-			// do the data painting, and directly get the generated images
-			List<ImagePosition> listImages = paintThread.call();
-
-			// set the images into the canvas. 
-			for ( ImagePosition image: listImages )
-			{
-				drawPainting(canvas, image);
+		final List<Future<List<ImagePosition>>> threadsPaint = new ArrayList<Future<List<ImagePosition>>>();
+		Device device = window.getShell().getDisplay();
+		
+		// for threads as many as the number of paint threads (specified by the caller)
+		for (int threadNum=0; threadNum < num_paint_threads; threadNum++) 
+		{
+			final BasePaintThread thread = getPaintThread(queue, linesToPaint,
+					device, attributes.numPixelsH, monitor);
+			if (thread != null) {
+				final Future<List<ImagePosition>> submit = threadExecutor.submit( thread );
+				threadsPaint.add(submit);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		}
+		// -------------------------------------------------------------------
+		// Finalize the painting (to be implemented by the instance)
+		// -------------------------------------------------------------------
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		if (waitDataPreparationThreads(ecs, result, num_threads, monitor))
+		{
+			endPainting(threadsPaint, monitor);
+		} else {
+			monitor.setCanceled(true);
+			// whatever the result, we need to clear the 
+			monitor.setTaskName("");
 		}
 	}
 	
@@ -266,18 +259,26 @@ public abstract class BaseViewPaint extends UIJob
 	 * @param result : the list of the result
 	 * @param launch_threads : number of launched threads
 	 */
-	private void waitDataPreparationThreads(ExecutorCompletionService<Integer> ecs, 
-			ArrayList<Integer> result, int launch_threads)
+	private boolean waitDataPreparationThreads(ExecutorCompletionService<Integer> ecs, 
+			ArrayList<Integer> result, int launch_threads, IProgressMonitor monitor)
 	{
 		for (int i=0; i<launch_threads; i++)
 		{
 			try {
 				Integer linenum = ecs.take().get();
+				if (linenum == null)
+					return false;
+				
 				result.add(linenum);
+				Debugger.printDebug(1, getClass() + " thread " + i + "/" + launch_threads + " finish " + linenum);
 			} catch (Exception e) {
-				e.printStackTrace();
+				// we don't need to show exception message everywhere unless if we are in develop mode
+				if (Debugger.getDebugLevel()>0)
+					e.printStackTrace();
+				return false;
 			}
 		}
+		return true;
 	}
 
 	/******
@@ -286,41 +287,92 @@ public abstract class BaseViewPaint extends UIJob
 	 * @param canvas
 	 * @param listOfImageThreads
 	 */
-	private void endPainting(ISpaceTimeCanvas canvas, List<Future<List<ImagePosition>>> listOfImageThreads)
+	private boolean endPainting(List<Future<List<ImagePosition>>> listOfImageThreads,
+			IProgressMonitor monitor)
 	{
 		for( Future<List<ImagePosition>> listFutures : listOfImageThreads ) 
 		{
+			if (monitor.isCanceled())
+				return false;
+			
 			try {
 				List<ImagePosition> listImages = listFutures.get();
+				if (listImages == null)
+					return false;
 				for (ImagePosition image : listImages) 
 				{
-					drawPainting(canvas, image);
-				}
-				
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
+					if (!monitor.isCanceled())
+						drawPainting(canvas, image);
+					else
+						return false;
+				}				
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		// notify user that we have finished painting
+		endPainting(monitor.isCanceled());
+		
+		return true;
 	}
 	
+
+	/*********************************
+	 * 
+	 * Rule for avoiding two jobs execute simultaneously
+	 *
+	 *********************************/
+	static private class MutexRule implements ISchedulingRule
+	{
+		final private BaseViewPaint paint;
+		
+		public MutexRule(BaseViewPaint paint) {
+			this.paint = paint;
+		}
+		
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return theSame(rule);
+		}
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return theSame(rule);
+		}
+		
+		private boolean theSame(ISchedulingRule rule) {
+			if (rule instanceof MutexRule) {
+				// we try to avoid conflict between painting with the same class:
+				// main trace job shouldn't be run simultaneously with other main trace job
+				boolean ret = paint.getName().equals( ((MutexRule)rule).paint.getName() );
+				return ret;
+			}
+			return false;
+		}
+	}
 	
 	//------------------------------------------------------------------------------------------------
 	// abstract methods 
 	//------------------------------------------------------------------------------------------------
 	
 	/**
-	 * Initialize the paint, before creating the threads to paint
-	 * The method return false to exit the paint, true to paint
+	 * Initialize the paint, before creating the threads to paint.
+	 * The method return false to exit the paint, true to paint.
+	 * 
+	 * The implementer is also responsible to reset its counter (yikes!)
 	 * 
 	 * @param linesToPaint
 	 * @param changedBounds
 	 * @return false will exit the painting
 	 */
 	abstract protected boolean startPainting(int linesToPaint, int numThreads, boolean changedBounds);
+	
+	/*****
+	 * notification for the termination of painting
+	 * 
+	 * @param isCanceled : flag if the process has been canceled or not
+	 */
+	abstract protected void endPainting(boolean isCanceled);
 	
 	/***
 	 * start painting an image to the canvas
@@ -356,7 +408,7 @@ public abstract class BaseViewPaint extends UIJob
 	 * @return
 	 */
 	abstract protected BaseTimelineThread  getTimelineThread(ISpaceTimeCanvas canvas, double xscale, double yscale,
-			Queue<TimelineDataSet> queue, AtomicInteger timelineDone, IProgressMonitor monitor);
+			Queue<TimelineDataSet> queue, IProgressMonitor monitor);
 	
 	/***
 	 * get a thread for painting a number of lines
@@ -368,5 +420,5 @@ public abstract class BaseViewPaint extends UIJob
 	 * @return
 	 */
 	abstract protected BasePaintThread getPaintThread( Queue<TimelineDataSet> queue, int numLines, 
-			AtomicInteger timelineDone, Device device, int width);
+			Device device, int width, IProgressMonitor monitor);
 }
