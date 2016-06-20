@@ -53,7 +53,6 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 
     // ----------------------------------- CONSTANTS
 	final protected Color clrGREEN, clrYELLOW, clrRED, clrNORMAL;
-	final static private String COLUMN_DATA_WIDTH = "w"; 
 	
     //======================================================
 	// ------ DATA ----------------------------------------
@@ -292,7 +291,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		if(iWidth > 0) {
    			Integer objWidth = Integer.valueOf(iWidth); 
    			// Laks: bug no 131: we need to have special key for storing the column width
-   			column.setData(COLUMN_DATA_WIDTH,objWidth);
+   			column.setData(ScopeTreeViewer.COLUMN_DATA_WIDTH,objWidth);
    			column.setWidth(0);
 		}
 	}
@@ -361,10 +360,12 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 				if (status[i]) {
 					// display column
 	       			// Laks: bug no 131: we need to have special key for storing the column width
-	        		Object o = column.getData(COLUMN_DATA_WIDTH);
+	        		Object o = column.getData(ScopeTreeViewer.COLUMN_DATA_WIDTH);
 	       			if((o != null) && (o instanceof Integer) ) {
 	       				int iWidth = ((Integer)o).intValue();
 	           			column.setWidth(iWidth);
+	       			} else {
+	       				column.setWidth(120);
 	       			}
 				} else {
 					// hide column

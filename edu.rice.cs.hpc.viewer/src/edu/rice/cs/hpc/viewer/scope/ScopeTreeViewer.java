@@ -22,7 +22,9 @@ import edu.rice.cs.hpc.viewer.util.Utilities;
 /**
  * we set lazy virtual bit in this viewer
  */
-public class ScopeTreeViewer extends TreeViewer {
+public class ScopeTreeViewer extends TreeViewer 
+{
+	final static public String COLUMN_DATA_WIDTH = "w"; 
 
 	/**
 	 * @param parent
@@ -188,6 +190,7 @@ public class ScopeTreeViewer extends TreeViewer {
     	col.setWidth(120); //TODO dynamic size
 		// associate the data of this column to the metric since we
 		// allowed columns to move (col position is not enough !)
+    	col.setData(COLUMN_DATA_WIDTH, 120);
     	col.setData(objMetric);
 		col.setMoveable(true);
 		//this.colMetrics[i].getColumn().pack();			// resize as much as possible
