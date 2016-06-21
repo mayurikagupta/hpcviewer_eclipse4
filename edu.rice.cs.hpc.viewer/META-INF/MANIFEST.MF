@@ -7,7 +7,6 @@ Bundle-Activator: edu.rice.cs.hpc.viewer.framework.Activator
 Bundle-Vendor: Rice University
 Require-Bundle: org.eclipse.ui,
  edu.rice.cs.hpc.data,
- org.eclipse.ui.ide.source,
  org.swtchart,
  org.swtchart.ext
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

@@ -37,6 +37,31 @@ fi
 
 for i in *; do echo $i 
   cd $i
+  
+  # special treatment for Mac platform under Eclipse MARS
+  # due to Eclipse bug, we need to change the layout of the files and directory
+  # to make the application executable and contains icons
+  # see bugs:
+  #   Bug 483101 - [macosx] Rcp product build fails with 4.5
+  #   Bug 465602 - p2 fails to resolve a target platform with Eclipse Mars artifacts on Mac OS X
+  #   Bug 474494 - Wrong directory structure for MacOS executables created
+  
+  if [ "$i" == "macosx.cocoa.x86_64" ]; then
+     cd $viewer
+     # check if we have separate Resources, MacOS and Info.plist
+     if [ -e MacOS/hpcviewer ]; then
+        mv MacOS/hpcviewer ${viewer}.app/Contents/MacOS
+        rmdir MacOS
+     fi
+     if [ -e Resources  ]; then
+        mv Resources ${viewer}.app/Contents/
+     fi
+     if [ -e Info.plist ]; then
+        mv Info.plist ${viewer}.app/Contents/Resources
+     fi
+     cd ..
+  fi
+  
   plugin="${viewer}/plugins/edu.rice.cs.hpc.${pdir}_*"
   
   for f in $plugin; do echo "plugin: $f"
