@@ -112,6 +112,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 
 	final private ExecutorService threadExecutor;
 	
+	final private DecimalFormat formatTime;
+
+	
     /**Creates a SpaceTimeDetailCanvas with the given parameters*/
 	public SpaceTimeDetailCanvas(IWorkbenchWindow window, Composite _composite)
 	{
@@ -133,6 +136,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		
 		// set the number of maximum threads in the pool to the number of hardware threads
 		threadExecutor = Executors.newFixedThreadPool( Utility.getNumThreads(0) ); 
+		formatTime = new DecimalFormat("#.###");
 		
 		addDisposeListener( new DisposeListener() {
 			
@@ -521,9 +525,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 	private void adjustLabels()
     {
 		final ImageTraceAttributes attributes = stData.getAttributes();
-		
-        timeLabel.setText("Time Range: [" + (attributes.getTimeBegin()/1000)/1000.0 + "s, "
-        					+ (attributes.getTimeEnd()/1000)/1000.0 +  "s]");
+		final String timeStart = formatTime.format(attributes.getTimeBegin()/1000000.0);
+		final String timeEnd   = formatTime.format(attributes.getTimeEnd()/1000000.0);
+        timeLabel.setText("Time Range: [" + timeStart + "s, " + timeEnd +  "s]");
         timeLabel.setSize(timeLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         
 
@@ -554,7 +558,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
         if (proc_end>=processes.length)
         	proc_end = processes.length-1;
         
-        processLabel.setText("Rank Range: [" + processes[proc_start] + "," + processes[proc_end]+"]");
+        processLabel.setText("Rank Range: [" + processes[proc_start] + ", " + processes[proc_end]+"]");
         processLabel.setSize(processLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         
         if(stData == null)
@@ -592,8 +596,8 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
         final IBaseData traceData = stData.getBaseData();
         final String processes[] = traceData.getListOfRanks();
 
-        DecimalFormat format = new DecimalFormat("#.###");
-        final String buffer = "(" + format.format(selectedTime) + "s, " + processes[selectedProcess] + ")";
+        final String buffer = "(" + formatTime.format(selectedTime) + "s, " + 
+        						processes[selectedProcess] + ")";
         return buffer;
 	}
 	
@@ -1109,6 +1113,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				
 				historyOperation.run();
 				break;
+			case OperationHistoryEvent.DONE:
+				adjustLabels();
+				break;
 			}
 		}
 	}
@@ -1173,7 +1180,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				int depth = ((DepthOperation)operation).getDepth();
 				setDepth(depth);
 			}
-			adjustLabels();
+			//adjustLabels();
 		}
 	}
 
