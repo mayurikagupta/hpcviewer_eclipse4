@@ -49,8 +49,8 @@ for i in *; do echo $i
   if [ "$i" == "macosx.cocoa.x86_64" ]; then
      cd $viewer
      # check if we have separate Resources, MacOS and Info.plist
-     if [ -e MacOS/hpcviewer ]; then
-        mv MacOS/hpcviewer ${viewer}.app/Contents/MacOS
+     if [ -e MacOS/${viewer} ]; then
+        mv MacOS/${viewer} ${viewer}.app/Contents/MacOS
         rmdir MacOS
      fi
      if [ -e Resources  ]; then
