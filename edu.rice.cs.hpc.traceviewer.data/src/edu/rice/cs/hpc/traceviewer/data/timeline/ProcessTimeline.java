@@ -131,6 +131,16 @@ public class ProcessTimeline {
 	public int line() {
 		return lineNum;
 	}
+	
+	/***
+	 * return the current depth process number, which is the current
+	 * selected process
+	 * 
+	 * @return current selected process
+	 */
+	public int getProcessNum() {
+		return processNumber;
+	}
 
 	/**
 	 * Finds the sample to which 'time' most closely corresponds in the

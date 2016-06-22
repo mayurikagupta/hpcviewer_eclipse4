@@ -1,5 +1,6 @@
 package edu.rice.cs.hpc.traceviewer.main;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -564,8 +565,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
     		final long selectedTime = position.time;
     		final int rank = position.process;
     		
-    		if ( rank >= 0 && rank < processes.length ) {               
-            	crossHairLabel.setText("Cross Hair: (" + (selectedTime/1000)/1000.0 + "s, " + processes[rank] + ")");
+    		if ( rank >= 0 && rank < processes.length ) {  
+    			crossHairLabel.setText("Cross Hair: " + getCrossHairText(selectedTime, rank));
+            	//crossHairLabel.setText("Cross Hair: (" + (selectedTime/1000)/1000.0 + "s, " + processes[rank] + ")");
     		} else {
     			// in case of incorrect filtering where user may have empty ranks or incorrect filters, we don't display the rank
     			crossHairLabel.setText("Cross Hair: (" + (selectedTime/1000)/1000.0 + "s, ?)");
@@ -574,6 +576,26 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
         
         labelGroup.setSize(labelGroup.computeSize(SWT.DEFAULT, SWT.DEFAULT));
     }
+	
+	/**************************************************************************
+	 * get formatted text to indicate the current position of the cursor
+	 * this function is a bit buggy if the number of process to display is higher
+	 * than the height resolution. somehow, the selected process is over 1 position 
+	 * 
+	 * @param closeTime
+	 * @param selectedProcess
+	 * @return
+	 **************************************************************************/
+	private String getCrossHairText(long closeTime, int selectedProcess) 
+	{
+		final float selectedTime = (float) ((float)closeTime / 1000000.0);
+        final IBaseData traceData = stData.getBaseData();
+        final String processes[] = traceData.getListOfRanks();
+
+        DecimalFormat format = new DecimalFormat("#.###");
+        final String buffer = "(" + format.format(selectedTime) + "s, " + processes[selectedProcess] + ")";
+        return buffer;
+	}
 	
     /**************************************************************************
 	 * Updates what the position of the selected box is.
@@ -816,7 +838,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
     				attributes.getTimeEnd() + "\t new: " + ((attributes.getTimeBegin() + attributes.getTimeEnd()) >> 1));
     		closeTime = (attributes.getTimeBegin() + attributes.getTimeEnd()) >> 1;
     	}
-    	
+
     	return new Position(closeTime, selectedProcess);
 	}
 	
