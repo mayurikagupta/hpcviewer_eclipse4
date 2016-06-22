@@ -57,7 +57,7 @@ for i in *; do echo $i
         mv Resources ${viewer}.app/Contents/
      fi
      if [ -e Info.plist ]; then
-        mv Info.plist ${viewer}.app/Contents/Resources
+        mv Info.plist ${viewer}.app/Contents/
      fi
      cd ..
   fi
