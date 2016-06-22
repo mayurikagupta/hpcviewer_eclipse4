@@ -15,7 +15,7 @@ Science as part of the SciDAC Center for Scalable Application Development
 Software (CScADS), the Performance Engineering Research Institute (PERI) 
 and Performance Insight For Programmers and Exascale Runtimes (PIPER).
 
-Release 5.4.0  (C) Copyright 2015, Rice University.
+Release 5.4.3  (C) Copyright 2016, Rice University.
       </text>
    </aboutInfo>
 
@@ -48,6 +48,7 @@ Release 5.4.0  (C) Copyright 2015, Rice University.
             winLargeHigh="/edu.rice.cs.hpc.viewer/icons/hpcviewer-icon-48x48-32bit.bmp"/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
