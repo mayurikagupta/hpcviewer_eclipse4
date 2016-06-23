@@ -74,7 +74,9 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 			// begin collecting the data if needed
 			// ---------------------------------
 			if (init(trace))
-			{				
+			{	
+				// this height computation causes inconsistency between different lines
+				// we need to find a better way, more deterministic and consistent
 				int h1 = (int) Math.round(scaleY*trace.line());
 				int h2 = (int) Math.round(scaleY*(trace.line()+1)) ;			
 				int imageHeight = h2 - h1;

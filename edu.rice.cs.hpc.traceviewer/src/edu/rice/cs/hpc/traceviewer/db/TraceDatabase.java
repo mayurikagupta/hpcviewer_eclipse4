@@ -81,7 +81,7 @@ public class TraceDatabase
 	static private void removeDatabase(TraceDatabase data) {
 		if (data != null) {
 			if (data.dataTraces != null) {
-				data.dataTraces.closeDB();
+				//data.dataTraces.closeDB();
 				data.dataTraces.dispose();
 			}
 		}
