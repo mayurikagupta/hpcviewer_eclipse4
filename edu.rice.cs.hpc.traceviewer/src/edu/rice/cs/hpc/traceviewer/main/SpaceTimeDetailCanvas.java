@@ -567,10 +567,15 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
         {
         	final Position position = stData.getAttributes().getPosition();
     		final long selectedTime = position.time;
-    		final int rank = position.process;
+    		//final int rank = position.process;
+    		// we need to use the process of the depth view to know the selected process
+    		// this approach is more reliable than computing the selected process based on
+    		// cursor position. Due to inconsistency use of floating-point rounding, 
+    		// the computed cursor position can be "non-deterministic"
+    		final int proc = stData.getCurrentDepthTrace().getProcessNum();
     		
-    		if ( rank >= 0 && rank < processes.length ) {  
-    			crossHairLabel.setText("Cross Hair: " + getCrossHairText(selectedTime, rank));
+    		if ( proc >= 0 && proc < processes.length ) {  
+    			crossHairLabel.setText("Cross Hair: " + getCrossHairText(selectedTime, proc));
             	//crossHairLabel.setText("Cross Hair: (" + (selectedTime/1000)/1000.0 + "s, " + processes[rank] + ")");
     		} else {
     			// in case of incorrect filtering where user may have empty ranks or incorrect filters, we don't display the rank
@@ -1114,8 +1119,21 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 				historyOperation.run();
 				break;
 			case OperationHistoryEvent.DONE:
-				adjustLabels();
+				if (operation instanceof PositionOperation) {
+					adjustLabels();
+				}
 				break;
+			}
+		} else if (operation.hasContext(BufferRefreshOperation.context)) {
+			if (event.getEventType() == OperationHistoryEvent.DONE) {
+				// this event is triggered by non ui-thread
+				// we need to ask ui thread to execute it
+				Display.getDefault().asyncExec(new Runnable() {					
+					@Override
+					public void run() {
+						adjustLabels();
+					}
+				});
 			}
 		}
 	}
