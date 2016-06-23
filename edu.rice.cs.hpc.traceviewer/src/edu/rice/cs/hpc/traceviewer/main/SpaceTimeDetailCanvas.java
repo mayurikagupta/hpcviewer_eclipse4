@@ -567,12 +567,19 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
         {
         	final Position position = stData.getAttributes().getPosition();
     		final long selectedTime = position.time;
+    		int proc = 0;
+    		
     		//final int rank = position.process;
     		// we need to use the process of the depth view to know the selected process
     		// this approach is more reliable than computing the selected process based on
     		// cursor position. Due to inconsistency use of floating-point rounding, 
     		// the computed cursor position can be "non-deterministic"
-    		final int proc = stData.getCurrentDepthTrace().getProcessNum();
+    		ProcessTimeline ptl = stData.getCurrentDepthTrace();
+
+    		// in case of exception, it is possible the depth trace is null
+    		if (ptl != null) {
+        		proc = stData.getCurrentDepthTrace().getProcessNum();
+    		}
     		
     		if ( proc >= 0 && proc < processes.length ) {  
     			crossHairLabel.setText("Cross Hair: " + getCrossHairText(selectedTime, proc));
