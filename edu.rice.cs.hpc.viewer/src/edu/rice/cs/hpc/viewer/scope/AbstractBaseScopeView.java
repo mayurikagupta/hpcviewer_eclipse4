@@ -1,6 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope;
 
 import java.io.FileNotFoundException;
+import java.nio.ByteOrder;
 import java.util.Map;
 //User interface
 import org.eclipse.ui.commands.ICommandService;
@@ -111,6 +112,11 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		};
 		serviceProvider.addSourceProviderListener(listener);
 
+		if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN)) {			
+		  System.out.println("Big-endian"); 
+		} else {
+		    System.out.println("Little-endian");
+		}
 	}
 	
     //======================================================
@@ -641,15 +647,30 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     		}
     		
     		// get the item
-    		TreeItem []itemsSelected = treeViewer.getTree().getSelection();
-    		if(itemsSelected == null || itemsSelected.length==0)
-    			return; // no selected. it will hard to for us to go further
-    		TreeItem item = itemsSelected[0];
+    		TreeItem item = treeViewer.getTree().getItem(new Point(event.x, event.y));
+    		if (item != null)
+    			checkIntersection(event, item);
+    	}
+    	
+    	/***
+    	 * check whether the mouse click intersect with an icon or a text in the tree item
+    	 * if it intersects with the icon, we display the callsite.
+    	 * it if intersects with the text, we display the source code
+    	 * otherwise, do nothing
+    	 * 
+    	 * @param event
+    	 * @param item : current item selected or pointed by the mouse
+    	 * @return
+    	 */
+    	private void checkIntersection(Event event, TreeItem item) {
     		Rectangle recImage = item.getImageBounds(0);	// get the image location (if exist)
-    		Rectangle recText = item.getTextBounds(0);
+    		Rectangle recText  = item.getTextBounds(0);
     		
+    		boolean inImage = (recImage.x<event.x && recImage.x+recImage.width>event.x);
+    		boolean inText  = (recText.x<event.x  && recText.x+recText.width>event.x);
+    		 
     		// verify if the user click on the icon
-    		if(recImage.intersects(event.x, event.y, event.width, event.height)) {
+    		if(inImage) {
     			// Check the object of the click/select item
     	        TreeSelection selection = (TreeSelection) treeViewer.getSelection();
     	        Object o = selection.getFirstElement();
@@ -663,10 +684,9 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	            	CallSiteScope callSiteScope = (CallSiteScope) scope;
     	            	LineScope lineScope = callSiteScope.getLineScope();
     	            	displaySourceCode(lineScope);
-    	            } else {
     	            }
     	        }
-    		} else if(recText.intersects(event.x, event.y, 1, 1)){
+    		} else if(inText){
     			// Check the object of the click/select item
     	        TreeSelection selection = (TreeSelection) treeViewer.getSelection();
     	        Object o = selection.getFirstElement();
@@ -680,18 +700,18 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	        		int line = 1 + cs.getLineScope().getFirstLineNumber();
     	        		
     	        		if (gc != null && line>0) {
+    	        			// a hack to know whether we click on the line number text
+    	        			// or the name of the node (procedure name)
         		        	Point p = gc.textExtent(":" + line);
-        		        	if (p.x+recText.x >= event.x && p.y+recText.y>= event.y) {
+        		        	if (p.x+recText.x >= event.x) {
         		        		displaySourceCode( cs.getLineScope() );
-        		        		return;
+            	            	return;
         		        	}
     	        		}
     	        	}
     	        	displaySourceCode( (Scope)o );
     	        }
-    		} else {
-    			// User click a region other than tree
-    		}		
+    		}
     	}
     	
     	/**
