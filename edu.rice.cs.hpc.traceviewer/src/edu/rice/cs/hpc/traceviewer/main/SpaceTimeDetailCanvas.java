@@ -35,6 +35,7 @@ import edu.rice.cs.hpc.traceviewer.operation.BufferRefreshOperation;
 import edu.rice.cs.hpc.traceviewer.operation.DepthOperation;
 import edu.rice.cs.hpc.traceviewer.operation.PositionOperation;
 import edu.rice.cs.hpc.traceviewer.operation.TraceOperation;
+import edu.rice.cs.hpc.traceviewer.operation.WindowResizeOperation;
 import edu.rice.cs.hpc.traceviewer.operation.ZoomOperation;
 import edu.rice.cs.hpc.traceviewer.painter.AbstractTimeCanvas;
 import edu.rice.cs.hpc.traceviewer.painter.BufferPaint;
@@ -1164,7 +1165,13 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		public void rebuffering() {
 			// force the paint to refresh the data			
 			final ImageTraceAttributes attr = stData.getAttributes();
-			notifyChanges("Resize", attr.getFrame() );
+			try {
+				TraceOperation.getOperationHistory().execute(
+						new WindowResizeOperation(attr.getFrame()), null, null);
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			//notifyChanges("Resize", attr.getFrame() );
 		}
 	}
 
