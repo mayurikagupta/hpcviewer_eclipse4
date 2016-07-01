@@ -13,6 +13,7 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.*;
+import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -30,7 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Label;
-
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.ui.IWorkbenchWindow;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
@@ -281,20 +282,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		this.tiAddExtMetric.setEnabled(true);
 	}
 	    
-	/**
-	 * Hiding a metric column
-	 * @param iColumnPosition: the index of the metric
-	 */
-	public void hideMetricColumn(TreeColumn column) {
-			
-		int iWidth = column.getWidth();
-		if(iWidth > 0) {
-   			Integer objWidth = Integer.valueOf(iWidth); 
-   			// Laks: bug no 131: we need to have special key for storing the column width
-   			column.setData(ScopeTreeViewer.COLUMN_DATA_WIDTH,objWidth);
-   			column.setWidth(0);
-		}
-	}
+
 	
     /**
      * Show column properties (hidden, visible ...)
@@ -338,8 +326,11 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		}
     }
     
+    
     /**
      * Change the column status (hide/show) in this view only
+     * @param status : array of boolean column status.
+     * 	true means the column is shown, hidden otherwise.
      */
     public void setColumnsStatus(boolean []status) {
     	if (treeViewer.getTree().isDisposed())
@@ -351,29 +342,41 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		// since the table also contains tree scope column
 		
 		assert columns.length > status.length;
-		
+
+		Layout layout = treeViewer.getTree().getParent().getLayout();
+		TreeColumnLayout treeLayout = (TreeColumnLayout) layout;
+
 		int i=0; // index for status
-		
+		treeViewer.getTree().setRedraw(false);
 		for (TreeColumn column : columns) {
 			if (column.getData() != null) {
+				int iWidth = 0;
 				// it must be metric column
 				if (status[i]) {
 					// display column
 	       			// Laks: bug no 131: we need to have special key for storing the column width
 	        		Object o = column.getData(ScopeTreeViewer.COLUMN_DATA_WIDTH);
 	       			if((o != null) && (o instanceof Integer) ) {
-	       				int iWidth = ((Integer)o).intValue();
-	           			column.setWidth(iWidth);
+	       				iWidth = ((Integer)o).intValue();
 	       			} else {
-	       				column.setWidth(120);
+		        		iWidth = ScopeTreeViewer.COLUMN_DEFAULT_WIDTH;
 	       			}
 				} else {
-					// hide column
-					hideMetricColumn(column);
+					// hide column					
+					int currentWidth = column.getWidth();
+					if(currentWidth > 0) {
+			   			Integer objWidth = Integer.valueOf(currentWidth); 
+			   			// Laks: bug no 131: we need to have special key for storing the column width
+			   			column.setData(ScopeTreeViewer.COLUMN_DATA_WIDTH, objWidth);
+					}
 				}
+	   			treeLayout.setColumnData(column, new ColumnPixelData(iWidth));
+       			column.setWidth(iWidth);
+
 				i++;
 			}
 		}
+		treeViewer.getTree().setRedraw(true);
     }
     
     
@@ -382,6 +385,11 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
      * @param colMetric
      */
     public void addMetricColumns(TreeColumn colMetric) {
+    	int width = colMetric.getWidth();
+    	ColumnPixelData colData = new ColumnPixelData(width, true);
+    	TreeColumnLayout layout = (TreeColumnLayout) treeViewer.getTree().getParent().getLayout();
+    	layout.setColumnData(colMetric, colData);
+    	
     	// when adding a new column, we have to refresh the viewer
     	// and this means we have to recompute again the top row of the table
     	this.restoreParentNode();

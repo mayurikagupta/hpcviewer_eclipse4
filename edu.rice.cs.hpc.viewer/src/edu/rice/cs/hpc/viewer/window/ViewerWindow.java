@@ -58,7 +58,7 @@ public class ViewerWindow {
 	
 	/** number of databases (whether has been closed or not) 
 	 *  this number is useful to make sure the view is always unique */
-	private AtomicInteger numAggregateDatabase = new AtomicInteger(1);
+	private AtomicInteger numAggregateDatabase = new AtomicInteger(0);
 
 	public IWorkbenchWindow getWinObj() {
 		return winObj;

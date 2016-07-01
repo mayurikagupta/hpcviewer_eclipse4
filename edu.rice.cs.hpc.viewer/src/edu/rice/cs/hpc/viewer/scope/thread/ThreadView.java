@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
@@ -154,7 +155,7 @@ public class ThreadView extends AbstractBaseScopeView
 	}
 	
 	@Override
-	protected void initTableColumns(boolean keepColumnStatus) {	}
+	protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus) {	}
 
 	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {

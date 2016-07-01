@@ -25,13 +25,14 @@ import edu.rice.cs.hpc.viewer.util.Utilities;
 public class ScopeTreeViewer extends TreeViewer 
 {
 	final static public String COLUMN_DATA_WIDTH = "w"; 
+	final static public int COLUMN_DEFAULT_WIDTH = 120;
 
 	/**
 	 * @param parent
 	 */
 	public ScopeTreeViewer(Composite parent) {
 		super(parent, SWT.VIRTUAL);
-		// TODO Auto-generated constructor stub
+		init();
 	}
 
 	/**
@@ -39,7 +40,7 @@ public class ScopeTreeViewer extends TreeViewer
 	 */
 	public ScopeTreeViewer(Tree tree) {
 		super(tree, SWT.VIRTUAL);
-		// TODO Auto-generated constructor stub
+		init();
 	}
 
 	/**
@@ -49,10 +50,13 @@ public class ScopeTreeViewer extends TreeViewer
 	public ScopeTreeViewer(Composite parent, int style) {
 		super(parent, SWT.VIRTUAL | style);
 		this.setUseHashlookup(true);
-
+		init();
 	}
 
-	
+	private void init() 
+	{
+		getTree().setLinesVisible(true);
+	}
 	
 	/**
 	 * Finding the path based on the treeitem information
@@ -63,19 +67,7 @@ public class ScopeTreeViewer extends TreeViewer
 		return super.getTreePathFromItem(item);
 	}
 
-    /**
-     * Add a new tree column into the tree viewer
-     * @param treeViewer: tree viewer
-     * @param objMetric: new metric
-     * @param iPosition: position of the column inside the viewer (0..n-1)
-     * @param bSorted: flag if the column should be sorted or not
-     * @return the tree viewer column
-     */
-	public TreeViewerColumn addTreeColumn(BaseMetric objMetric, boolean bSorted) {
-		// laks: addendum for column  
-    	TreeViewerColumn colMetric = addTreeColumn(objMetric, bSorted, false);
-		return colMetric;
-    }
+
     
 	/**
 	 * Return the canocalized text from the list of elements 
@@ -179,18 +171,18 @@ public class ScopeTreeViewer extends TreeViewer
      * @param b: flag to indicate if this column should be displayed or not (default should be true)
      * @return
      */
-    private TreeViewerColumn addTreeColumn(BaseMetric objMetric, //int iPosition, 
-    		boolean bSorted, boolean bDisplayed) {
+    public TreeViewerColumn addTreeColumn(BaseMetric objMetric, //int iPosition, 
+    		boolean bSorted) {
     	
     	TreeViewerColumn colMetric = new TreeViewerColumn(this,SWT.RIGHT);	// add column
 		colMetric.setLabelProvider(new MetricLabelProvider(objMetric /*, Utilities.fontMetric*/) );
 
 		TreeColumn col = colMetric.getColumn();
     	col.setText(objMetric.getDisplayName());	// set the title
-    	col.setWidth(120); //TODO dynamic size
+    	col.setWidth(COLUMN_DEFAULT_WIDTH); //TODO dynamic size
 		// associate the data of this column to the metric since we
 		// allowed columns to move (col position is not enough !)
-    	col.setData(COLUMN_DATA_WIDTH, 120);
+    	col.setData(COLUMN_DATA_WIDTH, COLUMN_DEFAULT_WIDTH);
     	col.setData(objMetric);
 		col.setMoveable(true);
 		//this.colMetrics[i].getColumn().pack();			// resize as much as possible

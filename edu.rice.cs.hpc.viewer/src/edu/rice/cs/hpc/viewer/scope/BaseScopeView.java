@@ -1,5 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope;
 
+import org.eclipse.jface.layout.TreeColumnLayout;
+import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -112,13 +114,13 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView#initTableColumns()
 	 */
-	protected void initTableColumns(boolean keepColumnStatus) {
+	protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus) {
 		
         if (treeViewer != null) {
         	Tree tree = treeViewer.getTree();
         	if (tree != null && !tree.isDisposed())
         	{
-        		initTableColumns(tree, keepColumnStatus);
+        		initTableColumns(tree, treeLayout, keepColumnStatus);
         	}
         }
 	}
@@ -163,7 +165,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 * @param tree
 	 * @param keepColumnStatus
 	 */
-	private void initTableColumns(Tree tree, boolean keepColumnStatus) 
+	private void initTableColumns(Tree tree, TreeColumnLayout treeLayout, boolean keepColumnStatus) 
 	{
         final Experiment myExperiment = database.getExperiment();
         final int numMetric			  = myExperiment.getMetricCount();
@@ -171,6 +173,8 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         int iColCount = tree.getColumnCount();
         boolean status[] = new boolean[numMetric];
 
+        tree.setRedraw(false);
+        
         if(iColCount>1) {
         	TreeColumn []columns = tree.getColumns();
         	
@@ -208,6 +212,8 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         		if (metric != null) {
             		titles[i+1] = metric.getDisplayName();	// get the title
             		colMetrics[i] = this.treeViewer.addTreeColumn(metric, (i==0));
+        			final ColumnPixelData data = new ColumnPixelData(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true, false);
+        			treeLayout.setColumnData(colMetrics[i].getColumn(), data);
             		
             		// bug fix: for view initialization, we need to reset the status of hide/view
             		if (!keepColumnStatus) {
@@ -220,8 +226,11 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         // update the root scope of the actions !
         this.objViewActions.updateContent(myExperiment, this.myRootScope);
     	this.objViewActions.objActionsGUI.setColumnsStatus(status);
-
+    	
+        tree.setRedraw(true);
 	}
+	
+
     /**
      * Tell children to update the content with the new database
      * @param new_database

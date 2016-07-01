@@ -1,7 +1,6 @@
 package edu.rice.cs.hpc.viewer.scope;
 
 import java.io.FileNotFoundException;
-import java.nio.ByteOrder;
 import java.util.Map;
 //User interface
 import org.eclipse.ui.commands.ICommandService;
@@ -28,10 +27,13 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.IExecutionListener;
 import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -78,6 +80,8 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 	private GC gc = null;
 	
 	private ISourceProviderListener listener;
+	private TreeColumnLayout treeLayout;
+
 
 	/**
 	 * bar composite for placing toolbar and tool items
@@ -111,12 +115,6 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 			public void sourceChanged(int sourcePriority, Map sourceValuesByName) {}
 		};
 		serviceProvider.addSourceProviderListener(listener);
-
-		if (ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN)) {			
-		  System.out.println("Big-endian"); 
-		} else {
-		    System.out.println("Little-endian");
-		}
 	}
 	
     //======================================================
@@ -331,13 +329,20 @@ abstract public class AbstractBaseScopeView  extends ViewPart
     	this.objCoolbar = this.initToolbar(objCompositeParent);
 		this.objViewActions =  createActions(objCompositeParent, this.objCoolbar); //actions of the tree
 		
+		final Composite tableComposite = new Composite(aParent, SWT.NONE);
+		
 		// ----- 03.21.2008 Laks: add virtual library for better memory consumption
 		// Laks 2009.06.22: add multi-selection for enabling copying into clipboard 
-    	treeViewer = new ScopeTreeViewer(aParent,SWT.BORDER|SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.MULTI);
+    	treeViewer = new ScopeTreeViewer(tableComposite,SWT.BORDER|SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.MULTI);
     	// set the attributes
     	treeViewer.setContentProvider(getScopeContentProvider());
-        treeViewer.getTree().setHeaderVisible(true);
-        treeViewer.getTree().setLinesVisible(true);
+    	
+    	GridDataFactory.fillDefaults().grab(true, true).applyTo(tableComposite);
+    	GridDataFactory.fillDefaults().grab(true, true).applyTo(treeViewer.getTree());
+    	
+    	final Tree tree = treeViewer.getTree();
+        tree.setHeaderVisible(true);
+        tree.setLinesVisible(true);
         
         // --------------------------------------------------------------------
         // tricky code for linux: by default on linux the tooltip doesn't show up
@@ -345,21 +350,26 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         // --------------------------------------------------------------------
         if (OSValidator.isUnix())
         	ColumnViewerToolTipSupport.enableFor(treeViewer, ToolTip.NO_RECREATE);
-
-        //treeViewer.setAutoExpandLevel(2);
         
         //----------------- create the column tree
-        TreeViewerColumn colTree;		// column for the scope tree
-        colTree = new TreeViewerColumn(treeViewer,SWT.LEFT, 0);
+        final TreeViewerColumn colTree = new TreeViewerColumn(treeViewer,SWT.LEFT, 0);
         colTree.getColumn().setText("Scope");
-        colTree.getColumn().setWidth(200); //TODO dynamic size
+        colTree.getColumn().setWidth(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH); //TODO dynamic size
         colTree.setLabelProvider( getLabelProvider() ); // laks addendum
+        
+    	treeLayout = new TreeColumnLayout();
+    	tableComposite.setLayout(treeLayout);
+    			
+		treeLayout.setColumnData(colTree.getColumn(), new ColumnWeightData(100, 
+				ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true));
+        
         sorterTreeColumn = new ColumnViewerSorter(this.treeViewer, colTree.getColumn(), null,0); 
         
         //-----------------
         // Laks 11.11.07: need this to expand the tree for all view
-        GridData data = new GridData(GridData.FILL_BOTH);
-        treeViewer.getTree().setLayoutData(data);
+        //GridData data = new GridData(GridData.FILL_BOTH);
+        //treeViewer.getTree().setLayoutData(data);
+        
         //-----------------
         // create the context menus
         this.createContextMenu();
@@ -514,13 +524,12 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         // tell the action class that we have built the tree
         objViewActions.setTreeViewer(treeViewer);
         
-        initTableColumns(keepColumnStatus);
+        initTableColumns(treeLayout, keepColumnStatus);
         
         // notify the children class to update the display
-    	updateDisplay();
+    	updateDisplay();    	
     }
     
-   
     
     //======================================================
     // ................ MISC ............................
@@ -578,7 +587,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 	 */
 	abstract public void updateDisplay();
 
-	abstract protected void initTableColumns(boolean keepColumnStatus);
+	abstract protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus);
 	
     /**
      * The derived class has to implement this method to create its own actions
