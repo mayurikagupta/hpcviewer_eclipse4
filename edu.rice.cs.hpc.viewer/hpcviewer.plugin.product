@@ -25,7 +25,7 @@ Release 5.4.3  (C) Copyright 2016, Rice University.
    <launcherArgs>
       <programArgs>-consoleLog
       </programArgs>
-      <vmArgs>-Dosgi.requiredJavaVersion=1.6 -XX:MaxPermSize=256m -Xms40m -Xmx1812m -Dosgi.locking=none
+      <vmArgs>-Dosgi.locking=none
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
@@ -49,14 +49,13 @@ Release 5.4.3  (C) Copyright 2016, Rice University.
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
    <license>
         <url>http://hpctoolkit.org</url>
         <text>
-   Copyright ((c)) 2002-2015, Rice University 
+   Copyright ((c)) 2002-2016, Rice University 
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
