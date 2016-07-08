@@ -288,7 +288,7 @@ public class Utilities {
 	 * @param tree
 	 */
 	static private void resetView ( TreeItemManager objItemManager, TreeViewer tree) {
-		resetViewRowHeight(tree);
+		//resetViewRowHeight(tree);
 		// save the context first
 		objItemManager.saveContext(tree);
 		// refresh
