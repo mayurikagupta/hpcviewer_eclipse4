@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.CoolBar;
@@ -70,23 +69,20 @@ public class ThreadView extends AbstractBaseScopeView
 	 * using list of threads as the additional parameter.
 	 * @param db : database
 	 * @param scope : the root (should be cct root)
-	 * @param threads : the list of threads
 	 */
-	public void setInput(Database db, RootScope scope, List<Integer> threads)
+	public void setInput(Database db, RootScope scope)
 	{
-    	database = db;
-    	myRootScope = scope;// try to get the aggregate value
+		if (database != db && myRootScope != scope) {
+	    	database = db;
+	    	myRootScope = scope;// try to get the aggregate value
 
-        // tell the action class that we have built the tree
-        objViewActions.setTreeViewer(treeViewer);
-        ((ThreadScopeViewAction)objViewActions).setMetricManager(getMetricManager());
-        
-        Experiment experiment = db.getExperiment();
-        BaseMetric []metrics  = experiment.getMetricRaw();
-        initTableColumns(threads, metrics);
-        
-        // notify the children class to update the display
-    	updateDisplay();
+	        // tell the action class that we have built the tree
+	        objViewActions.setTreeViewer(treeViewer);
+	        ((ThreadScopeViewAction)objViewActions).setMetricManager(getMetricManager());
+	        
+	        // notify the children class to update the display
+	    	updateDisplay();
+		}
 	}
 	
 	@Override
@@ -127,19 +123,22 @@ public class ThreadView extends AbstractBaseScopeView
 		
 		// 1. check if the threads already exist in the view
 		boolean col_exist = false;
-		for (BaseMetric metric : metrics) {
-			if (metric instanceof MetricRaw) {
-				List<Integer> lt = ((MetricRaw)metric).getThread();
-				if (lt.size() == threads.size()) {
-					for(Integer i : threads) {
-						col_exist = lt.contains(i);
-						if (!col_exist) {
-							break;
+		if (metrics != null) {
+			for (BaseMetric metric : metrics) {
+				if (metric instanceof MetricRaw) {
+					List<Integer> lt = ((MetricRaw)metric).getThread();
+					if (lt.size() == threads.size()) {
+						for(Integer i : threads) {
+							col_exist = lt.contains(i);
+							if (!col_exist) {
+								break;
+							}
 						}
 					}
 				}
+				if (col_exist) 
+					break;
 			}
-			if (col_exist) break;
 		}
 		
 		// 2. if the column of this thread exist, exit.
@@ -155,7 +154,7 @@ public class ThreadView extends AbstractBaseScopeView
 	}
 	
 	@Override
-	protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus) {	}
+	protected void initTableColumns(boolean keepColumnStatus) {	}
 
 	@Override
 	protected ScopeViewActions createActions(Composite parent, CoolBar coolbar) {
@@ -236,12 +235,12 @@ public class ThreadView extends AbstractBaseScopeView
 							index = threads.get(i);
 						} else {
 							// show the last thread index
-							if (size > MAX_THREAD_INDEX)
+							if (size > MAX_THREAD_INDEX+1)
 								buffer.append("..");
 							index = threads.get(size-1);
 						}
 						buffer.append(labels[index]);
-						if (i < MAX_THREAD_INDEX-1 && i<size-1)
+						if (i < MAX_THREAD_INDEX && i<size-1)
 							buffer.append(',');
 					}
 					buffer.append("]-");

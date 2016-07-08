@@ -8,8 +8,11 @@ import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.jface.layout.TreeColumnLayout;
+import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.swt.widgets.TreeItem;
 
@@ -191,6 +194,12 @@ public class ScopeTreeViewer extends TreeViewer
 				col, objMetric,iPosition); // sorting mechanism
 		if(bSorted)
 			colSorter.setSorter(colSorter, ColumnViewerSorter.ASC);
+
+		Layout layout = getTree().getParent().getLayout();
+		if (layout instanceof TreeColumnLayout) {
+			final ColumnPixelData data = new ColumnPixelData(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true, false);
+			((TreeColumnLayout)layout).setColumnData(colMetric.getColumn(), data);
+		}
 
 		return colMetric;
     }

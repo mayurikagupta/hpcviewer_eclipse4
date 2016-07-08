@@ -80,7 +80,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 	private GC gc = null;
 	
 	private ISourceProviderListener listener;
-	private TreeColumnLayout treeLayout;
+	//private TreeColumnLayout treeLayout;
 
 
 	/**
@@ -357,7 +357,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         colTree.getColumn().setWidth(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH); //TODO dynamic size
         colTree.setLabelProvider( getLabelProvider() ); // laks addendum
         
-    	treeLayout = new TreeColumnLayout();
+        TreeColumnLayout treeLayout = new TreeColumnLayout();
     	tableComposite.setLayout(treeLayout);
     			
 		treeLayout.setColumnData(colTree.getColumn(), new ColumnWeightData(100, 
@@ -443,6 +443,13 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 			 */
 			public void postExecuteSuccess(String commandId, Object returnValue) 
 			{
+				// in Eclipse mars, Eclipse creates a dummy view with empty tree.
+				// we have to be careful not to allow them to show up
+				if (treeViewer.getTree() == null || treeViewer.getTree().isDisposed()) {
+					// bug in Eclipse
+					System.err.println("Empty tree : " + getPartName() + ": " + getViewSite().getId() + " . " + getViewSite().getSecondaryId());
+					return;
+				}
 				if (commandId.equals(DebugShowCCT.commandId) || commandId.equals(DebugShowFlatID.commandId))
 				{
 					// refresh the table to take into account the turn on/off debugging mode
@@ -524,7 +531,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
         // tell the action class that we have built the tree
         objViewActions.setTreeViewer(treeViewer);
         
-        initTableColumns(treeLayout, keepColumnStatus);
+        initTableColumns(keepColumnStatus);
         
         // notify the children class to update the display
     	updateDisplay();    	
@@ -587,7 +594,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 	 */
 	abstract public void updateDisplay();
 
-	abstract protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus);
+	abstract protected void initTableColumns(boolean keepColumnStatus);
 	
     /**
      * The derived class has to implement this method to create its own actions

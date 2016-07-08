@@ -114,13 +114,13 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView#initTableColumns()
 	 */
-	protected void initTableColumns(TreeColumnLayout treeLayout, boolean keepColumnStatus) {
+	protected void initTableColumns(boolean keepColumnStatus) {
 		
         if (treeViewer != null) {
         	Tree tree = treeViewer.getTree();
         	if (tree != null && !tree.isDisposed())
         	{
-        		initTableColumns(tree, treeLayout, keepColumnStatus);
+        		initTableColumns(tree, keepColumnStatus);
         	}
         }
 	}
@@ -165,7 +165,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 * @param tree
 	 * @param keepColumnStatus
 	 */
-	private void initTableColumns(Tree tree, TreeColumnLayout treeLayout, boolean keepColumnStatus) 
+	private void initTableColumns(Tree tree, boolean keepColumnStatus) 
 	{
         final Experiment myExperiment = database.getExperiment();
         final int numMetric			  = myExperiment.getMetricCount();
@@ -212,8 +212,6 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         		if (metric != null) {
             		titles[i+1] = metric.getDisplayName();	// get the title
             		colMetrics[i] = this.treeViewer.addTreeColumn(metric, (i==0));
-        			final ColumnPixelData data = new ColumnPixelData(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true, false);
-        			treeLayout.setColumnData(colMetrics[i].getColumn(), data);
             		
             		// bug fix: for view initialization, we need to reset the status of hide/view
             		if (!keepColumnStatus) {

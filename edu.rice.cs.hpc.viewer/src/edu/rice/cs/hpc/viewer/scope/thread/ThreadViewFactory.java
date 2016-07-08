@@ -79,30 +79,32 @@ class ThreadViewFactory
 				final String path = experiment.getDefaultDirectory().getAbsolutePath();
 				
 				// check if the view already exists
+				IViewPart view = null;
 				final IViewReference vref = page.findViewReference(ThreadView.ID, path);
 				if (vref != null) {
 					// it's there. we need to activate it and set the new threads
-					IViewPart view = vref.getView(true);
-					((ThreadView)view).addTableColumns(threads);
-					page.activate(view);
-					return view;
+					view = vref.getView(true);
 					
 				} else {
 					// it doesn't exist. need to create it.
-					IViewPart view = page.showView(ThreadView.ID, path, 
+					view = page.showView(ThreadView.ID, path, 
 							IWorkbenchPage.VIEW_ACTIVATE);
 					if (view != null && (view  instanceof ThreadView)) 
 					{
-
-						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
-						if (threads != null) {
-							((ThreadView)view).setInput(db, scope, threads);
-							ExperimentView ev = db.getExperimentView();
-							ev.addView((AbstractBaseScopeView) view);
-							return view;
-						}
+						ExperimentView ev = db.getExperimentView();
+						ev.addView((AbstractBaseScopeView) view);
 					}
 				}
+				if (view != null) {
+					if (threads != null) {
+						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
+						((ThreadView)view).setInput(db, scope);
+						((ThreadView)view).addTableColumns(threads);
+						page.activate(view);
+						return view;
+					}
+				}
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				MessageDialog.openError(window.getShell(), "Error", e.getMessage());
