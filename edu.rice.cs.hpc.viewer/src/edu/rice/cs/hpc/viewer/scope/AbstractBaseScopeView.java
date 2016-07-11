@@ -447,7 +447,7 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 				// we have to be careful not to allow them to show up
 				if (treeViewer.getTree() == null || treeViewer.getTree().isDisposed()) {
 					// bug in Eclipse
-					System.err.println("Empty tree : " + getPartName() + ": " + getViewSite().getId() + " . " + getViewSite().getSecondaryId());
+					//System.err.println("Empty tree : " + getPartName() + ": " + getViewSite().getId() + " . " + getViewSite().getSecondaryId());
 					return;
 				}
 				if (commandId.equals(DebugShowCCT.commandId) || commandId.equals(DebugShowFlatID.commandId))
