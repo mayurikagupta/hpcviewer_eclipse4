@@ -64,9 +64,9 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 	public Integer call() throws Exception {
 
 		ProcessTimeline trace = getNextTrace(currentLine);
-		Integer numTraces = 0;
 		final double pixelLength = (attributes.getTimeInterval())/(double)attributes.numPixelsH;
 		final long timeBegin = attributes.getTimeBegin();
+		int num_invalid_samples = 0;
 		
 		while (trace != null)
 		{
@@ -94,7 +94,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 						trace, timeBegin, trace.line(),
 						imageHeight, pixelLength, usingMidpoint);
 				
-				data.collect();
+				num_invalid_samples += data.collect();
 				
 				final TimelineDataSet dataSet = data.getList();
 				queue.add(dataSet);				
@@ -110,7 +110,6 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 			monitor.worked(1);
 			
 			trace = getNextTrace(currentLine);
-			numTraces++;
 			
 			// ---------------------------------
 			// finalize
@@ -120,7 +119,7 @@ public abstract class BaseTimelineThread implements Callable<Integer> {
 		//System.out.println("BTT q: " + queue.size() + " line:" + currentLine.get() +" tot: " + numTraces);
 		// terminate the monitor progress bar (if any) when there's no more work to do 
 		//monitor.done();
-		return numTraces;
+		return Integer.valueOf(num_invalid_samples);
 	}
 
 	/****
