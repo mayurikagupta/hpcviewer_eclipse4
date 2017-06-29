@@ -11,9 +11,8 @@ performance metrics in conjunction with an application&apos;s source code.
 
 hpcviewer is part of Rice University&apos;s HPCToolkit project. Development of 
 HPCToolkit is principally funded by the Department of Energy&apos;s Office of 
-Science as part of the SciDAC Center for Scalable Application Development 
-Software (CScADS), the Performance Engineering Research Institute (PERI) 
-and Performance Insight For Programmers and Exascale Runtimes (PIPER).
+Science, Lawrence Livermore National Laboratory and National Science 
+Foundation.
 
 Release 2017.06  (C) Copyright 2017, Rice University.
       </text>
