@@ -111,14 +111,14 @@ do
     fi
 done
 
-# Check that version is 1.5 or later.
+# Check that version is 1.7 or later.
 
 if test "$force" = no ; then
     if test "x$java_version" = x ; then
 	die "unable to find program 'java' on your PATH"
     fi
     minor=`expr "$java_version" : '[^.]*\.\([0-9]*\)'`
-    test "$minor" -ge 5 >/dev/null 2>&1
+    test "$minor" -ge 7 >/dev/null 2>&1
     if test $? -ne 0 ; then
 	die "$java_version is too old, use Java 1.5 or later"
     fi
@@ -133,6 +133,11 @@ libexec_dir="${install_dir}/libexec/$name"
 binary_file="$name"
 ini_file="${name}.ini"
 sh_file="${name}.sh"
+
+# bug no 20: https://github.com/HPCToolkit/hpcviewer/issues/20
+if [ -e $libexec_dir ]; then
+  rm -rf $libexec_dir
+fi
 
 mkdir -p "$bin_dir" "$libexec_dir" \
     || die "unable to mkdir install directories"
