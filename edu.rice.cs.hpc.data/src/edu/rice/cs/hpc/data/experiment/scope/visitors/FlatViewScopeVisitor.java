@@ -28,7 +28,10 @@ import edu.rice.cs.hpc.data.experiment.source.SourceFile;
  *
  *************************************************************************************************/
 
-public class FlatViewScopeVisitor implements IScopeVisitor {
+public class FlatViewScopeVisitor implements IScopeVisitor 
+{
+	final static private char SEPARATOR_ID = ':';
+	
 	private Hashtable<Integer, LoadModuleScope> htFlatLoadModuleScope;
 	private Hashtable<String, FileScope> htFlatFileScope;
 	private HashMap<String, FlatScopeInfo> htFlatScope;
@@ -77,8 +80,9 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		add(scope,vt, true, false); 
 	}
 	public void visit(ProcedureScope scope, ScopeVisitType vt) 		{
-		if (!scope.isFalseProcedure())
-			add(scope,vt, true, false); 
+		if (isPseudoProcedure(scope))
+			return;
+		add(scope,vt, true, false); 
 	}
 
 	
@@ -173,7 +177,11 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 				proc_cct_s = findEnclosingProcedure(cct_s);
 			}
 
-			if (proc_cct_s == null || proc_cct_s.isFalseProcedure()) {
+			// if the procedure is a fake procedure, do not convert it to flat tree node
+			// Careful: Some inline functions are fake procedures (like macros).
+			//  we want this inline procedures to be converted to flat tree regardless 
+			//  they are fake procedure.
+			if (proc_cct_s == null || isPseudoProcedure(proc_cct_s)) {
 				//throw new RuntimeException("Cannot find the enclosing procedure for " + cct_s);
 				return null;
 			}
@@ -210,7 +218,18 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		return flat_info_s;
 	}
 
-	
+	/*****************************************************************
+	 * Check if the scope is a pseudo procedure like <root> or <thread root>
+	 *  or <partial callpath>
+	 * A scope is a pseudo procedure iff it's a fake procedure and it isn't an alien procedure
+	 * 
+	 * @param scope
+	 * @return true if it's a pseudo procedure
+	 ****************************************************************/
+	private boolean isPseudoProcedure(ProcedureScope scope) {
+		boolean result = scope.isFalseProcedure() && !scope.isAlien();
+		return result;
+	}
 	
 	/*****************************************************************
 	 * Create the flat view of a load module
@@ -248,7 +267,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 	 *****************************************************************/
 	private String getUniqueFileID(SourceFile file, LoadModuleScope lm)
 	{
-		return lm.getFlatIndex() + ":" + file.getFileID();
+		String separator = String.valueOf(SEPARATOR_ID);
+		return lm.getFlatIndex() + separator + file.getFileID();
 	}
 	
 	
@@ -395,8 +415,21 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 		{
 			// forcing to include procedure ID to ensure uniqueness of call site
 			final int proc_id = ((CallSiteScope)scope).getProcedureScope().getFlatIndex();
-			hash_id.append(':');
+			hash_id.append(SEPARATOR_ID);
 			hash_id.append(proc_id);
+		} else if (scope instanceof ProcedureScope) 
+		{
+			ProcedureScope proc_scope = (ProcedureScope) scope;
+			if (proc_scope.isFalseProcedure()) {
+				int linenum = proc_scope.getFirstLineNumber();
+				String file_id = getUniqueFileID(proc_scope.getSourceFile(), proc_scope.getLoadModule());
+
+				hash_id.append(SEPARATOR_ID);
+				hash_id.append(file_id);
+				
+				hash_id.append(SEPARATOR_ID);
+				hash_id.append(linenum);
+			}
 		}
 		return hash_id.toString();
 	}
@@ -467,8 +500,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			}
 			if (parent instanceof ProcedureScope) {
 				ProcedureScope proc = (ProcedureScope) parent;
-				if (!proc.isAlien()) 
-					return proc;
+				/*if (!proc.isAlien()) */
+				return proc;
 			}
 			if (parent instanceof RootScope) return null;
 			parent = parent.getParentScope();
@@ -503,9 +536,9 @@ public class FlatViewScopeVisitor implements IScopeVisitor {
 			if (add_inclusive)
 				flat_s.combine(cct_s, inclusive_filter);
 		}
-		if (add_exclusive)
+		if (add_exclusive) {
 			flat_s.combine(cct_s, exclusive_filter);
-
+		}
 		//-----------------------------------------------------------------------
 		// store the flat scopes that have been updated  
 		//-----------------------------------------------------------------------
