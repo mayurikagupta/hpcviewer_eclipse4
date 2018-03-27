@@ -20,6 +20,7 @@ import edu.rice.cs.hpc.data.experiment.scope.LineScope;
 import edu.rice.cs.hpc.data.experiment.scope.LoadModuleScope;
 import edu.rice.cs.hpc.data.experiment.scope.LoopScope;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
+import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope.ProcedureType;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
@@ -678,8 +679,13 @@ public class BaseExperimentBuilder extends Builder {
 				this.scopeStack.push(ls);
 				this.scopeStack.push(csn2);
 
+				if (isalien)
+					procScope.setProcedureType(ProcedureType.ProcedureInlineFunction);
+				else 
+					procScope.setProcedureType(ProcedureType.ProcedureNormal);
 			} else {
 				this.beginScope(procScope);
+				procScope.setProcedureType(ProcedureType.ProcedureInlineMacro);
 			}
 	}
 
