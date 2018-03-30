@@ -19,6 +19,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -47,6 +48,7 @@ import edu.rice.cs.hpc.traceviewer.data.db.ImageTraceAttributes;
 import edu.rice.cs.hpc.traceviewer.data.db.Position;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimeline;
 import edu.rice.cs.hpc.traceviewer.data.timeline.ProcessTimelineService;
+import edu.rice.cs.hpc.traceviewer.util.MessageLabelManager;
 import edu.rice.cs.hpc.traceviewer.util.Utility;
 import edu.rice.cs.hpc.traceviewer.data.util.Constants;
 import edu.rice.cs.hpc.traceviewer.data.util.Debugger;
@@ -102,7 +104,13 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
     /**The Label with the current cross hair information.*/
 	private Label crossHairLabel;
         
-    /**The min number of process units you can zoom in.*/
+    /**The Label for displaying a message info/warning to users.*/
+	private Label messageLabel;
+
+	/** thread to remove message */
+	MessageLabelManager restoreMessage;
+	
+	/**The min number of process units you can zoom in.*/
     private final static int MIN_PROC_DISP = 1;
 	
 	final private ImageTraceAttributes oldAttributes;
@@ -122,9 +130,9 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		super(_composite, SWT.NO_BACKGROUND, RegionType.Rectangle );
 		oldAttributes = new ImageTraceAttributes();
 
-		selectionTopLeft = new Point(0,0);
+		selectionTopLeft     = new Point(0,0);
 		selectionBottomRight = new Point(0,0);
-		stData = null;
+		stData  = null;
 		
 		initMouseSelection();
 		
@@ -515,11 +523,25 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
     {
 		labelGroup = _labelGroup;
         
-        timeLabel = new Label(labelGroup, SWT.LEFT);
-        processLabel = new Label(labelGroup, SWT.CENTER);
+        timeLabel  	   = new Label(labelGroup, SWT.LEFT);
+        processLabel   = new Label(labelGroup, SWT.CENTER);
         crossHairLabel = new Label(labelGroup, SWT.RIGHT);
+        messageLabel   = new Label(labelGroup, SWT.LEFT);
     }
    
+	/*
+	 * (non-Javadoc)
+	 * @see edu.rice.cs.hpc.traceviewer.painter.ISpaceTimeCanvas#setMessage(java.lang.String)
+	 */
+	public void setMessage(String message)
+	{
+		if (restoreMessage == null)
+			restoreMessage = new MessageLabelManager(getDisplay(), messageLabel);
+		
+		restoreMessage.showMessage(message);
+	}
+	
+	
 	/**************************************************************************
 	 * Updates what the labels display to the viewer's current state.
 	 **************************************************************************/
