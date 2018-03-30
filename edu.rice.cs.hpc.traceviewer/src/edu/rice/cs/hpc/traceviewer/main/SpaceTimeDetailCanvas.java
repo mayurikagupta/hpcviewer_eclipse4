@@ -19,7 +19,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -538,7 +537,7 @@ public class SpaceTimeDetailCanvas extends AbstractTimeCanvas
 		if (restoreMessage == null)
 			restoreMessage = new MessageLabelManager(getDisplay(), messageLabel);
 		
-		restoreMessage.showMessage(message);
+		restoreMessage.showWarning(message);
 	}
 	
 	
