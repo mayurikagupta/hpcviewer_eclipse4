@@ -21,7 +21,7 @@ public class MessageLabelManager
 	Color colorBackground;
 	Shell shell;
 
-	public MessageLabelManager(Display display, Label messageLabel) {
+	public MessageLabelManager(final Display display, Label messageLabel) {
 
 		this.messageLabel   = messageLabel;
 		this.display 		= display;
@@ -57,7 +57,7 @@ public class MessageLabelManager
 		threadAlarm.start();
 	}
 	
-	private void initLabel(final int foreground, final int background, String message) {
+	private void initLabel(final int foreground, final int background, final String message) {
 		display.syncExec(new Runnable() {
 
 			@Override
