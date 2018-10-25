@@ -146,7 +146,7 @@ public class ScopeViewActionsGUI implements IScopeActionsGUI {
 		database = vWin.getDb(sFilename);
 		
 		// actions needed when a new experiment is loaded
-		this.resizeTableColumns();	// we assume the data has been populated
+		//this.resizeTableColumns();	// we assume the data has been populated
         this.enableActions();
         // since we have a new content of experiment, we need to display 
         // the aggregate metrics
