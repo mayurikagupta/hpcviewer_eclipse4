@@ -1,5 +1,7 @@
 package edu.rice.cs.hpc.viewer.scope.bottomup;
 
+import org.eclipse.jface.viewers.TreeViewer;
+
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeCallerView;
 import edu.rice.cs.hpc.data.experiment.scope.IMergedScope;
@@ -26,8 +28,8 @@ public class CallerViewContentProvider extends AbstractContentProvider
 	//private PercentScopeVisitor percentVisitor;
 	//private FinalizeMetricVisitorWithBackup finalizeVisitor;
 	
-	public CallerViewContentProvider()
-	{
+	public CallerViewContentProvider(TreeViewer viewer) {
+		super(viewer);
 	}
 	
     /**

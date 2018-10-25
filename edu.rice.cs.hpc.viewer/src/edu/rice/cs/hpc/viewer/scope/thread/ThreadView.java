@@ -174,7 +174,7 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected AbstractContentProvider getScopeContentProvider() {
-		return new AbstractContentProvider() {};
+		return new AbstractContentProvider(getTreeViewer()) {};
 	}
 
 	@Override
