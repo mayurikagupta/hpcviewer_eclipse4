@@ -56,11 +56,11 @@ java_version=`java -version 2>&1 | grep -i vers | head -1`
 if test "x$java_version" = x ; then
     die "unable to find program 'java' on your PATH"
 fi
-minor=`expr "$java_version" : '[^.]*\.\([0-9]*\)'`
-test "$minor" -ge 7 >/dev/null 2>&1
-if test $? -ne 0 ; then
-    die "$java_version is too old, use Java 1.7 or later"
-fi
+#minor=`expr "$java_version" : '[^.]*\.\([0-9]*\)'`
+#test "$minor" -ge 7 >/dev/null 2>&1
+#if test $? -ne 0 ; then
+#    die "$java_version is too old, use Java 1.7 or later"
+#fi
 
 java_vendor=`java -version | sed -n 2p  | awk '{print $1}'`
 if test "$java_vendor" = "gij"; then

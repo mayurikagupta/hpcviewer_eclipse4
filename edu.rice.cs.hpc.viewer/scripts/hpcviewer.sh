@@ -58,13 +58,13 @@ if test "x$java_version" = x ; then
 fi
 minor=`expr "$java_version" : '[^.]*\.\([0-9]*\)'`
 test "$minor" -ge 7 >/dev/null 2>&1
-if test $? -ne 0 ; then
-    die "$java_version is too old, use Java 1.7 or later"
-fi
+#if test $? -ne 0 ; then
+#    echo "$java_version is too old, use Java 1.7 or later"
+#fi
 
 java_vendor=`java -version | sed -n 2p  | awk '{print $1}'`
 if test "$java_vendor" = "gij"; then
-    die "GNU JVM (gij) is not supported. Please use JVM from Oracle/SUN or IBM"
+    echo "GNU JVM (gij) is not supported. Please use JVM from Oracle/SUN or IBM"
 fi
 
 #------------------------------------------------------------
