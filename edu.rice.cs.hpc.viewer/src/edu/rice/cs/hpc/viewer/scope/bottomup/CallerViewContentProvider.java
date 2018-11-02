@@ -1,18 +1,16 @@
 package edu.rice.cs.hpc.viewer.scope.bottomup;
 
-import org.eclipse.jface.viewers.TreeViewer;
-
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeCallerView;
 import edu.rice.cs.hpc.data.experiment.scope.IMergedScope;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
-//import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.filters.ExclusiveOnlyMetricPropagationFilter;
 import edu.rice.cs.hpc.data.experiment.scope.filters.InclusiveOnlyMetricPropagationFilter;
-//import edu.rice.cs.hpc.data.experiment.scope.visitors.FinalizeMetricVisitorWithBackup;
-//import edu.rice.cs.hpc.data.experiment.scope.visitors.PercentScopeVisitor;
+
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
+import edu.rice.cs.hpc.viewer.scope.ScopeTreeViewer;
 
 /************************************************************************
  * 
@@ -25,10 +23,8 @@ public class CallerViewContentProvider extends AbstractContentProvider
 {
 	private ExclusiveOnlyMetricPropagationFilter exclusiveOnly;
 	private InclusiveOnlyMetricPropagationFilter inclusiveOnly;
-	//private PercentScopeVisitor percentVisitor;
-	//private FinalizeMetricVisitorWithBackup finalizeVisitor;
 	
-	public CallerViewContentProvider(TreeViewer viewer) {
+	public CallerViewContentProvider(ScopeTreeViewer viewer) {
 		super(viewer);
 	}
 	
@@ -74,7 +70,7 @@ public class CallerViewContentProvider extends AbstractContentProvider
     				throw new RuntimeException("Unexpected scope node: " + node);
     			}
     		}
-            return has_children; // !((Scope.Node) element).isLeaf();    		
+            return has_children;   		
     	}
     	else
     		return false;
@@ -88,9 +84,5 @@ public class CallerViewContentProvider extends AbstractContentProvider
     public void setDatabase(Experiment experiment) {
     	exclusiveOnly = new ExclusiveOnlyMetricPropagationFilter(experiment);
     	inclusiveOnly = new InclusiveOnlyMetricPropagationFilter(experiment);
-    	
-    	//RootScope root = experiment.getCallerTreeRoot();
-/*    	percentVisitor = new PercentScopeVisitor(experiment.getMetricCount(), root);
-    	finalizeVisitor = new FinalizeMetricVisitorWithBackup(experiment.getMetrics());*/
     }    
 }

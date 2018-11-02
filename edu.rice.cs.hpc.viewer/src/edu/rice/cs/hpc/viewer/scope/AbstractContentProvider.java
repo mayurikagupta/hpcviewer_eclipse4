@@ -1,21 +1,23 @@
 package edu.rice.cs.hpc.viewer.scope;
 
-import org.eclipse.jface.viewers.ILazyContentProvider;
+import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 
+import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
 public abstract class AbstractContentProvider
-	implements ITreeContentProvider, ILazyContentProvider 
+	implements ITreeContentProvider, ILazyTreeContentProvider 
 {
     private RootScope  root;
-    private TreeViewer viewer;
+    private ScopeTreeViewer viewer;
     
-    public AbstractContentProvider(TreeViewer viewer) {
+    public AbstractContentProvider(ScopeTreeViewer viewer) {
     	this.viewer = viewer;
+    	new ScopeComparator();
     }
         
     /**
@@ -80,20 +82,48 @@ public abstract class AbstractContentProvider
     }
  
 
-	@Override
-	public void updateElement(int index) {
-		if (root == null) return;
-		
-		Scope current = root.getSubscope(index);
-		Object parent = current.getParent();
-		
-		viewer.replace(parent, index, current);
-		viewer.setChildCount(current, current.getChildCount());
-	}    
-
     /*
      * (non-Javadoc)
      * @see org.eclipse.jface.viewers.IContentProvider#dispose()
      */
     public void dispose() {}
+
+	@Override
+	public void updateElement(Object parent, int index) {
+		Object element = null;
+		
+		TreeViewerColumn column = viewer.getSortColumn();
+		Object data = column.getColumn().getData();
+		if (data == null) {
+			// sort based on the name of the scope
+		} else if (data instanceof BaseMetric) {
+			// sort based on the metric
+		}
+		int child_position = index;
+		
+		if (parent instanceof RootScope) {
+			child_position = index - 1;
+		} else {
+		}
+		
+		element = viewer.getSortScope( (Scope)parent, child_position);
+		
+		viewer.replace(parent, index, element);
+		updateChildCount(element, -1);
+	} 
+
+	@Override
+	public void updateChildCount(Object element, int currentChildCount) {
+		int length = 0;
+
+		if (element instanceof Scope) {			
+			Scope current = (Scope) element;
+			length = current.getChildCount();
+		}
+		if (element == root) {
+			length = root.getChildCount();
+		}
+		
+		viewer.setChildCount(element, length);
+	}	
 }

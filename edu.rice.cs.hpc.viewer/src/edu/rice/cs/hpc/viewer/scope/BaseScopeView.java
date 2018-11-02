@@ -1,7 +1,5 @@
 package edu.rice.cs.hpc.viewer.scope;
 
-import org.eclipse.jface.layout.TreeColumnLayout;
-import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -197,7 +195,8 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         	}
         }
         // prepare the data for the sorter class for tree
-        sorterTreeColumn.setMetric(myExperiment.getMetric(0));
+        // ScopeComparator sorterTreeColumn = (ScopeComparator) treeViewer.getComparator();
+        // sorterTreeColumn.setMetric(myExperiment.getMetric(0));
 
         // dirty solution to update titles
         TreeViewerColumn []colMetrics = new TreeViewerColumn[numMetric];

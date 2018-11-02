@@ -1,12 +1,11 @@
 package edu.rice.cs.hpc.viewer.scope.flat;
 
-import org.eclipse.jface.viewers.TreeViewer;
-
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
+import edu.rice.cs.hpc.viewer.scope.ScopeTreeViewer;
 
 public class FlatViewContentProvider extends AbstractContentProvider {
 
-	public FlatViewContentProvider(TreeViewer viewer) {
+	public FlatViewContentProvider(ScopeTreeViewer viewer) {
 		super(viewer);
 	}
 

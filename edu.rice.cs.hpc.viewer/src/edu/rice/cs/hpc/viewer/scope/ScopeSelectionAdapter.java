@@ -1,0 +1,132 @@
+package edu.rice.cs.hpc.viewer.scope;
+
+import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.swt.widgets.TreeItem;
+
+import edu.rice.cs.hpc.data.util.OSValidator;
+import edu.rice.cs.hpc.viewer.util.Utilities;
+
+/*********************************************************
+ * 
+ * Class to handle column header selection (a.k.a sort event)
+ *
+ *********************************************************/
+public class ScopeSelectionAdapter extends SelectionAdapter 
+{
+	// direction
+	public static final int ASC = 1;
+	public static final int NONE = 0;	// unused: for init only
+	public static final int DESC = -1;
+
+	final private ScopeTreeViewer viewer;	// viewer
+	final private TreeViewerColumn column;		// column
+
+    ScopeSelectionAdapter(ScopeTreeViewer viewer, TreeViewerColumn column) {
+		this.viewer 	= viewer;
+		this.column     = column;
+    	new ScopeComparator();
+	}
+	
+	public void widgetSelected(SelectionEvent e) {
+		
+		// ----------------
+		// pre-sorting 
+		// ----------------
+		Object []elements = null;
+		if (OSValidator.isMac()) {
+			// --------------------------------------------------------------------
+			//Eclipse Indigo bug on Mac OS: expanding a long call path will cause
+			// SWT to slowly sort tree items. Somehow Eclipse also expands other
+			// collapsed tree items as well.
+			// --------------------------------------------------------------------
+			// save the current expaded elements to be restored after the sort
+			elements = viewer.getExpandedElements();
+			
+			// collapse all the items
+			viewer.collapseAll();
+		}
+		// before sorting, we need to check if the first row is an element header 
+		// something like "aggregate metrics" or zoom-in item
+		Tree tree = viewer.getTree();
+		if (tree.getItemCount()==0)
+			return; // no items: no need to sort
+		
+		TreeItem item = viewer.getTree().getItem(0);
+		Image imgItem = item.getImage(0);
+		String []sText = Utilities.getTopRowItems(viewer);
+		
+		// ----------------
+		// sorting 
+		// ----------------
+		int tdirection = viewer.getSortDirection();
+		
+		if( tdirection == ASC ) {
+			setSorter(DESC);
+		} else if( tdirection == DESC ) {
+			setSorter(ASC);
+		} else {
+			// no direction. the default is ASC
+			setSorter(DESC);
+		}
+		
+		// ----------------
+		// post-sorting 
+		// ----------------
+		if(sText != null) {
+			Utilities.insertTopRow(viewer, imgItem, sText);
+		}
+		if (elements != null) {
+			viewer.setExpandedElements(elements);
+		}
+	}
+	
+	/**
+	 * Sort the column according to the direction
+	 * @param sorter
+	 * @param direction
+	 */
+	public void setSorter(int direction) {
+		// bug Eclipse no 199811 https://bugs.eclipse.org/bugs/show_bug.cgi?id=199811
+		// sorting can be very slow in mac OS
+		// we need to manually disable redraw before comparison and the refresh after the comparison 
+				
+		viewer.getTree().setRedraw(false);
+		TreeColumn col = column.getColumn();
+		
+		if( direction == NONE ) {
+			
+			col.getParent().setSortColumn(null);
+			col.getParent().setSortDirection(SWT.NONE);
+			viewer.setComparator(null);
+			
+		} else {			
+			col.getParent().setSortColumn(col);
+			
+			if( direction == ASC ) {
+				col.getParent().setSortDirection(SWT.DOWN);
+			} else {
+				col.getParent().setSortDirection(SWT.UP);
+			}
+		}
+		
+		// prepare the sorting for this column with a specific direction
+		viewer.setSortColumn(column);
+		viewer.setSortDirection(direction);
+		
+		 // have to call this before actually sorting the elements
+		viewer.sort_start();
+		
+		// do the sort
+		viewer.refresh();
+
+		viewer.sort_end();
+		
+		viewer.getTree().setRedraw(true);
+	}
+}

@@ -72,7 +72,6 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 	protected ScopeTreeViewer 	 treeViewer;		// tree for the caller and callees
 	protected Database 			 database;			// experiment data	
 	protected RootScope 		 myRootScope;		// the root scope of this view
-	protected ColumnViewerSorter sorterTreeColumn;	// sorter for the tree
     protected ScopeViewActions 	 objViewActions;	// actions for this scope view
 	
     private EditorManager editorSourceCode;	// manager to display the source code
@@ -331,10 +330,12 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		
 		final Composite tableComposite = new Composite(aParent, SWT.NONE);
 		
-		// ----- 03.21.2008 Laks: add virtual library for better memory consumption
-		// Laks 2009.06.22: add multi-selection for enabling copying into clipboard 
+		//  virtual library for better memory consumption
+		//  multi-selection for enabling copying into clipboard 
     	treeViewer = new ScopeTreeViewer(tableComposite,SWT.BORDER|SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.MULTI);
-    	// set the attributes
+
+    	// ask the child class to create the content provider. 
+    	// each class may have different type of content provider.
     	treeViewer.setContentProvider(getScopeContentProvider());
     	
     	GridDataFactory.fillDefaults().grab(true, true).applyTo(tableComposite);
@@ -363,12 +364,8 @@ abstract public class AbstractBaseScopeView  extends ViewPart
 		treeLayout.setColumnData(colTree.getColumn(), new ColumnWeightData(100, 
 				ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true));
         
-        sorterTreeColumn = new ColumnViewerSorter(this.treeViewer, colTree.getColumn(), null,0); 
-        
-        //-----------------
-        // Laks 11.11.07: need this to expand the tree for all view
-        //GridData data = new GridData(GridData.FILL_BOTH);
-        //treeViewer.getTree().setLayoutData(data);
+		ScopeSelectionAdapter selectionAdapter = new ScopeSelectionAdapter(treeViewer, colTree);
+		colTree.getColumn().addSelectionListener(selectionAdapter);
         
         //-----------------
         // create the context menus

@@ -11,6 +11,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+
+import java.util.Arrays;
+import java.util.HashMap;
+
 import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.TreePath;
@@ -19,6 +23,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
+import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.metric.MetricLabelProvider;
 import edu.rice.cs.hpc.viewer.util.Utilities;
 
@@ -30,6 +35,12 @@ public class ScopeTreeViewer extends TreeViewer
 	final static public String COLUMN_DATA_WIDTH = "w"; 
 	final static public int COLUMN_DEFAULT_WIDTH = 120;
 
+	// sort attributes
+	private TreeViewerColumn sort_column = null;
+	private int sort_direction = ScopeSelectionAdapter.NONE;
+	private HashMap<Scope, Object[]> sort_scopes;
+	private ScopeComparator comparator;
+	
 	/**
 	 * @param parent
 	 */
@@ -188,13 +199,15 @@ public class ScopeTreeViewer extends TreeViewer
     	col.setData(COLUMN_DATA_WIDTH, COLUMN_DEFAULT_WIDTH);
     	col.setData(objMetric);
 		col.setMoveable(true);
-		//this.colMetrics[i].getColumn().pack();			// resize as much as possible
-		int iPosition = this.doGetColumnCount();
-		ColumnViewerSorter colSorter = new ColumnViewerSorter(this, 
-				col, objMetric,iPosition); // sorting mechanism
-		if(bSorted)
-			colSorter.setSorter(colSorter, ColumnViewerSorter.ASC);
 
+		ScopeSelectionAdapter selectionAdapter = new ScopeSelectionAdapter(this, colMetric);
+		
+		// catch event when the user sort the column on the column header
+		col.addSelectionListener(selectionAdapter);
+		
+		if(bSorted) {
+			selectionAdapter.setSorter(ScopeSelectionAdapter.ASC);
+		}
 		Layout layout = getTree().getParent().getLayout();
 		if (layout instanceof TreeColumnLayout) {
 			final ColumnPixelData data = new ColumnPixelData(ScopeTreeViewer.COLUMN_DEFAULT_WIDTH, true, false);
@@ -202,6 +215,95 @@ public class ScopeTreeViewer extends TreeViewer
 		}
 
 		return colMetric;
+    }
+    
+    // --------------------
+    // sorting features
+    // --------------------
+    
+    /**
+     * store the column to be sorted. This will be used by the sorting method
+     * @param column
+     */
+    public void setSortColumn(TreeViewerColumn column) {
+    	this.sort_column = column;
+    }
+    
+    /***
+     * store the direction of sorting. This will be used by the sorting method
+     * @param direction
+     */
+    public void setSortDirection(int direction) {
+    	this.sort_direction = direction;
+    }
+    
+    /***
+     * retrieve the sorting column
+     * @return
+     */
+    public TreeViewerColumn getSortColumn() {
+    	return sort_column;
+    }
+    
+    /***
+     * retrieve the current sorting direction
+     * @return
+     */
+    public int getSortDirection() {
+    	return sort_direction;
+    }
+    
+    /***
+     * retrieve the sorted children of the parent.
+     * This method will dynamically sort the children when needed.
+     * If a parent has never sorted its children, it will sort immediately and return.
+     * the next time the same parent asks for its sorted children, it returns from the cache.
+     * <br>
+     * @param parent
+     * @param children
+     */
+    public Object[] getSortScopes(Scope parent) {
+    	Object [] children = sort_scopes.get(parent);
+    	if (children == null) {
+    		children = parent.getChildren();
+    		if (children == null)
+    			return null;
+    		
+    		BaseMetric metric = (BaseMetric) sort_column.getColumn().getData();
+    		comparator.setMetric(metric);
+    		comparator.setDirection(sort_direction);
+    		
+    		Arrays.sort(children, comparator);
+    		sort_scopes.put(parent, children);
+    	}
+    	return children;
+    }
+    
+    /***
+     * Retrieve a child of a parent for a specific sorted index.
+     * 
+     * @param parent
+     * @param index
+     * @return
+     */
+    public Object getSortScope(Scope parent, int index) {
+    	Object []children = getSortScopes(parent);
+    	if (children != null)
+    		return children[index];
+    	
+    	return null;
+    }
+    
+    public void sort_start() {
+    	if (sort_scopes != null) {
+    		sort_scopes.clear();
+    	} else {
+    		sort_scopes = new HashMap<Scope, Object[]>();
+    		comparator = new ScopeComparator();
+    	}
+    }
+    
+    public void sort_end() {
     }
     
     /****
