@@ -2,17 +2,20 @@ package edu.rice.cs.hpc.viewer.scope;
 
 import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 
-import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
+/********************************
+ * 
+ * Base class of content provider of all views
+ * All the children need to implement hasChildren method
+ *
+ ********************************/
 public abstract class AbstractContentProvider
 	implements ITreeContentProvider, ILazyTreeContentProvider 
 {
-    private RootScope  root;
     private ScopeTreeViewer viewer;
     
     public AbstractContentProvider(ScopeTreeViewer viewer) {
@@ -56,17 +59,6 @@ public abstract class AbstractContentProvider
     		return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
-     */
-    public boolean hasChildren(Object element) {
-    	if(element instanceof Scope)
-            return ((Scope) element).hasChildren(); // !((Scope.Node) element).isLeaf();
-    	else
-    		return false;
-    }
-
     /**
     * Notifies this content provider that the given viewer's input
     * has been switched to a different element.
@@ -78,7 +70,6 @@ public abstract class AbstractContentProvider
     *   does not have an input
     */
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-    	this.root = (RootScope) newInput;
     }
  
 
@@ -90,23 +81,16 @@ public abstract class AbstractContentProvider
 
 	@Override
 	public void updateElement(Object parent, int index) {
-		Object element = null;
-		
-		TreeViewerColumn column = viewer.getSortColumn();
-		Object data = column.getColumn().getData();
-		if (data == null) {
-			// sort based on the name of the scope
-		} else if (data instanceof BaseMetric) {
-			// sort based on the metric
-		}
+
 		int child_position = index;
 		
 		if (parent instanceof RootScope) {
+			// if the parent is a root, the first row is a header
+			// this header row is not counted as a child 
 			child_position = index - 1;
-		} else {
 		}
 		
-		element = viewer.getSortScope( (Scope)parent, child_position);
+		Object element = viewer.getSortScope( (Scope)parent, child_position);
 		
 		viewer.replace(parent, index, element);
 		updateChildCount(element, -1);
@@ -114,15 +98,8 @@ public abstract class AbstractContentProvider
 
 	@Override
 	public void updateChildCount(Object element, int currentChildCount) {
-		int length = 0;
-
-		if (element instanceof Scope) {			
-			Scope current = (Scope) element;
-			length = current.getChildCount();
-		}
-		if (element == root) {
-			length = root.getChildCount();
-		}
+		Object []children = getChildren(element);
+		int length = (children == null ? 0 : children.length);
 		
 		viewer.setChildCount(element, length);
 	}	

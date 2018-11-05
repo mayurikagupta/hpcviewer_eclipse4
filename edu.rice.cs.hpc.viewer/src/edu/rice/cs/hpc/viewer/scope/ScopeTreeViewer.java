@@ -17,6 +17,7 @@ import java.util.HashMap;
 
 import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.ColumnPixelData;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.swt.widgets.TreeItem;
 
@@ -264,8 +265,10 @@ public class ScopeTreeViewer extends TreeViewer
      */
     public Object[] getSortScopes(Scope parent) {
     	Object [] children = sort_scopes.get(parent);
+    	
     	if (children == null) {
-    		children = parent.getChildren();
+    		ITreeContentProvider provider = (ITreeContentProvider) getContentProvider();
+    		children = provider.getChildren(parent);
     		if (children == null)
     			return null;
     		

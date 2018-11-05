@@ -64,15 +64,12 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 		// ----------------
 		// sorting 
 		// ----------------
-		int tdirection = viewer.getSortDirection();
+		int tdirection = column.getColumn().getParent().getSortDirection();
 		
 		if( tdirection == ASC ) {
 			setSorter(DESC);
-		} else if( tdirection == DESC ) {
+		} else  {
 			setSorter(ASC);
-		} else {
-			// no direction. the default is ASC
-			setSorter(DESC);
 		}
 		
 		// ----------------
@@ -97,27 +94,29 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 		// we need to manually disable redraw before comparison and the refresh after the comparison 
 				
 		viewer.getTree().setRedraw(false);
-		TreeColumn col = column.getColumn();
+		
+		TreeColumn col    = column.getColumn();
+		int swt_direction = SWT.NONE;
 		
 		if( direction == NONE ) {
 			
 			col.getParent().setSortColumn(null);
-			col.getParent().setSortDirection(SWT.NONE);
-			viewer.setComparator(null);
 			
 		} else {			
 			col.getParent().setSortColumn(col);
 			
 			if( direction == ASC ) {
-				col.getParent().setSortDirection(SWT.DOWN);
+				swt_direction = SWT.DOWN;				
 			} else {
-				col.getParent().setSortDirection(SWT.UP);
+				swt_direction = SWT.UP;
 			}
 		}
 		
 		// prepare the sorting for this column with a specific direction
+		
+		col.getParent().setSortDirection(swt_direction);
+		viewer.setSortDirection(direction);		
 		viewer.setSortColumn(column);
-		viewer.setSortDirection(direction);
 		
 		 // have to call this before actually sorting the elements
 		viewer.sort_start();
