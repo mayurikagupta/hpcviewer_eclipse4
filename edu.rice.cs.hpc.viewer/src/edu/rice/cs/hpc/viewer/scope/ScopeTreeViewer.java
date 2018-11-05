@@ -290,8 +290,12 @@ public class ScopeTreeViewer extends TreeViewer
      * @return
      */
     public Object getSortScope(Scope parent, int index) {
+    	if (index < 0)
+    		return null;
+    	
     	Object []children = getSortScopes(parent);
-    	if (children != null)
+    	
+    	if (children != null && index<children.length)
     		return children[index];
     	
     	return null;

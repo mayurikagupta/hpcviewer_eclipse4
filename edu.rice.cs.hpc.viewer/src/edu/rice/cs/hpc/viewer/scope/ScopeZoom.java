@@ -18,7 +18,6 @@ public class ScopeZoom {
 	private ScopeViewActionsGUI objActionsGUI;
 	
     private java.util.Stack<Scope> stackRootTree;
-	private java.util.Stack<Object[]> stackTreeStates;
 
 	// --------------------------------------------------------------------
 	//	CONSTRUCTORS
@@ -32,7 +31,6 @@ public class ScopeZoom {
 		this.viewer = treeViewer;
 		this.objActionsGUI = objGUI;
 		stackRootTree = new java.util.Stack<Scope>();
-		stackTreeStates = new java.util.Stack<Object[]>();
 	}
 	
 	// --------------------------------------------------------------------
@@ -45,11 +43,8 @@ public class ScopeZoom {
 	 * @param old
 	 */
 	public void zoomIn (Scope current, Scope old) {
-		// ---------------------- save the current view
+
 		this.stackRootTree.push(old); // save the node for future zoom-out
-		Object treeStates[] = viewer.getExpandedElements();
-		this.stackTreeStates.push(treeStates);
-		// ---------------------- 
 
 		viewer.setInput(current);
 		// we need to insert the selected node on the top of the table
@@ -76,12 +71,6 @@ public class ScopeZoom {
 		viewer.setInput( parent );
 		// Bug fix: we need to insert the parent on the top of the table
 		this.objActionsGUI.insertParentNode(parent);
-
-		// return the previous expanded tree items
-		if(this.stackTreeStates.size()>0) {
-			Object o[] = this.stackTreeStates.pop();
-			viewer.setExpandedElements(o);
-		}
 	}
 	
 	/**

@@ -4,7 +4,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.dialogs.Dialog;
-
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.swt.widgets.Display;
@@ -332,15 +332,20 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 	/**
 	 * Zoom-out the node
 	 */
-	public void zoomOut() {		
-		objZoom.zoomOut();
-		// funny behavior on Windows: they still keep the track of the previously selected item !!
-		// therefore we need to check again the state of the buttons
-		Scope nodeSelected = this.getSelectedNode();
-		
-		registerAction(ActionType.ZoomOut);
+	public void zoomOut() {
+		try {
+			objZoom.zoomOut();
+			// funny behavior on Windows: they still keep the track of the previously selected item !!
+			// therefore we need to check again the state of the buttons
+			Scope nodeSelected = this.getSelectedNode();
+			
+			registerAction(ActionType.ZoomOut);
 
-		this.checkStates(nodeSelected);
+			this.checkStates(nodeSelected);
+		} catch (Exception e) {
+			// just ignore if there's somwthing wrong with the zoom out
+			MessageDialog.openError(objShell, "Error", e.getMessage());
+		}
 	}
 	
 	/**

@@ -91,9 +91,10 @@ public abstract class AbstractContentProvider
 		}
 		
 		Object element = viewer.getSortScope( (Scope)parent, child_position);
-		
-		viewer.replace(parent, index, element);
-		updateChildCount(element, -1);
+		if (element != null) {
+			viewer.replace(parent, index, element);
+			updateChildCount(element, -1);
+		}
 	} 
 
 	@Override
