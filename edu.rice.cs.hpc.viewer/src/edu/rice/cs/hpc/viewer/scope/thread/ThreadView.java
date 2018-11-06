@@ -26,6 +26,7 @@ import edu.rice.cs.hpc.viewer.metric.MetricRawManager;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
+import edu.rice.cs.hpc.viewer.scope.ScopeTreeViewer;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -42,8 +43,9 @@ public class ThreadView extends AbstractBaseScopeView
 	
 	/** the metric manager of the view. DO NOT access this variable directly.
 	 *  Instead, we need to query to getMetricManager() */
-	private IMetricManager metricManager;
+	private IMetricManager metricManager = null;
 	
+	private ThreadContentProvider contentProvider = null;
 	
 	/************
 	 * Activate the thread view
@@ -60,8 +62,7 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	public void setInput(Database db, RootScope scope, boolean keepColumnStatus)
-	{
-		
+	{		
 	}
 	
 	/*****
@@ -174,7 +175,10 @@ public class ThreadView extends AbstractBaseScopeView
 
 	@Override
 	protected AbstractContentProvider getScopeContentProvider() {
-		return new AbstractContentProvider(getTreeViewer()) {};
+		if (contentProvider == null) {
+			contentProvider = new ThreadContentProvider(getTreeViewer());
+		}
+		return contentProvider;
 	}
 
 	@Override
@@ -189,6 +193,17 @@ public class ThreadView extends AbstractBaseScopeView
 		// update the content of the view
 		updateDisplay();
 	}
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+     */
+    public boolean hasChildren(Object element) {
+    	if(element instanceof Scope)
+            return ((Scope) element).hasChildren(); // !((Scope.Node) element).isLeaf();
+    	else
+    		return false;
+    }
+
 
 	@Override
 	protected CellLabelProvider getLabelProvider() {
@@ -305,5 +320,26 @@ public class ThreadView extends AbstractBaseScopeView
 		
 		// create a new metric manager for this view
 		return new MetricRawManager(treeViewer);
+	}
+	
+	static class ThreadContentProvider extends AbstractContentProvider
+	{
+	    public ThreadContentProvider(ScopeTreeViewer viewer) {
+			super(viewer);
+		}
+
+		/*
+	     * (non-Javadoc)
+	     * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+	     */
+	    public boolean hasChildren(Object element) {
+	    	if(element instanceof Scope)
+	            return ((Scope) element).hasChildren(); // !((Scope.Node) element).isLeaf();
+	    	else
+	    		return false;
+	    }
+
+
+		
 	}
 }
