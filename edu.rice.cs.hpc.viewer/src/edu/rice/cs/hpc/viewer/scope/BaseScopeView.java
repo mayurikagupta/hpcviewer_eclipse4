@@ -87,13 +87,11 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             
             this.objViewActions.updateContent(getExperiment(), myRootScope);
 
-            // FIXME: For unknown reason, the updateContent method above does not resize the column automatically,
-            // so we need to do it here, manually ... sigh
-            //this.objViewActions.resizeColumns();	// resize the column to fit all metrics
-        	
-            // Laks 2009.03.17: select the first scope
-            TreeItem objItem = this.treeViewer.getTree().getItem(1);
+            // Try select the first scope
+            TreeItem objItem = treeViewer.getTree().getItem(1);            
+            treeViewer.getTree().showItem(objItem);
             this.treeViewer.getTree().setSelection(objItem);
+            
             // reset the button
             this.objViewActions.checkNodeButtons();
             
@@ -102,9 +100,6 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             // if the filter may incur misleading information, we should warn users
             // ------------------------------------------------------------
             checkFilterStatus(myExperiment);
-        } else {
-        	// empty experiment data (it should be a warning instead of an error. The error should be on the profile side).
-        	// this.objViewActions.showErrorMessage("Warning: empty database.");
         }
    	}
 

@@ -19,13 +19,13 @@ import edu.rice.cs.hpc.viewer.util.Utilities;
  *********************************************************/
 public class ScopeSelectionAdapter extends SelectionAdapter 
 {
-	// direction
-	public static final int ASC = 1;
-	public static final int NONE = 0;	// unused: for init only
-	public static final int DESC = -1;
-
-	final private ScopeTreeViewer viewer;	// viewer
-	final private TreeViewerColumn column;		// column
+	final private ScopeTreeViewer viewer;
+	final private TreeViewerColumn column;
+	
+	final static public int SORT_ASC  = 1;
+	final static public int SORT_DESC = -1;
+	
+	private int current_sort_direction = SORT_DESC;
 
     ScopeSelectionAdapter(ScopeTreeViewer viewer, TreeViewerColumn column) {
 		this.viewer 	= viewer;
@@ -64,13 +64,7 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 		// ----------------
 		// sorting 
 		// ----------------
-		int tdirection = column.getColumn().getParent().getSortDirection();
-		
-		if( tdirection == ASC ) {
-			setSorter(DESC);
-		} else  {
-			setSorter(ASC);
-		}
+		setSorter(current_sort_direction);
 		
 		// ----------------
 		// post-sorting 
@@ -97,25 +91,20 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 		
 		TreeColumn col    = column.getColumn();
 		int swt_direction = SWT.NONE;
+		col.getParent().setSortColumn(col);
 		
-		if( direction == NONE ) {
-			
-			col.getParent().setSortColumn(null);
-			
-		} else {			
-			col.getParent().setSortColumn(col);
-			
-			if( direction == ASC ) {
-				swt_direction = SWT.DOWN;				
-			} else {
-				swt_direction = SWT.UP;
-			}
+		if( direction == SORT_ASC ) {
+			swt_direction = SWT.UP;
+			current_sort_direction = SORT_DESC;
+		} else {
+			swt_direction = SWT.DOWN;
+			current_sort_direction = SORT_ASC;
 		}
 		
 		// prepare the sorting for this column with a specific direction
 		
 		col.getParent().setSortDirection(swt_direction);
-		viewer.setSortDirection(direction);		
+		viewer.setSortDirection(current_sort_direction);		
 		viewer.setSortColumn(column);
 		
 		 // have to call this before actually sorting the elements
