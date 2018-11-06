@@ -447,6 +447,8 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 					bResult = DerivedMetric.evaluateExpression(expFormula, varMap, fctMap);
 				} catch (ExpressionParseException e) {
 					MessageDialog.openError(getShell(), "Error: incorrect expression", e.getDescription());
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), "Error detected", e.getMessage());
 				}
 			} else {
 				MessageDialog.openError(getShell(), "Error: empty expression", 
@@ -473,6 +475,7 @@ public class ExtDerivedMetricDlg extends TitleAreaDialog {
 			  try {
 				  Formatter format = new Formatter();
 				  format.format(sFormat, 1.0);
+				  format.close();
 				  
 			  } catch (IllegalFormatException e) {
 				  sError = "Format is incorrect.";

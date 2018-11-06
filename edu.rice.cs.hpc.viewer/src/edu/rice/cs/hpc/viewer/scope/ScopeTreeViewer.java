@@ -38,7 +38,8 @@ public class ScopeTreeViewer extends TreeViewer
 
 	// sort attributes
 	private TreeViewerColumn sort_column = null;
-	private int sort_direction = ScopeSelectionAdapter.NONE;
+	private int sort_direction 			 = SWT.NONE;
+	
 	private HashMap<Scope, Object[]> sort_scopes;
 	private ScopeComparator comparator;
 	
@@ -69,7 +70,7 @@ public class ScopeTreeViewer extends TreeViewer
 
 	private void init() 
 	{
-		this.setUseHashlookup(true);
+		setUseHashlookup(true);
 		getTree().setLinesVisible(true);
 	}
 	
@@ -186,15 +187,16 @@ public class ScopeTreeViewer extends TreeViewer
      * @param b: flag to indicate if this column should be displayed or not (default should be true)
      * @return
      */
-    public TreeViewerColumn addTreeColumn(BaseMetric objMetric, //int iPosition, 
+    public TreeViewerColumn addTreeColumn(BaseMetric objMetric,  
     		boolean bSorted) {
     	
     	TreeViewerColumn colMetric = new TreeViewerColumn(this,SWT.RIGHT);	// add column
-		colMetric.setLabelProvider(new MetricLabelProvider(objMetric /*, Utilities.fontMetric*/) );
+		colMetric.setLabelProvider( new MetricLabelProvider(objMetric) );
 
 		TreeColumn col = colMetric.getColumn();
     	col.setText(objMetric.getDisplayName());	// set the title
     	col.setWidth(COLUMN_DEFAULT_WIDTH); //TODO dynamic size
+    	
 		// associate the data of this column to the metric since we
 		// allowed columns to move (col position is not enough !)
     	col.setData(COLUMN_DATA_WIDTH, COLUMN_DEFAULT_WIDTH);
@@ -207,7 +209,7 @@ public class ScopeTreeViewer extends TreeViewer
 		col.addSelectionListener(selectionAdapter);
 		
 		if(bSorted) {
-			selectionAdapter.setSorter(ScopeSelectionAdapter.ASC);
+			selectionAdapter.setSorter(ScopeSelectionAdapter.SORT_DESC);
 		}
 		Layout layout = getTree().getParent().getLayout();
 		if (layout instanceof TreeColumnLayout) {
@@ -273,7 +275,7 @@ public class ScopeTreeViewer extends TreeViewer
     			return null;
     		
     		BaseMetric metric = (BaseMetric) sort_column.getColumn().getData();
-    		comparator.setMetric(metric);
+    		comparator.setMetric(metric);    		
     		comparator.setDirection(sort_direction);
     		
     		Arrays.sort(children, comparator);
@@ -305,7 +307,7 @@ public class ScopeTreeViewer extends TreeViewer
     		sort_scopes.clear();
     	} else {
     		sort_scopes = new HashMap<Scope, Object[]>();
-    		comparator = new ScopeComparator();
+    		comparator  = new ScopeComparator();
     	}
     }
     
