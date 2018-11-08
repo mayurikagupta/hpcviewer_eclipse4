@@ -21,8 +21,8 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 	final private ScopeTreeViewer viewer;
 	final private TreeViewerColumn column;
 	
-	final static public int SORT_ASC  = 1;
-	final static public int SORT_DESC = -1;
+	final static public int SORT_DESCENDING = 1;  // from high value to lower value
+	final static public int SORT_ASCENDING  = -1; // from low value to higher value
 
     ScopeSelectionAdapter(ScopeTreeViewer viewer, TreeViewerColumn column) {
 		this.viewer 	= viewer;
@@ -50,7 +50,17 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 		// ----------------
 		// sorting 
 		// ----------------
-		setSorter(getCurrentSortDirection());
+		int sort_direction  = SORT_DESCENDING;
+		TreeColumn oldColumnSort = column.getColumn().getParent().getSortColumn();
+
+		if (oldColumnSort == column.getColumn()) {
+			// we click the same column: want to change the sort direction
+			int swt_direction = column.getColumn().getParent().getSortDirection();
+
+			if (swt_direction == SWT.DOWN)
+				sort_direction = SORT_ASCENDING;
+		}
+		setSorter(sort_direction);
 		
 		// ----------------
 		// post-sorting 
@@ -62,8 +72,7 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 	
 	/**
 	 * Sort the column according to the direction
-	 * @param sorter
-	 * @param direction
+	 * @param direction The value has to be either {@code SORT_DESCENDING} or {@code SORT_ASCENDING}
 	 */
 	public void setSorter(int direction) {
 		// bug Eclipse no 199811 https://bugs.eclipse.org/bugs/show_bug.cgi?id=199811
@@ -72,37 +81,27 @@ public class ScopeSelectionAdapter extends SelectionAdapter
 				
 		viewer.getTree().setRedraw(false);
 		
-		TreeColumn col     = column.getColumn();
-		int swt_direction  = SWT.NONE;
-		int sort_direction = SORT_DESC;
+		int swt_direction = SWT.NONE;
 		
-		col.getParent().setSortColumn(col);
-		
-		if( direction == SORT_ASC ) {
+		if( direction == SORT_DESCENDING ) {
+			swt_direction = SWT.DOWN;
+		} else if( direction == SORT_ASCENDING ) {
 			swt_direction = SWT.UP;
 		} else {
-			swt_direction = SWT.DOWN;
-			sort_direction = SORT_ASC;
+			// incorrect value. Let's try to be permissive instead of throwing exception
+			direction = 0;
 		}
 		
 		// prepare the sorting for this column with a specific direction
 		ISortContentProvider sortProvider = (ISortContentProvider) viewer.getContentProvider();
 		
-		col.getParent().setSortDirection(swt_direction);
+		TreeColumn col = column.getColumn();
+		col.getParent().setSortDirection(swt_direction);		
+		col.getParent().setSortColumn(col);
 		
 		 // start sorting
-		sortProvider.sort_column(column, sort_direction);
+		sortProvider.sort_column(column, direction);
 
 		viewer.getTree().setRedraw(true);
-	}
-	
-	
-	int getCurrentSortDirection() {
-		int swt_direction = column.getColumn().getParent().getSortDirection();
-		
-		if (swt_direction == SWT.UP || swt_direction == SWT.NONE)
-			return SORT_DESC;
-		
-		return SORT_ASC;
-	}
+	}	
 }

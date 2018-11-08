@@ -197,7 +197,7 @@ public class ScopeTreeViewer extends TreeViewer
 		col.addSelectionListener(selectionAdapter);
 		
 		if(bSorted) {
-			selectionAdapter.setSorter(ScopeSelectionAdapter.SORT_DESC);
+			selectionAdapter.setSorter(ScopeSelectionAdapter.SORT_DESCENDING);
 		}
 		Layout layout = getTree().getParent().getLayout();
 		if (layout instanceof TreeColumnLayout) {

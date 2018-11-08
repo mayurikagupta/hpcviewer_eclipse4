@@ -87,4 +87,5 @@ public class ScopeComparator implements Comparator<Object>
 		String text1 = node1.getName();
 		String text2 = node2.getName();
 		return text1.compareTo(text2);
-	}}
+	}
+}
