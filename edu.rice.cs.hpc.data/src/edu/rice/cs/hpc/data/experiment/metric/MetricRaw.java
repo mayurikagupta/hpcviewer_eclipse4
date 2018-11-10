@@ -187,7 +187,11 @@ public class MetricRaw  extends BaseMetric {
 		{
 			if (threads.size()>1)
 			{
-				value = getAverageValue(s, threads);
+				// by default we return the sum of the the value of the threads
+				// we should make this customizable in the future
+				// users may like to see the average or the min or the max, ...
+				
+				value = getSumValue(s, threads);
 			} else if (threads.size()==1)
 			{
 				value = getSpecificValue(s, threads.get(0));
@@ -204,6 +208,27 @@ public class MetricRaw  extends BaseMetric {
 	{
 		return getValue(s);
 	}
+	
+	/***
+	 * compute the sum of the value across the threads
+	 * @param s the current scope
+	 * @param threads list of threads
+	 * @return
+	 * @throws IOException
+	 */
+	private MetricValue getSumValue(IMetricScope s, List<Integer> threads) throws IOException
+	{
+		double val_sum = 0.0;
+		double []values = threadData.getMetrics(((Scope)s).getCCTIndex(), getIndex(), num_metrics);
+		for(Integer thread : threads)
+		{
+			val_sum += (values[thread]);
+		}
+		MetricValue value = setValue(val_sum); 
+		return value;
+	}
+	
+
 	/*****
 	 * compute the average value of a scope for certain threads.
 	 * The number of threads cannot be null.
@@ -213,15 +238,8 @@ public class MetricRaw  extends BaseMetric {
 	 */
 	private MetricValue getAverageValue(IMetricScope s, List<Integer> threads) throws IOException
 	{
-		double val_mean = 0.0;
-		final double divider  = 1.0d / threads.size();
-		double []values = threadData.getMetrics(((Scope)s).getCCTIndex(), getIndex(), num_metrics);
-		for(Integer thread : threads)
-		{
-			val_mean += (values[thread] * divider);
-		}
-		MetricValue value = setValue(val_mean); 
-		return value;
+		double value = getSumValue(s, threads).value / threads.size(); 
+		return setValue(value);
 	}
 	
 	/****
