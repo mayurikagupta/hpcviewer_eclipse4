@@ -12,8 +12,8 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  * Raw metric class\n
  * a.k.a thread-level metric
  ****************************************/
-public class MetricRaw  extends BaseMetric {
-
+public class MetricRaw  extends BaseMetric 
+{
 	private int ID;			 // the index of this metric as specified in XML
 	private String db_glob;  // old format: the glob pattern of the metric-db file
 	private int db_id;		 // sequential index of the metric in the XML. Is has to be between 0 to the number of metrics
