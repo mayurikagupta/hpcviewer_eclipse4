@@ -16,8 +16,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.StyledString.Styler;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.ui.IViewReference;
@@ -61,8 +64,11 @@ public class Utilities {
 	// special color for the top row
 	static public Color COLOR_TOP;
 	
-	static public String NEW_LINE = System.getProperty("line.separator");
-	
+	static final public String NEW_LINE = System.getProperty("line.separator");
+
+	static final public Styler STYLE_ACTIVE_LINK = 
+			StyledString.createColorRegistryStyler(JFacePreferences.ACTIVE_HYPERLINK_COLOR, null);;
+
 	/**
 	 * Set the font for the metric columns (it may be different to other columns)
 	 * This method has to be called first before others
