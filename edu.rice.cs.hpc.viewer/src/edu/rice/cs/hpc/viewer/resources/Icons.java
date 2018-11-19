@@ -26,6 +26,8 @@ public class Icons  extends BaseIconManager
 	final static public String Image_InlineFromDisabled = "CallFromInlineDisabled.gif";
 	final static public String Image_InlineToDisabled = "CallToInlineDisabled.gif";
 	
+	final static public String Image_MetricAggregate  = "MetricAggregate.png";
+	
 	final static public String Image_ZoomIn = "ZoomIn.gif";
 	final static public String Image_ZoomOut = "ZoomOut.gif";
 	final static public String Image_Flatten = "Flatten.gif";
@@ -81,7 +83,9 @@ public class Icons  extends BaseIconManager
 			registerImage(registry, getClass(), Image_InlineTo);
 			registerImage(registry, getClass(), Image_InlineFromDisabled);
 			registerImage(registry, getClass(), Image_InlineToDisabled);
-			
+
+			registerImage(registry, getClass(), Image_MetricAggregate);
+
 			registerImage(registry, getClass(), Image_ZoomIn);
 			registerImage(registry, getClass(), Image_ZoomOut);
 			registerImage(registry, getClass(), Image_Flatten);

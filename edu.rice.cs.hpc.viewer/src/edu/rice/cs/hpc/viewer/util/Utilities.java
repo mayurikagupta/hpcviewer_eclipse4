@@ -36,6 +36,7 @@ import edu.rice.cs.hpc.data.experiment.scope.CallSiteScope;
 import edu.rice.cs.hpc.data.experiment.scope.CallSiteScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.LineScope;
 import edu.rice.cs.hpc.data.experiment.scope.ProcedureScope;
+import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.util.OSValidator;
 
@@ -428,6 +429,9 @@ public class Utilities {
 	 * @return
 	 */
 	static public Image getScopeNavButton(Object scope) {
+		if (scope instanceof RootScope)
+			return Icons.getImage(Icons.Image_MetricAggregate);
+		
 		if (scope instanceof CallSiteScope) {
 			CallSiteScope scopeCall = (CallSiteScope) scope;
         	LineScope lineScope = (scopeCall).getLineScope();
