@@ -4,10 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import org.eclipse.jface.viewers.ILazyTreeContentProvider;
-import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
-import org.eclipse.jface.viewers.Viewer;
-
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
 import edu.rice.cs.hpc.data.experiment.scope.Scope;
 
@@ -18,74 +15,34 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
  *
  ********************************/
 public abstract class AbstractContentProvider
-	implements ITreeContentProvider, ILazyTreeContentProvider, ISortContentProvider 
+	implements ILazyTreeContentProvider, ISortContentProvider 
 {
-    private ScopeTreeViewer viewer;
-	private HashMap<Integer, Object[]> sort_scopes;
-	private ScopeComparator comparator;
+    final private ScopeTreeViewer viewer;
+	final private HashMap<Integer, Object[]> sort_scopes;
+	final private ScopeComparator comparator;
+	
 	private TreeViewerColumn sort_column = null;
 	private int sort_direction 			 = 0;
 
     public AbstractContentProvider(ScopeTreeViewer viewer) {
     	this.viewer = viewer;
-    	new ScopeComparator();
-    }
-        
-    /**
-     * get the number of elements (called by jface)
-     */
-    public Object[] getElements(Object inputElement) {
-            return getChildren(inputElement);
+		sort_scopes = new HashMap<Integer, Object[]>();
+		comparator  = new ScopeComparator();
     }
 
-    /**
-     * find the list of children
-     */
-    public Object[] getChildren(Object parentElement) {
-    	if(parentElement instanceof Scope) {
-    		// normal mode
-        	Scope parent = ((Scope) parentElement);
-        	Object arrChildren[] = parent.getChildren();
-        	// if the database has empty data, the children is null
-        	if (arrChildren != null && arrChildren.length>0)
-        	{
-    			return arrChildren;
-        	}
-    	}
-    	return null;
-    }
-    
 
     /*
      * (non-Javadoc)
      * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
      */
+    @Override
     public Object getParent(Object element) {
     	if(element instanceof Scope)
             return ((Scope) element).getParent();
     	else
     		return null;
-    }
+    } 
 
-    /**
-    * Notifies this content provider that the given viewer's input
-    * has been switched to a different element.
-    *
-    * @param viewer the viewer
-    * @param oldInput the old input element, or <code>null</code> if the viewer
-    *   did not previously have an input
-    * @param newInput the new input element, or <code>null</code> if the viewer
-    *   does not have an input
-    */
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-    }
- 
-
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-     */
-    public void dispose() {}
 
 	@Override
 	public void updateElement(Object parent, int index) {
@@ -107,33 +64,56 @@ public abstract class AbstractContentProvider
 
 	@Override
 	public void updateChildCount(Object element, int currentChildCount) {
-		Object []children = getChildren(element);
-		int length = (children == null ? 0 : children.length);
-		
-		viewer.setChildCount(element, length);
+		if (element instanceof Scope) {
+			Object []children = getSortedChildren((Scope)element);
+			int length = (children == null ? 0 : children.length);
+			
+			viewer.setChildCount(element, length);
+		}
 	}
 
     
     @Override
     public void sort_column(TreeViewerColumn sort_column, int direction) {
     	
-    	sort_begin(sort_column, direction);
+    	this.sort_column    = sort_column;
+    	this.sort_direction = direction;
     	
+		sort_scopes.clear();
+
     	// perform the sort by refreshing the viewer
     	// this refresh method will force the table to recompute the children
     	
     	viewer.refresh();
-    	
-    	sort_end();
     }
+
+    /**
+     * Return an array of objects which is the children of the node (if exists)
+     * to be implemented by derived class.
+     * 
+     * @param node
+     * @return
+     */
+    abstract public Object[] getChildren(Object node);
     
     
-	private Object[] getSortedChildren(Scope parent) {
+    //////////////////////////////////////////
+    // private methods
+    //////////////////////////////////////////
+    
+    
+    /***
+     * return the sorted list of children 
+     * 
+     * @param parent
+     * @return
+     */
+    public Object[] getSortedChildren(Scope parent) {
 		
 		int hash = System.identityHashCode(parent);
     	Object [] children = sort_scopes.get(hash);
     	
-    	if (children == null) {
+    	if (children == null && sort_column != null) {
     		children = getChildren(parent);
     		if (children == null)
     			return null;
@@ -166,25 +146,4 @@ public abstract class AbstractContentProvider
     	
     	return null;
     }
-    
-    private void sort_begin(TreeViewerColumn sort_column, int direction) {
-    	
-    	this.sort_column    = sort_column;
-    	this.sort_direction = direction;
-    	
-    	if (sort_scopes != null) {
-    		sort_scopes.clear();
-    	} else {
-    		sort_scopes = new HashMap<Integer, Object[]>();
-    		comparator  = new ScopeComparator();
-    	}
-    }
-    
-    private void sort_end() {
-    	if (sort_scopes != null) {
-    		sort_scopes.clear();
-    	}    
-    }
-    
-
 }

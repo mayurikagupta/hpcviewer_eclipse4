@@ -335,5 +335,13 @@ public class ThreadView extends AbstractBaseScopeView
 	    	else
 	    		return false;
 	    }
+	    
+		@Override
+		public Object[] getChildren(Object node) {
+			if (node instanceof Scope) {
+				return ((Scope)node).getChildren();
+			}
+			return null;
+		}
 	}
 }

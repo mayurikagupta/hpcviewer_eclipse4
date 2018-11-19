@@ -2,6 +2,7 @@ package edu.rice.cs.hpc.viewer.scope.topdown;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
@@ -14,6 +15,7 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.viewer.graph.GraphMenu;
 import edu.rice.cs.hpc.viewer.scope.AbstractContentProvider;
 import edu.rice.cs.hpc.viewer.scope.BaseScopeView;
+import edu.rice.cs.hpc.viewer.scope.ScopeColumnLabelProvider;
 import edu.rice.cs.hpc.viewer.scope.ScopeViewActions;
 import edu.rice.cs.hpc.viewer.scope.StyledScopeLabelProvider;
 
@@ -47,7 +49,8 @@ public class ScopeView extends BaseScopeView
 
 	@Override
 	protected CellLabelProvider getLabelProvider() {
-		return new StyledScopeLabelProvider( this.getSite().getWorkbenchWindow() ); 
+		return new DelegatingStyledCellLabelProvider(new ScopeColumnLabelProvider());
+		//return new StyledScopeLabelProvider( this.getSite().getWorkbenchWindow() ); 
 	}
 
 	@Override

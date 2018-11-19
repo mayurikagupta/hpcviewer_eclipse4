@@ -427,7 +427,7 @@ public class Utilities {
 	 * @param scope
 	 * @return
 	 */
-	static public Image getScopeNavButton(Scope scope) {
+	static public Image getScopeNavButton(Object scope) {
 		if (scope instanceof CallSiteScope) {
 			CallSiteScope scopeCall = (CallSiteScope) scope;
         	LineScope lineScope = (scopeCall).getLineScope();

@@ -28,13 +28,6 @@ public class CallerViewContentProvider extends AbstractContentProvider
 		super(viewer);
 	}
 	
-    /**
-     * get the number of elements (called by jface)
-     */
-	@Override
-    public Object[] getElements(Object inputElement) {
-            return getChildren(inputElement);
-    }
 
     /**
      * find the list of children
