@@ -99,7 +99,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		// -------------------
 		// set the default metric
 		// -------------------
-		Utilities.setFontMetric(window.getShell().getDisplay());
+		Utilities.initFontMetric(window.getShell().getDisplay());
 
 		this.shutdownEvent(this.workbench, window.getActivePage());
 

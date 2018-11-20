@@ -18,10 +18,13 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.StyledString.Styler;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
@@ -67,15 +70,53 @@ public class Utilities {
 	
 	static final public String NEW_LINE = System.getProperty("line.separator");
 
-	static final public Styler STYLE_ACTIVE_LINK = 
-			StyledString.createColorRegistryStyler(JFacePreferences.ACTIVE_HYPERLINK_COLOR, null);;
+	static final public Styler STYLE_ACTIVE_LINK = new StyledString.Styler() {
+
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
+			textStyle.foreground = colorRegistry.get(JFacePreferences.ACTIVE_HYPERLINK_COLOR);
+			textStyle.font 		 = fontGeneral;
+		}
+		
+	};
+	
+	static final public Styler STYLE_INACTIVE_LINK = new StyledString.Styler() {
+		
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			textStyle.font = fontGeneral;
+		}
+	};
+	
+	/** font style for clickable line number in a call site */
+	static final public Styler STYLE_COUNTER = new StyledString.Styler() {
+		
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
+			textStyle.foreground = colorRegistry.get(JFacePreferences.COUNTER_COLOR);
+			textStyle.font = fontGeneral;
+		}
+	};
+	
+	/** font style for unclickable line number in a callsite */
+	static final public Styler STYLE_DECORATIONS = new StyledString.Styler() {
+		
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
+			textStyle.foreground = colorRegistry.get(JFacePreferences.DECORATIONS_COLOR);
+			textStyle.font = fontGeneral;
+		}
+	};
 
 	/**
-	 * Set the font for the metric columns (it may be different to other columns)
+	 * Initialize the font for the metric columns (it may be different to other columns)
 	 * This method has to be called first before others
 	 * @param display
 	 */
-	static public void setFontMetric(Display display) {
+	static public void initFontMetric(Display display) {
 		COLOR_TOP = new Color(display, 255,255,204);
 		
 		ScopedPreferenceStore objPref = (ScopedPreferenceStore)Activator.getDefault().getPreferenceStore();
@@ -110,7 +151,7 @@ public class Utilities {
 		// create font for general purpose (view, editor, ...)
 		Utilities.fontGeneral = new Font (display, objFontGeneric);
 		
-		Utilities.fontMetric = new Font(display, objFontMetric);
+		Utilities.fontMetric = new Font(display, objFontMetric);		
 	}
 
 	/**

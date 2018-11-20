@@ -94,15 +94,15 @@ public class StyledScopeLabelProvider extends DelegatingStyledCellLabelProvider
 				// show the line number
 				if (line>0) {
 					if (isReadable)
-						styledString.append(String.valueOf(line)+": ", StyledString.COUNTER_STYLER);
+						styledString.append(String.valueOf(line)+": ", Utilities.STYLE_COUNTER);
 					else 
-						styledString.append(String.valueOf(line)+": ", StyledString.DECORATIONS_STYLER);
+						styledString.append(String.valueOf(line)+": ", Utilities.STYLE_DECORATIONS);
 				}
 			}
 			if(Utilities.isFileReadable(node)) {
 				styledString.append( text, Utilities.STYLE_ACTIVE_LINK );
 			} else {
-				styledString.append( text );
+				styledString.append( text, Utilities.STYLE_INACTIVE_LINK );
 			}
 			return styledString;
 		}
