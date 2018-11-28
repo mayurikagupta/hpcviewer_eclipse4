@@ -350,24 +350,27 @@ public class Utilities {
 	 * @param tree
 	 */
 	static public Listener listenerToResetRowHeight ( TreeViewer tree ) {
-		if (OSValidator.isWindows()) { 
-			Tree treeItem = tree.getTree();
-			// resize the table row height using a MeasureItem listener
-			Listener measurementListener = new Listener() {
-				public void handleEvent(Event event) {
-					final ScopedPreferenceStore objPref = (ScopedPreferenceStore)Activator.getDefault().getPreferenceStore();
-					FontData []objFontsMetric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_METRIC);
-					FontData []objFontsGeneric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_GENERIC);
-					// get font height (from preferences) for each font
-					int objFontMetricHeight = objFontsMetric[0].getHeight();
-					int objFontGenericHeight = objFontsGeneric[0].getHeight();
-					event.height = objFontMetricHeight>objFontGenericHeight?objFontMetricHeight:objFontGenericHeight + 10;
-				} // end handleEvent
-			}; // end measurementListener
-			treeItem.addListener(SWT.MeasureItem, measurementListener);
-			return measurementListener;
-		}
-		return null;
+		
+		final int MARGIN_FONT = 10;
+		
+		Tree treeItem = tree.getTree();
+		
+		// resize the table row height using a MeasureItem listener
+		Listener measurementListener = new Listener() {
+			public void handleEvent(Event event) {
+				final ScopedPreferenceStore objPref = (ScopedPreferenceStore)Activator.getDefault().getPreferenceStore();
+				FontData []objFontsMetric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_METRIC);
+				FontData []objFontsGeneric = PreferenceConverter.getFontDataArray(objPref, PreferenceConstants.P_FONT_GENERIC);
+				
+				// get font height (from preferences) for each font
+				int objFontMetricHeight  = objFontsMetric[0].getHeight();
+				int objFontGenericHeight = objFontsGeneric[0].getHeight();
+				
+				event.height = Math.min(objFontMetricHeight, objFontGenericHeight) + MARGIN_FONT;
+			} // end handleEvent
+		}; // end measurementListener
+		treeItem.addListener(SWT.MeasureItem, measurementListener);
+		return measurementListener;
 	}
 	
 	/**
