@@ -138,18 +138,12 @@ public class TraceDatabase
 	static public boolean openLocalDatabase(IWorkbenchWindow window, 
 			final String database)
 	{
-		DatabaseAccessInfo info = null;
-		if (database == null)
-		{
-			OpenDatabaseDialog dlg = new OpenDatabaseDialog(window.getShell(), null, true);
-			if (dlg.open() == Window.CANCEL)
-				return false;
-			
-			info = dlg.getDatabaseAccessInfo();
-		} else {
-			info = new DatabaseAccessInfo(database);
-		}
-		return openDatabase(window, info, true);
+		DatabaseAccessInfo info = LocalDBOpener.open(window, database);
+
+		if (info != null)
+			return openDatabase(window, info, true);
+		
+		return false;
 	}
 
 	/*******

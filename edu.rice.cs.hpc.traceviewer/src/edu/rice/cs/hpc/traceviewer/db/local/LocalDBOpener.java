@@ -3,6 +3,7 @@ package edu.rice.cs.hpc.traceviewer.db.local;
 import java.io.File;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import edu.rice.cs.hpc.data.experiment.InvalExperimentException;
@@ -51,28 +52,12 @@ public class LocalDBOpener extends AbstractDBOpener
 	 */
 	public SpaceTimeDataController openDBAndCreateSTDC(IWorkbenchWindow window,
 			final IProgressMonitor statusMgr) throws InvalExperimentException, Exception {
-			
-		// Laks 2014.03.10: needs to comment the call to removeInstance
-		// this call causes the data to be deleted but the GC+Color instances still exist
-		// the allocated GC+Color can be disposed later in SpaceTimeDataController class
-		
-		//	TraceDatabase.removeInstance(window);
 
 		// ---------------------------------------------------------------------
 		// Try to open the database and refresh the data
 		// ---------------------------------------------------------------------
-		
-		
+				
 		statusMgr.setTaskName("Opening trace data...");
-
-		// ---------------------------------------------------------------------
-		// dispose resources if the data has been allocated
-		// unfortunately, some colors are allocated from window handle,
-		// some are allocated dynamically. At the moment we can't dispose
-		// all colors
-		// ---------------------------------------------------------------------
-		// if (database.dataTraces != null)
-		// database.dataTraces.dispose();
 
 		IFileDB fileDB;
 		switch (version)
@@ -87,15 +72,10 @@ public class LocalDBOpener extends AbstractDBOpener
 		default:
 			throw new InvalExperimentException("Trace data version is not unknown: " + version);
 		}
-		//fileDB.open(directory, 0, 0);
 		
 		// prepare the xml experiment and all extended data
 		SpaceTimeDataControllerLocal stdc = new SpaceTimeDataControllerLocal(
 				window, statusMgr, directory, fileDB);
-		
-		// open trace data with the default record size (since the version 2.0 has no info)
-		// fortunately version 3 and 2 have the same record size.
-		//fileDB.open(directory, stdc.getHeaderSize(), SpaceTimeDataControllerLocal.RECORD_SIZE);
 		
 		return stdc;
 	}
@@ -144,6 +124,32 @@ public class LocalDBOpener extends AbstractDBOpener
 	@Override
 	public void end() {
 	}	
+	
+	
+	/****
+	 * Display a directory dialog box and update the variable
+	 */
+	static public DatabaseAccessInfo open(IWorkbenchWindow window, String path)
+	{
+		DirectoryDialog dialog;
+
+		dialog = new DirectoryDialog(window.getShell());
+		dialog.setMessage("Please select a directory containing execution traces.");
+		dialog.setText("Select Data Directory");
+		
+		if (path != null) {
+			dialog.setFilterPath(path);
+		}
+
+		// database is null if the user click cancel
+		final String database = dialog.open();
+		final boolean retval  = (database != null);
+		
+		if (retval) {
+			return new DatabaseAccessInfo(database);
+		}
+		return null;
+	}
 }
 
 

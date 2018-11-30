@@ -24,17 +24,19 @@ import edu.rice.cs.hpc.traceviewer.data.util.ProcedureClassMap;
 public class ColorTable implements IProcedureTable
 {
 	static final public int COLOR_ICON_SIZE = 8;
-	static private ColorImagePair IMAGE_WHITE;
+	private ColorImagePair IMAGE_WHITE;
+	
 	// data members
 	HashMap<String, ColorImagePair> colorMatcher;
 	
 	/**All of the function names stored in this colorTable.*/
-	ArrayList<String> procNames;
+	final private ArrayList<String> procNames;
 	
 	/**The display this ColorTable uses to generate the random colors.*/
-	Display display;
-	
-	private ProcedureClassMap classMap;
+	final private Display display;
+
+	/** user defined color */
+	final private ProcedureClassMap classMap;
 	
 	/**Creates a new ColorTable with Display _display.*/
 	public ColorTable()
@@ -46,10 +48,8 @@ public class ColorTable implements IProcedureTable
 		
 		display = Util.getActiveShell().getDisplay();
 		
-		// create our own white color so we can dispose later, instead of disposing
-		//	Eclipse's white color
-		final RGB rgb_white = display.getSystemColor(SWT.COLOR_WHITE).getRGB();
-		IMAGE_WHITE = new ColorImagePair( new Color(display, rgb_white));
+		// initialize the procedure-color map (user-defined color)
+		classMap = new ProcedureClassMap(display);
 	}
 	
 	/**
@@ -60,6 +60,8 @@ public class ColorTable implements IProcedureTable
 			pair.dispose();
 		}
 		IMAGE_WHITE.dispose();
+		
+		colorMatcher.clear();
 	}
 	
 	/**
@@ -87,34 +89,16 @@ public class ColorTable implements IProcedureTable
 		}
 	}
 	
-
-	/***
-	 * set the procedure name with a new color
-	 * @param name
-	 * @param color
-	 */
-	public void setColor(String name, RGB rgb) {
-		// dispose old value
-		final ColorImagePair oldValue = colorMatcher.get(name);
-		if (oldValue != null) {
-			oldValue.dispose();
-		}
-		// create new value
-		final ColorImagePair newValue = new ColorImagePair(new Color(display,rgb));
-		colorMatcher.put(name, newValue);
-	}
-	
 	/*********************************************************************
 	 * Fills the colorMatcher with unique "random" colors that correspond
 	 * to each function name in procNames.
 	 *********************************************************************/
 	public void setColorTable()
 	{	
-		// initialize the procedure-color map
-		classMap = new ProcedureClassMap(display);
-
 		if (colorMatcher != null)
 			dispose();
+		
+		initializeWhiteColor();
 		
 		//This is where the data file is converted to the colorTable using colorMatcher.
 		//creates name-function-color colorMatcher for each function.
@@ -176,13 +160,18 @@ public class ColorTable implements IProcedureTable
 	 * 	a color, we'll return the allocated color, otherwise, create a new one
 	 * 	randomly.
 	 * 
-	 * @param name
-	 * @param colorMin
-	 * @param colorMax
-	 * @param r
-	 * @return
+	 * @param name name of the procedure
+	 * @param colorMin minimum integer value
+	 * @param colorMax maximum integer value
+	 * @param r random integer
+	 * 
+	 * @return RGB
 	 ***********************************************************************/
 	private RGB getProcedureColor( String name, int colorMin, int colorMax, Random r ) {
+		
+		// if the name matches, we return the user-defined color
+		// otherwise, we randomly create a color for this name
+		
 		ProcedureClassData value = this.classMap.get(name);
 		final RGB rgb;
 		if (value != null)
@@ -192,6 +181,21 @@ public class ColorTable implements IProcedureTable
 							colorMin + r.nextInt(colorMax), 
 							colorMin + r.nextInt(colorMax));
 		return rgb;
+	}
+
+	/************************************************************************
+	 * Initialize the predefined-value of white color
+	 * 
+	 * If the white color value is not initialize, we create a new one
+	 * Otherwise, do nothing.
+	 ************************************************************************/
+	private void initializeWhiteColor() {
+		if (IMAGE_WHITE == null || IMAGE_WHITE.getImage().isDisposed()) {
+			// create our own white color so we can dispose later, instead of disposing
+			//	Eclipse's white color
+			final RGB rgb_white = display.getSystemColor(SWT.COLOR_WHITE).getRGB();
+			IMAGE_WHITE = new ColorImagePair( new Color(display, rgb_white));
+		}
 	}
 	
 	

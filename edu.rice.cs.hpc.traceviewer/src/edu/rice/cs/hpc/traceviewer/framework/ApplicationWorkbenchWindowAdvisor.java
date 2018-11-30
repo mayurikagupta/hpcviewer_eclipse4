@@ -55,12 +55,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		// ---------------------------------------------------------------------
 		
 		final IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+		IWorkbenchWindow window = configurer.getWindow();
+		
 		//process command line argument - currently only works for local but can be easily modified to work with remote
 		if (args != null && args.length > 0) {
 			for (String arg : args) {
 				if (arg != null && arg.charAt(0) != '-') {
 					// this must be the name of the database to open
-					TraceDatabase.openLocalDatabase(configurer.getWindow(), arg);
+					TraceDatabase.openLocalDatabase(window, arg);
 					return;
 				} 
 			}
@@ -68,7 +70,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		// Eclipse indigo MAC export will add -showlocation flag in front of the executable
 		// It is also possible the next version of Eclipse will add other flags
 		// Hence, we need calling open dialog box here to make sure it displays on all Eclipse versions
-		TraceDatabase.openLocalDatabase(configurer.getWindow(), null);
+		TraceDatabase.openLocalDatabase(window, null);
 	}
 
 	/*

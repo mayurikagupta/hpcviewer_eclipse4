@@ -6,13 +6,7 @@
    <aboutInfo>
       <image path="/edu.rice.cs.hpc.traceviewer/icons/hpctraceviewer048.png"/>
       <text>
-         hpcviewer is a user interface for analyzing a database of 
-performance metrics in conjunction with an application&apos;s source code.
-
-hpcviewer is part of Rice University&apos;s HPCToolkit project. Development of 
-HPCToolkit is principally funded by the Department of Energy&apos;s Office of 
-Science, Lawrence Livermore National Laboratory and National Science 
-Foundation.
+         hpctraceviewer is part of Rice University&apos;s HPCToolkit project. Development of  HPCToolkit is principally funded by the Department of Energy&apos;s Office of Science, Lawrence Livermore National Laboratory and National Science Foundation.
 
 Release 2018.11   (C) Copyright 2018, Rice University.
       </text>
@@ -24,7 +18,7 @@ Release 2018.11   (C) Copyright 2018, Rice University.
    <launcherArgs>
       <programArgs>-consoleLog
       </programArgs>
-      <vmArgs>-Dosgi.requiredJavaVersion=1.6 -XX:MaxPermSize=256m -Xms40m -Xmx1512m
+      <vmArgs>-Dosgi.locking=none
       </vmArgs>
       <vmArgsLin>-Dorg.eclipse.swt.internal.gtk.cairoGraphics=false
       </vmArgsLin>
@@ -200,5 +194,12 @@ if advised of the possibility of such damage.
       <plugin id="org.w3c.dom.svg"/>
    </plugins>
 
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
 
 </product>
