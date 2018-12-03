@@ -67,6 +67,7 @@ public abstract class AliasMap<K,V> implements IUserData<K, V> {
 	 */
 	public void clear() {
 		data.clear();
+		data = null;
 	}
 	
 	/***

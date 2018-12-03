@@ -114,10 +114,15 @@ public class CallStackViewer extends TableViewer
 		final ColumnLabelProvider myLableProvider = new ColumnLabelProvider() {
         	public Image getImage(Object element) {
         		if (element instanceof String) {
+        			if (element == EMPTY_FUNCTION)
+        				return null;
+        			
         			Image img = null;
+        			
     				SpaceTimeDataController stData = dataService.getData();
-        			if (stData != null)
+        			if (stData != null) {
         				img = stData.getColorTable().getImage((String)element);
+        			}
         			return img;
         		}
         		

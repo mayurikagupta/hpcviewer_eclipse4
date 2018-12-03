@@ -54,7 +54,6 @@ public class ProcedureClassMapAction extends AbstractHandler {
 		// reset the color table
 		ColorTable colorTable = dataService.getData().getColorTable(); 
 		colorTable.dispose();
-		colorTable.setColorTable();
 		
 		// broadcast to all views
 		dataService.broadcastUpdate(null);

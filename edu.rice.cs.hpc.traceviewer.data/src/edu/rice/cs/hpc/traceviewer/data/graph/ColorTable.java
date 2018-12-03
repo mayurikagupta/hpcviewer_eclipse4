@@ -24,10 +24,10 @@ import edu.rice.cs.hpc.traceviewer.data.util.ProcedureClassMap;
 public class ColorTable implements IProcedureTable
 {
 	static final public int COLOR_ICON_SIZE = 8;
-	private ColorImagePair IMAGE_WHITE;
 	
-	// data members
-	HashMap<String, ColorImagePair> colorMatcher;
+	static private final int cmin = 16;
+	static private final int cmax = 200 - cmin;
+	static private final long RANDOM_SEED = 612543231;
 	
 	/**All of the function names stored in this colorTable.*/
 	final private ArrayList<String> procNames;
@@ -38,6 +38,13 @@ public class ColorTable implements IProcedureTable
 	/** user defined color */
 	final private ProcedureClassMap classMap;
 	
+	final private Random random_generator;
+
+	// data members
+
+	private ColorImagePair IMAGE_WHITE;
+	final private	HashMap<String, ColorImagePair> colorMatcher;
+
 	/**Creates a new ColorTable with Display _display.*/
 	public ColorTable()
 	{
@@ -48,8 +55,15 @@ public class ColorTable implements IProcedureTable
 		
 		display = Util.getActiveShell().getDisplay();
 		
+		// rework the color assignment to use a single random number stream
+		random_generator = new Random((long)RANDOM_SEED);
+
 		// initialize the procedure-color map (user-defined color)
 		classMap = new ProcedureClassMap(display);
+		
+		colorMatcher = new HashMap<String, ColorTable.ColorImagePair>();
+		
+		initializeWhiteColor();
 	}
 	
 	/**
@@ -59,9 +73,9 @@ public class ColorTable implements IProcedureTable
 		for (ColorImagePair pair: colorMatcher.values()) {
 			pair.dispose();
 		}
-		IMAGE_WHITE.dispose();
 		
 		colorMatcher.clear();
+		classMap.clear();
 	}
 	
 	/**
@@ -71,7 +85,12 @@ public class ColorTable implements IProcedureTable
 	 */
 	public Color getColor(String name)
 	{
-		return colorMatcher.get(name).getColor();
+		final ColorImagePair cipair = colorMatcher.get(name);
+		if (cipair != null) {
+			return cipair.getColor();
+		} else {
+			return createColorImagePair(name).getColor();
+		}
 	}
 	
 	/**
@@ -85,47 +104,22 @@ public class ColorTable implements IProcedureTable
 		if (cipair != null) {
 			return cipair.getImage();
 		} else {
-			return null;
+			return createColorImagePair(name).getImage();
 		}
 	}
 	
-	/*********************************************************************
-	 * Fills the colorMatcher with unique "random" colors that correspond
-	 * to each function name in procNames.
-	 *********************************************************************/
-	public void setColorTable()
-	{	
-		if (colorMatcher != null)
-			dispose();
+	private ColorImagePair createColorImagePair(String procName)
+	{
+		RGB rgb = getProcedureColor( procName, cmin, cmax, random_generator );
+		Color c = new Color(display, rgb);
+		Image i = createImage(display, rgb);
+		ColorImagePair cip = new ColorImagePair(c, i);
 		
-		initializeWhiteColor();
+		colorMatcher.put(procName, cip);
 		
-		//This is where the data file is converted to the colorTable using colorMatcher.
-		//creates name-function-color colorMatcher for each function.
-		colorMatcher = new HashMap<String,ColorImagePair>();
-		{
-			// rework the color assignment to use a single random number stream
-			Random r = new Random((long)612543231);
-			int cmin = 16;
-			int cmax = 200 - cmin;
-			for (int l=0; l<procNames.size(); l++) {
-				
-				String procName = procNames.get(l);
-				
-				if (procName != CallPath.NULL_FUNCTION) {
-					
-					if (!colorMatcher.containsKey(procName)) {
-						
-						RGB rgb = getProcedureColor( procName, cmin, cmax, r );
-						Color c = new Color(display, rgb);
-						colorMatcher.put(procName, new ColorImagePair(c));
-					}
-				} else {
-					colorMatcher.put(procName, IMAGE_WHITE);
-				}
-			}
-		}
+		return cip;
 	}
+	
 	
 	/************************************************************************
 	 * Adds a name to the list of function names in this ColorTable.
@@ -194,7 +188,12 @@ public class ColorTable implements IProcedureTable
 			// create our own white color so we can dispose later, instead of disposing
 			//	Eclipse's white color
 			final RGB rgb_white = display.getSystemColor(SWT.COLOR_WHITE).getRGB();
-			IMAGE_WHITE = new ColorImagePair( new Color(display, rgb_white));
+			final Color col_white = new Color(display, rgb_white);
+			final Image img_white = createImage(display, rgb_white);
+			
+			IMAGE_WHITE = new ColorImagePair(col_white, img_white );
+			
+			colorMatcher.put(CallPath.NULL_FUNCTION, IMAGE_WHITE);
 		}
 	}
 	
@@ -212,10 +211,10 @@ public class ColorTable implements IProcedureTable
 		 * create a color-image pair
 		 * @param color c
 		 */
-		ColorImagePair(Color c) {
+		ColorImagePair(Color color, Image image) {
 			// create an empty image filled with color c
-			image = ColorTable.createImage(display, c.getRGB());
-			color = c;
+			this.image = image;
+			this.color = color;
 		}
 		
 		/***

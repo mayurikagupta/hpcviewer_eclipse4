@@ -153,13 +153,8 @@ public abstract class SpaceTimeDataController
 				scopeMap   = visitor.getMap();
 				colorTable = (ColorTable) visitor.getProcedureTable();
 				
-				// initialize colors
-				colorTable.setColorTable();
-				
 				// attributes initialization
 				attributes 	 = new ImageTraceAttributes();
-				//lineNum 	 = new AtomicInteger(0);
-				//depthLineNum = new AtomicInteger(0);
 
 				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
 				ptlService = (ProcessTimelineService) sourceProviderService.getSourceProvider(ProcessTimelineService.PROCESS_TIMELINE_PROVIDER); 
