@@ -25,12 +25,9 @@ public class ColorTable implements IProcedureTable
 {
 	static final public int COLOR_ICON_SIZE = 8;
 	
-	static private final int cmin = 16;
-	static private final int cmax = 200 - cmin;
+	static private final int COLOR_MIN = 16;
+	static private final int COLOR_MAX = 200 - COLOR_MIN;
 	static private final long RANDOM_SEED = 612543231;
-	
-	/**All of the function names stored in this colorTable.*/
-	final private ArrayList<String> procNames;
 	
 	/**The display this ColorTable uses to generate the random colors.*/
 	final private Display display;
@@ -48,11 +45,6 @@ public class ColorTable implements IProcedureTable
 	/**Creates a new ColorTable with Display _display.*/
 	public ColorTable()
 	{
-		procNames = new ArrayList<String>();
-		// Initializes the CSS that represents time values outside of the
-		// time-line.
-		procNames.add(CallPath.NULL_FUNCTION);
-		
 		display = Util.getActiveShell().getDisplay();
 		
 		// rework the color assignment to use a single random number stream
@@ -85,12 +77,7 @@ public class ColorTable implements IProcedureTable
 	 */
 	public Color getColor(String name)
 	{
-		final ColorImagePair cipair = colorMatcher.get(name);
-		if (cipair != null) {
-			return cipair.getColor();
-		} else {
-			return createColorImagePair(name).getColor();
-		}
+		return createColorImagePair(name).getColor();
 	}
 	
 	/**
@@ -100,17 +87,22 @@ public class ColorTable implements IProcedureTable
 	 */
 	public Image getImage(String name) 
 	{
-		final ColorImagePair cipair = colorMatcher.get(name);
-		if (cipair != null) {
-			return cipair.getImage();
-		} else {
-			return createColorImagePair(name).getImage();
-		}
+		return createColorImagePair(name).getImage();
 	}
 	
+	/************************************************************************
+	 * create a pair of color and image based on the procedure name
+	 * 
+	 * @param procName
+	 * @return ColorImagePair
+	 ************************************************************************/
 	private ColorImagePair createColorImagePair(String procName)
 	{
-		RGB rgb = getProcedureColor( procName, cmin, cmax, random_generator );
+		if (colorMatcher.containsKey(procName)) {
+			return colorMatcher.get(procName);
+		}			
+		
+		RGB rgb = getProcedureColor( procName, COLOR_MIN, COLOR_MAX, random_generator );
 		Color c = new Color(display, rgb);
 		Image i = createImage(display, rgb);
 		ColorImagePair cip = new ColorImagePair(c, i);
@@ -129,8 +121,6 @@ public class ColorTable implements IProcedureTable
 	 ************************************************************************/
 	public void addProcedure(String name)
 	{
-		if(!procNames.contains(name))
-			procNames.add(name);
 	}
 	
 	
@@ -209,7 +199,8 @@ public class ColorTable implements IProcedureTable
 		
 		/****
 		 * create a color-image pair
-		 * @param color c
+		 * @param Color color
+		 * @param Image image
 		 */
 		ColorImagePair(Color color, Image image) {
 			// create an empty image filled with color c
@@ -219,7 +210,7 @@ public class ColorTable implements IProcedureTable
 		
 		/***
 		 * get the color 
-		 * @return
+		 * @return Color
 		 */
 		public Color getColor() {
 			return this.color;
@@ -227,7 +218,7 @@ public class ColorTable implements IProcedureTable
 		
 		/***
 		 * get the image
-		 * @return
+		 * @return Image
 		 */
 		public Image getImage() {
 			return this.image;

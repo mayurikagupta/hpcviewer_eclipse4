@@ -32,7 +32,8 @@ public class TraceDataVisitor implements IScopeVisitor
 {
 	final private HashMap<Integer, CallPath> map;
 	final private IProcedureTable colorTable;
-	private int maxDepth = 0;
+	private int current_depth = 0;
+	private int max_depth = 0;
 
 	public TraceDataVisitor() {
 		map = new HashMap<Integer, CallPath>();
@@ -53,11 +54,11 @@ public class TraceDataVisitor implements IScopeVisitor
 	public void visit(GroupScope scope, ScopeVisitType vt) { }
 
 	public void visit(ProcedureScope scope, ScopeVisitType vt) { 
-		addProcedure(scope);
+		update(scope, vt);
 	}
 
 	public void visit(CallSiteScope scope, ScopeVisitType vt) { 
-		addProcedure(scope);
+		update(scope, vt);
 	}
 
 	public void visit(LineScope scope, ScopeVisitType vt) { 
@@ -65,17 +66,10 @@ public class TraceDataVisitor implements IScopeVisitor
 			int cpid = scope.getCpid();
 			if (cpid > 0)
 			{
-				Scope cur = scope;
-				int depth = 0;
-				do
-				{
-					if((cur instanceof CallSiteScope) || (cur instanceof ProcedureScope))
-						++depth;
-					cur = cur.getParentScope();
+				this.map.put(cpid, new CallPath(scope, current_depth));
+				if (current_depth <= 0) {
+					System.err.println("ERROR: depth cannot be less than 1: "  + current_depth);
 				}
-				while(cur != null && !(cur instanceof RootScope));
-				this.map.put(cpid, new CallPath(scope, depth));
-				maxDepth = Math.max(maxDepth, depth);
 			}
 		}
 	}
@@ -88,7 +82,7 @@ public class TraceDataVisitor implements IScopeVisitor
 	 */
 	public int getMaxDepth()
 	{
-		return maxDepth;
+		return max_depth;
 	}
 	
 	/****
@@ -110,8 +104,13 @@ public class TraceDataVisitor implements IScopeVisitor
 		return colorTable;
 	}
 	
-	private void addProcedure(Scope scope)
-	{
-		colorTable.addProcedure(scope.getName());
+	private void update(Scope scope, ScopeVisitType vt) {
+		if (vt == ScopeVisitType.PreVisit) {
+			current_depth++;
+			max_depth = Math.max(max_depth, current_depth);
+		} else {
+			current_depth--;
+		}
+
 	}
 }
