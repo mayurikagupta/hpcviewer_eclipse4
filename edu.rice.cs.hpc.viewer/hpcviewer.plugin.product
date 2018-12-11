@@ -21,6 +21,7 @@ Release 2018.11  (C) Copyright 2018, Rice University.
       <programArgs>-consoleLog
       </programArgs>
       <vmArgs>-Dosgi.locking=none
+-Dosgi.requiredJavaVersion=1.8
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
