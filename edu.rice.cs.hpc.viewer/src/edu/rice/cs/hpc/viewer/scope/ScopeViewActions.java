@@ -2,6 +2,7 @@ package edu.rice.cs.hpc.viewer.scope;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -103,23 +104,23 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 
     /**
 	 * find the hot call path
-	 * @param pathItem
-	 * @param item
-	 * @param scope
-	 * @param metric
-	 * @param iLevel
-	 * @return
+	 * @param Scope scope
+	 * @param BaseMetric metric
+	 * @param int iLevel
+	 * @param TreePath path
+	 * @param HotCallPath objHotPath (caller has to allocate it)
 	 */
-	private HotCallPath getHotCallPath(Scope scope, BaseMetric metric, int iLevel) {
+	private boolean getHotCallPath(Scope scope, BaseMetric metric, int iLevel, TreePath path, HotCallPath objHotPath) {
 		if(scope == null || metric == null )
-			return null;
+			return false;
 
 		AbstractContentProvider content = (AbstractContentProvider)treeViewer.getContentProvider();
 		Object []children = content.getSortedChildren(scope);
 		
-		HotCallPath objPath = new HotCallPath();
-		objPath.node 	 = scope;
-		objPath.is_found = false;
+		if (objHotPath == null) objHotPath = new HotCallPath();
+		
+		objHotPath.node = scope;
+		objHotPath.path = path;
 		
 		// singly depth first search
 		// bug fix: we only drill once !
@@ -138,18 +139,20 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 				// simple comparison: if the child has "significant" difference compared to its parent
 				// then we consider it as hot path node.
 				if(dChild < (ScopeViewActions.fTHRESHOLD * dParent)) {
-					objPath.is_found = true;
-					objPath.node     = scopeChild;
+					objHotPath.node     = scopeChild;
 					
-					return objPath;
+					return true;
 				} else {
 					// let's move deeper down the tree
-					return this.getHotCallPath(scopeChild, metric, iLevel+ 1);
+					TreePath childPath = path.createChildPath(scopeChild);
+					treeViewer.expandToLevel(childPath, 1);
+
+					return getHotCallPath(scopeChild, metric, iLevel+ 1, childPath, objHotPath);
 				}
 			}
 		}
 		// if we reach at this statement, then there is no hot call path !
-		return objPath;
+		return false;
 	}
 
 	/**
@@ -273,17 +276,18 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 			BaseMetric metric = (BaseMetric) data;
 			// find the hot call path
 			int iLevel = 0;
-			HotCallPath objHot = getHotCallPath(current, metric, iLevel);
+			TreePath []path = objSel.getPaths();
+			
+			HotCallPath objHotPath = new HotCallPath();
+			
+			boolean is_found = getHotCallPath(current, metric, iLevel, path[0], objHotPath);
 
 			// whether we find it or not, we should reveal the tree path to the last scope
 			
-			treeViewer.reveal(objHot.node);
-			treeViewer.setSelection(new StructuredSelection(objHot.node), true);
+			treeViewer.setSelection(new StructuredSelection(objHotPath.path), true);
 
-			if(!objHot.is_found) {
+			if(!is_found) {
 				this.showErrorMessage("No hot child.");
-			} else {
-				
 			}
 		} else {
 			// It is almost impossible for the jvm to reach this part of branch.
@@ -520,7 +524,6 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
     	// last node iterated
     	Scope node = null;
     	
-    	// indicate if a hot path is found or not
-    	boolean is_found = false;
+    	TreePath path = null;
     }
 }
