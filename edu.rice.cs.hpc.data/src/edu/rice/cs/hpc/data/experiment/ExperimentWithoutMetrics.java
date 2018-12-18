@@ -1,6 +1,7 @@
 package edu.rice.cs.hpc.data.experiment;
 
 import java.io.File;
+import java.util.List;
 
 import edu.rice.cs.hpc.data.experiment.extdata.TraceAttribute;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
@@ -16,6 +17,7 @@ public class ExperimentWithoutMetrics extends BaseExperiment
 {
 	/***** attributes of the traces ***/
 	private TraceAttribute attribute;
+	private List<String> procedureList;
 
 	public void open(File fileExperiment, IUserData<String, String> userData)
 			throws	Exception
@@ -23,7 +25,20 @@ public class ExperimentWithoutMetrics extends BaseExperiment
 		super.open(fileExperiment, userData, false);
 	}
 
-
+	/**
+	 * Set the procedure table <br/>
+	 * FIXME: This method is supposed to be called by an Experiment Builder class
+	 * 
+	 * @param hashProcedureTable
+	 */
+	public void setProcedureTable(List<String> procedureList) {
+		this.procedureList = procedureList;
+	}
+	
+	public List<String> getProcedureTable() {
+		return procedureList;
+	}
+	
 	/******
 	 * set the trace attributes (if the tracefile exist)
 	 * @param _attribute

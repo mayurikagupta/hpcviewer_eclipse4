@@ -7,6 +7,7 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.Experiment;
@@ -80,10 +81,11 @@ public class BaseExperimentBuilder extends Builder {
 	protected Token2.TokenXML elemInfoState = TokenXML.T_INVALID_ELEMENT_NAME;
 
 	//--------------------------------------------------------------------------------------
-	private HashMap<Integer, ProcedureAttribute> hashProcedureTable;
-	private HashMap<Integer, LoadModuleScope> hashLoadModuleTable;
-	private HashMap <Integer, SourceFile> hashSourceFileTable;
-	private HashMap<Integer, Scope> hashCallSiteTable;
+	private HashMap<Integer, String> 			hashProcedureTable;
+	private HashMap<Integer, LoadModuleScope> 	hashLoadModuleTable;
+	private HashMap<Integer, SourceFile> 		hashSourceFileTable;
+	private HashMap<Integer, Scope> 			hashCallSiteTable;
+	private HashMap<Integer, String>			hashFalseProcedure;
 
 	private int min_cctid = Integer.MAX_VALUE;
 	private int max_cctid = Integer.MIN_VALUE;
@@ -114,14 +116,14 @@ public class BaseExperimentBuilder extends Builder {
 		this.csviewer = false;
 		//viewRootScope = new RootScope[3];
 		
-		hashProcedureTable = new HashMap<Integer, ProcedureAttribute>();
+		hashProcedureTable  = new HashMap<Integer, String>();
 		hashLoadModuleTable = new HashMap<Integer, LoadModuleScope>();
-		new HashMap<Integer, Scope>();
 		hashSourceFileTable = new HashMap<Integer, SourceFile>();
-		hashCallSiteTable = new HashMap<Integer, Scope>();
+		hashCallSiteTable   = new HashMap<Integer, Scope>();
+		hashFalseProcedure  = new HashMap<Integer, String>();
 
 		// parse action data structures
-		this.scopeStack = new Stack<Scope>();
+		this.scopeStack   = new Stack<Scope>();
 		this.srcFileStack = new Stack<SourceFile>();
 		this.srcFileStack.push(null); // mimic old behavior
 
@@ -332,6 +334,13 @@ public class BaseExperimentBuilder extends Builder {
 			this.end_TraceDBTable();
 			break;
 			
+		case T_PROCEDURE_TABLE:
+			if (experiment instanceof ExperimentWithoutMetrics) {
+				List<String> listProcedure = hashProcedureTable.values().stream().collect(Collectors.toList());	
+				((ExperimentWithoutMetrics)experiment).setProcedureTable(listProcedure);;
+			}
+			break;
+
 
 			// ignored elements
 			// trace database
@@ -345,7 +354,6 @@ public class BaseExperimentBuilder extends Builder {
 		case T_METRIC_FORMULA:
 		case T_SEC_HEADER:
 		case T_METRIC:
-		case T_PROCEDURE_TABLE:
 		case T_PROCEDURE:
 		case T_FILE_TABLE:
 		case T_FILE:
@@ -544,7 +552,7 @@ public class BaseExperimentBuilder extends Builder {
 			SourceFile srcFile = null; // file location of this procedure
 			
 			LoadModuleScope objLoadModule    = null;
-			ProcedureAttribute procAttribute = null;
+			String procAttribute = null;
 
 			for(int i=0; i<attributes.length; i++) {
 				if (attributes[i].equals("s")) { 
@@ -595,7 +603,7 @@ public class BaseExperimentBuilder extends Builder {
 					}
 				} else if (attributes[i].equals("p") ) {
 					// obsolete format: p is the name of the procedure
-					procAttribute = new ProcedureAttribute(values[i], false);
+					procAttribute = values[i];
 					
 				} else if(attributes[i].equals(NAME_ATTRIBUTE)) {
 					// new database format: n is the flat ID of the procedure
@@ -622,7 +630,7 @@ public class BaseExperimentBuilder extends Builder {
 					flat_id = Integer.MAX_VALUE ^ flat_id;
 				}
 
-				if (procAttribute.name.isEmpty()) {
+				if (procAttribute.isEmpty()) {
 					// this is a line scope
 					Scope scope;
 					if (firstLn == lastLn)
@@ -648,10 +656,12 @@ public class BaseExperimentBuilder extends Builder {
 			 
 			srcFile.setIsText(istext);
 			this.srcFileStack.add(srcFile);
-
+			boolean falseProcedure = hashFalseProcedure.containsKey(flat_id);
+							
+			
 			ProcedureScope procScope  = new ProcedureScope(this.viewRootScope, objLoadModule, srcFile, 
 					firstLn-1, lastLn-1, 
-					procAttribute.name, isalien, cct_id, flat_id, userData, procAttribute.falseProcedure);
+					procAttribute, isalien, cct_id, flat_id, userData, falseProcedure);
 
 			if ( (this.scopeStack.size()>1) && ( this.scopeStack.peek() instanceof LineScope)  ) {
 
@@ -826,7 +836,11 @@ public class BaseExperimentBuilder extends Builder {
 		}
 		try {
 			Integer objID = Integer.parseInt(sID);
-			this.hashProcedureTable.put(objID, new ProcedureAttribute(sData, isFalseProc));
+			this.hashProcedureTable.put(objID, sData);
+			
+			if (isFalseProc)
+				this.hashFalseProcedure.put(objID, sData);
+			
 		} catch (java.lang.NumberFormatException e) {
 			e.printStackTrace();
 		}
@@ -1273,18 +1287,16 @@ public class BaseExperimentBuilder extends Builder {
 	//--------------------------------------------------------------------------------
 
 	
-	private ProcedureAttribute getProcedureName(String sProcIndex) {
+	private String getProcedureName(String sProcIndex) {
 		String sProcName = PROCEDURE_UNKNOWN;
-		ProcedureAttribute attribute = null;
 		boolean hashtableExist = (this.hashProcedureTable.size()>0);
+		
 		if(hashtableExist) {
 			try {
 				Integer objProcID = Integer.parseInt(sProcIndex); 
 				// get the real name of the procedure from the dictionary
-				attribute = this.hashProcedureTable.get(objProcID);
-				if(attribute != null) {
-					return attribute;
-				}
+				return this.hashProcedureTable.get(objProcID);
+				
 			} catch (java.lang.NumberFormatException e) {
 				System.err.println("Warning: Procedure index doesn't exist: " + sProcIndex);
 			}
@@ -1292,8 +1304,7 @@ public class BaseExperimentBuilder extends Builder {
 			// the database of procedure doesn't exist. This can be a flat view.
 			sProcName = sProcIndex;
 		}
-		attribute = new ProcedureAttribute(sProcName, false);
-		return attribute;
+		return sProcName;
 	}
 	
 	
@@ -1303,7 +1314,7 @@ public class BaseExperimentBuilder extends Builder {
 	 * @author laksonoadhianto
 	 *
 	 ************************************************************************/
-	private class StatementRange {
+	static private class StatementRange {
 		private int firstLn;
 		private int lastLn;
 		
@@ -1325,15 +1336,4 @@ public class BaseExperimentBuilder extends Builder {
 		public int getLastLine( ) { return this.lastLn; }
 	}
 
-	private class ProcedureAttribute
-	{
-		final public String name;
-		final public boolean falseProcedure;
-		
-		public ProcedureAttribute(String name, boolean falseProcedure)
-		{
-			this.name = name;
-			this.falseProcedure = falseProcedure;
-		}
-	}
 }

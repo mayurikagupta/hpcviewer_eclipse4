@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.widgets.Display;
@@ -151,7 +152,10 @@ public abstract class SpaceTimeDataController
 
 				maxDepth   = visitor.getMaxDepth();
 				scopeMap   = visitor.getMap();
-				colorTable = (ColorTable) visitor.getProcedureTable();
+				colorTable = new ColorTable();
+				
+				final List<String> procTable = exp.getProcedureTable();
+				colorTable.setColor(procTable);
 				
 				// attributes initialization
 				attributes 	 = new ImageTraceAttributes();
@@ -311,22 +315,6 @@ public abstract class SpaceTimeDataController
 		return enableMidpoint;
 	}
 
-	/*public void resetCounter() {
-		lineNum.set(0);
-	}
-	
-	public int getNumberOfLines() {
-		return lineNum.get();
-	}*/
-
-/*	public void resetDepthCounter() {
-		depthLineNum.set(0);
-	}
-	
-	public int getNumberOfDepthLines() {
-		return depthLineNum.get();
-	}*/
-	
 	//see the note where this is called in FilterRanks
 	public IFilteredData getFilteredBaseData() {
 		if (dataTrace instanceof IFilteredData)

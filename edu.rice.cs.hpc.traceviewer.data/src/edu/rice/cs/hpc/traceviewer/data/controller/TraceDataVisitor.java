@@ -15,10 +15,7 @@ import edu.rice.cs.hpc.data.experiment.scope.Scope;
 import edu.rice.cs.hpc.data.experiment.scope.ScopeVisitType;
 import edu.rice.cs.hpc.data.experiment.scope.StatementRangeScope;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
-import edu.rice.cs.hpc.data.util.IProcedureTable;
-
 import edu.rice.cs.hpc.traceviewer.data.graph.CallPath;
-import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 
 /**********************************************************
  * Visitor class for gathering procedure names and the 
@@ -31,13 +28,11 @@ import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 public class TraceDataVisitor implements IScopeVisitor 
 {
 	final private HashMap<Integer, CallPath> map;
-	final private IProcedureTable colorTable;
 	private int current_depth = 0;
 	private int max_depth = 0;
 
 	public TraceDataVisitor() {
 		map = new HashMap<Integer, CallPath>();
-		colorTable = new ColorTable();
 	}
 
 	//----------------------------------------------------
@@ -92,16 +87,6 @@ public class TraceDataVisitor implements IScopeVisitor
 	public HashMap<Integer, CallPath> getMap()
 	{
 		return map;
-	}
-	
-	/****
-	 * get the list of procedure names used in a given scope.
-	 * 
-	 * @return the instance of IProcedureTable
-	 */
-	public IProcedureTable getProcedureTable()
-	{
-		return colorTable;
 	}
 	
 	private void update(Scope scope, ScopeVisitType vt) {
