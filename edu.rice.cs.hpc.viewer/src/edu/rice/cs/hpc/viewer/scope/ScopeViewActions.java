@@ -129,7 +129,12 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 			if(o instanceof Scope) {
 				// get the child node
 				Scope scopeChild = (Scope) o;
+				
+				// let's move deeper down the tree
+				treeViewer.expandToLevel(path, 1);
 
+				// compare the value of the parent and the child
+				// if the ratio is significant, we stop 
 				MetricValue mvParent = metric.getValue(scope);
 				MetricValue mvChild  = metric.getValue(scopeChild);
 				
@@ -143,10 +148,8 @@ public abstract class ScopeViewActions /*extends ScopeActions /* implements IToo
 					
 					return true;
 				} else {
-					// let's move deeper down the tree
-					TreePath childPath = path.createChildPath(scopeChild);
-					treeViewer.expandToLevel(childPath, 1);
 
+					TreePath childPath = path.createChildPath(scopeChild);
 					return getHotCallPath(scopeChild, metric, iLevel+ 1, childPath, objHotPath);
 				}
 			}
