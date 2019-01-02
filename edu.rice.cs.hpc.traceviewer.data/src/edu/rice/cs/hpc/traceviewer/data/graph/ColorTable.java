@@ -165,14 +165,9 @@ public class ColorTable
 	 ************************************************************************/
 	private ColorImagePair createColorImagePair(String procName)
 	{
-		// 1. check duplicates
-		ColorImagePair cip = colorMatcher.get(procName);
+		ColorImagePair cip;
 		
-		if (cip != null) {
-			return cip;
-		}
-		
-		// 2. check if it matches predefined colors
+		// 1. check if it matches predefined colors
 		ProcedureClassData value = this.classMap.get(procName);
 		if (value != null) {
 			
@@ -184,6 +179,12 @@ public class ColorTable
 			cip = createColorImagePair(procName, rgb);
 			predefinedColorMatcher.put(procName, cip);
 			
+			return cip;
+		}
+		
+		// 2. check duplicates
+		cip = colorMatcher.get(procName);
+		if (cip != null) {
 			return cip;
 		}
 		

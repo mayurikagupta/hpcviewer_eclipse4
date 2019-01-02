@@ -131,15 +131,14 @@ public class LocalDBOpener extends AbstractDBOpener
 	 */
 	static public DatabaseAccessInfo open(IWorkbenchWindow window, String path)
 	{
+		if (path != null)
+			return new DatabaseAccessInfo(path);
+		
 		DirectoryDialog dialog;
 
 		dialog = new DirectoryDialog(window.getShell());
 		dialog.setMessage("Please select a directory containing execution traces.");
 		dialog.setText("Select Data Directory");
-		
-		if (path != null) {
-			dialog.setFilterPath(path);
-		}
 
 		// database is null if the user click cancel
 		final String database = dialog.open();
