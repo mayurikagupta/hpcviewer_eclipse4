@@ -16,6 +16,7 @@ import edu.rice.cs.hpc.data.experiment.scope.ScopeVisitType;
 import edu.rice.cs.hpc.data.experiment.scope.StatementRangeScope;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.IScopeVisitor;
 import edu.rice.cs.hpc.traceviewer.data.graph.CallPath;
+import edu.rice.cs.hpc.traceviewer.data.graph.ColorTable;
 
 /**********************************************************
  * Visitor class for gathering procedure names and the 
@@ -28,11 +29,15 @@ import edu.rice.cs.hpc.traceviewer.data.graph.CallPath;
 public class TraceDataVisitor implements IScopeVisitor 
 {
 	final private HashMap<Integer, CallPath> map;
+	final private ColorTable colorTable;
+	
 	private int current_depth = 0;
 	private int max_depth = 0;
 
-	public TraceDataVisitor() {
+	public TraceDataVisitor(ColorTable colorTable) {
+		
 		map = new HashMap<Integer, CallPath>();
+		this.colorTable = colorTable;
 	}
 
 	//----------------------------------------------------
@@ -63,7 +68,7 @@ public class TraceDataVisitor implements IScopeVisitor
 			{
 				this.map.put(cpid, new CallPath(scope, current_depth));
 				if (current_depth <= 0) {
-					System.err.println("ERROR: depth cannot be less than 1: "  + current_depth);
+					System.err.println("Warning: depth cannot be less than 1: "  + current_depth);
 				}
 			}
 		}
@@ -93,6 +98,9 @@ public class TraceDataVisitor implements IScopeVisitor
 		if (vt == ScopeVisitType.PreVisit) {
 			current_depth++;
 			max_depth = Math.max(max_depth, current_depth);
+			
+			// assign a color to this procedure scope
+			colorTable.addProcedure(scope.getName());
 		} else {
 			current_depth--;
 		}

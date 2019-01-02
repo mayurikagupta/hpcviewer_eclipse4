@@ -1,9 +1,8 @@
 package edu.rice.cs.hpc.traceviewer.data.graph;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -33,14 +32,15 @@ public class ColorTable
 	final private Display display;
 
 	/** user defined color */
-	final private ProcedureClassMap classMap;
+	private ProcedureClassMap classMap;
 	
 	final private Random random_generator;
 
 	// data members
 
 	private ColorImagePair IMAGE_WHITE;
-	final private	HashMap<String, ColorImagePair> colorMatcher;
+	private	HashMap<String, ColorImagePair> colorMatcher;
+	private	HashMap<String, ColorImagePair> predefinedColorMatcher;
 
 	/**Creates a new ColorTable with Display _display.*/
 	public ColorTable()
@@ -53,7 +53,8 @@ public class ColorTable
 		// initialize the procedure-color map (user-defined color)
 		classMap = new ProcedureClassMap(display);
 		
-		colorMatcher = new HashMap<String, ColorTable.ColorImagePair>();
+		colorMatcher 		   = new HashMap<String, ColorTable.ColorImagePair>();
+		predefinedColorMatcher = new HashMap<String, ColorTable.ColorImagePair>();
 		
 		initializeWhiteColor();
 	}
@@ -67,7 +68,33 @@ public class ColorTable
 		}
 		
 		colorMatcher.clear();
+		
+		for (ColorImagePair pair: predefinedColorMatcher.values()) {
+			if (pair != null) pair.dispose();
+		}
+		predefinedColorMatcher.clear();
+		
 		classMap.clear();
+	}
+	
+	public void resetPredefinedColor() 
+	{
+		for (ColorImagePair pair: predefinedColorMatcher.values()) {
+			if (pair != null) pair.dispose();
+		}
+		predefinedColorMatcher.clear();
+		classMap.clear();
+		
+		Object []entries = classMap.getEntrySet();
+		for (Object obj:entries) {
+			Entry<String, ProcedureClassData> entry = (Entry<String, ProcedureClassData>) obj;
+			ProcedureClassData data = entry.getValue();
+			final RGB rgb = data.getRGB();
+			String proc = entry.getKey();
+			ColorImagePair cip = createColorImagePair(proc, rgb);
+			
+			predefinedColorMatcher.put(proc, cip);
+		}
 	}
 	
 	/**
@@ -76,11 +103,8 @@ public class ColorTable
 	 * @return
 	 */
 	public Color getColor(String name)
-	{
+	{		
 		ColorImagePair cip = createColorImagePair(name);
-		if (cip == null) {
-			System.err.println(name + ": has null color");
-		}
 		return cip.getColor();
 	}
 	
@@ -92,35 +116,19 @@ public class ColorTable
 	public Image getImage(String name) 
 	{
 		ColorImagePair cip = createColorImagePair(name); 
-		if (cip == null) {
-			System.err.println(name + ": has null image");
-		}
 		return cip.getImage();
 	}
-	
-	public void setColor(List<String> listProcedure) {
-		
-		ColorImagePair []values = null;
-		int i = 0;
-		
-		for (String proc: listProcedure) {
-			
-			ColorImagePair pair = null;
-			
-			if (i<MAX_NUM_DIFFERENT_COLORS) {
-				pair = createColorImagePair(proc);
-				i++;
-			} else {
-				
-				if (values == null) {
-					values = new ColorImagePair[listProcedure.size()];
-					colorMatcher.values().toArray(values);
-				}
-				int index = random_generator.nextInt(MAX_NUM_DIFFERENT_COLORS-1);
-				pair = values[index];
-			}
-			colorMatcher.put(proc, pair);
-		}
+
+
+	/************************************************************************
+	 * add a color to a procedure.
+	 * If the procedure is already assigned a color, do nothing.
+	 * 
+	 * @param proc name of the procedure
+	 ************************************************************************/
+	public void addProcedure(String proc) 
+	{
+		createColorImagePair(proc);
 	}
 	
 	/***********************************************************************
@@ -139,26 +147,81 @@ public class ColorTable
 	}
 	
 	
+	
+	private ColorImagePair []listDefinedColorImagePair = null;
+	
 	/************************************************************************
-	 * create a pair of color and image based on the procedure name
+	 * Main method to generate color if necessary <br/>
+	 * This creates a pair of color and image based on the procedure name.
+	 * If a procedure is already assigned a color, we do nothing. <br/>
+	 * Otherwise, it creates color and image to be assigned to this procedure.
+	 * <br> If the list of colors is too big, it will pick randomly from existing
+	 * color to avoid too many handles created. Some OS like Windows has limitation
+	 * of the number of handles to be generated.
 	 * 
-	 * @param procName
+	 * @param procName the name of the procedure
+	 * 
 	 * @return ColorImagePair
 	 ************************************************************************/
 	private ColorImagePair createColorImagePair(String procName)
 	{
+		// 1. check duplicates
 		ColorImagePair cip = colorMatcher.get(procName);
 		
 		if (cip != null) {
 			return cip;
-		}			
+		}
 		
-		RGB rgb = getProcedureColor( procName, COLOR_MIN, COLOR_MAX, random_generator );
+		// 2. check if it matches predefined colors
+		ProcedureClassData value = this.classMap.get(procName);
+		if (value != null) {
+			
+			cip = predefinedColorMatcher.get(procName);
+			if (cip != null)
+				return cip;
+			
+			final RGB rgb = value.getRGB();
+			cip = createColorImagePair(procName, rgb);
+			predefinedColorMatcher.put(procName, cip);
+			
+			return cip;
+		}
+		
+		// 3. generate a new color-image if we have enough handles
+		if (colorMatcher.size() < MAX_NUM_DIFFERENT_COLORS) {
+			RGB rgb = getProcedureColor( procName, COLOR_MIN, COLOR_MAX, random_generator );
+			cip = createColorImagePair(procName, rgb);
+		} else {			
+			
+			// 4. we have more procedures than the limit
+			// this may not work on some OS like Windows that limits the number of handles
+			// we need to reuse existing color randomly to this procedure to avoid system crash
+
+			if (listDefinedColorImagePair == null) {
+				listDefinedColorImagePair = new ColorImagePair[colorMatcher.size()];
+				colorMatcher.values().toArray(listDefinedColorImagePair);
+			}
+			// get a random index within the range 1..MAX-1
+			int index = random_generator.nextInt(MAX_NUM_DIFFERENT_COLORS-2)+1;
+			cip = listDefinedColorImagePair[index];
+		}
+		colorMatcher.put(procName, cip);
+
+		return cip;
+	}
+	
+	/************************************************************************
+	 * Create a pair color and image with a specified RGB
+	 * 
+	 * @param procName
+	 * @param rgb
+	 * @return
+	 ************************************************************************/
+	private ColorImagePair createColorImagePair(String procName, RGB rgb) 
+	{
 		Color c = new Color(display, rgb);
 		Image i = createImage(display, rgb);
-		cip = new ColorImagePair(c, i);
-		
-		colorMatcher.put(procName, cip);
+		ColorImagePair cip = new ColorImagePair(c, i);
 		
 		return cip;
 	}
@@ -177,17 +240,9 @@ public class ColorTable
 	 ***********************************************************************/
 	private RGB getProcedureColor( String name, int colorMin, int colorMax, Random r ) {
 		
-		// if the name matches, we return the user-defined color
-		// otherwise, we randomly create a color for this name
-		
-		ProcedureClassData value = this.classMap.get(name);
-		final RGB rgb;
-		if (value != null)
-			rgb = value.getRGB();
-		else 
-			rgb = new RGB(	colorMin + r.nextInt(colorMax), 
-							colorMin + r.nextInt(colorMax), 
-							colorMin + r.nextInt(colorMax));
+		RGB rgb = new RGB(	colorMin + r.nextInt(colorMax), 
+				colorMin + r.nextInt(colorMax), 
+				colorMin + r.nextInt(colorMax));
 		return rgb;
 	}
 

@@ -53,11 +53,11 @@ public abstract class SpaceTimeDataController
 	protected long maxEndTime, minBegTime;
 
 
-	protected ProcessTimelineService ptlService;
+	protected ProcessTimelineService ptlService = null;
 
 	
 	/** The map between the nodes and the cpid's. */
-	private HashMap<Integer, CallPath> scopeMap;
+	private HashMap<Integer, CallPath> scopeMap = null;
 	
 	// We probably want to get away from this. The for code that needs it should be
 	// in one of the threads. It's here so that both local and remote can use
@@ -66,10 +66,10 @@ public abstract class SpaceTimeDataController
 	//AtomicInteger depthLineNum;
 		
 	/** The maximum depth of any single CallStackSample in any trace. */
-	protected int maxDepth;
+	protected int maxDepth = 0;
 	
-	protected ColorTable colorTable;
-	private boolean enableMidpoint;
+	protected ColorTable colorTable = null;
+	private boolean enableMidpoint  = true;
 	
 	protected IBaseData dataTrace = null;
 	final protected ExperimentWithoutMetrics exp;
@@ -131,6 +131,11 @@ public abstract class SpaceTimeDataController
 		return currentDataIdx;
 	}
 	
+	public void resetPredefinedColor()
+	{
+		colorTable.resetPredefinedColor();
+	}
+	
 	/******
 	 * Initialize the object
 	 * 
@@ -145,17 +150,17 @@ public abstract class SpaceTimeDataController
 
 			@Override
 			public void run() {
+				
+				// initialize color table
+				colorTable = new ColorTable();
+				
 				// tree traversal to get the list of cpid, procedures and max depth
-				TraceDataVisitor visitor = new TraceDataVisitor();
+				TraceDataVisitor visitor = new TraceDataVisitor(colorTable);
 				RootScope root = exp.getRootScope(RootScopeType.CallingContextTree);
 				root.dfsVisitScopeTree(visitor);
 
 				maxDepth   = visitor.getMaxDepth();
 				scopeMap   = visitor.getMap();
-				colorTable = new ColorTable();
-				
-				final List<String> procTable = exp.getProcedureTable();
-				colorTable.setColor(procTable);
 				
 				// attributes initialization
 				attributes 	 = new ImageTraceAttributes();
