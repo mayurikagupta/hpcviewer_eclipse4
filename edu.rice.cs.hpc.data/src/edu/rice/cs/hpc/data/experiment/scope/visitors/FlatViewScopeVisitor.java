@@ -369,6 +369,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor
 		}
 
 		FlatScopeInfo objFlat = this.getFlatScope(cct_s, id);
+		if (objFlat == null)
+			return null;
 
 		if (flat_enc_s != null) {
 			if (!isCyclicDependency(flat_enc_s, objFlat.flat_s)) {
@@ -384,9 +386,8 @@ public class FlatViewScopeVisitor implements IScopeVisitor
 				this.addToTree(flat_enc_s, copy);
 			}
 		}
-
-		if (objFlat != null)
-			this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
+		this.addCostIfNecessary(id, objFlat.flat_s, cct_s_metrics, true, true);
+		
 		return objFlat;
 		
 	}
