@@ -335,10 +335,6 @@ public class BaseExperimentBuilder extends Builder {
 			break;
 			
 		case T_PROCEDURE_TABLE:
-			if (experiment instanceof ExperimentWithoutMetrics) {
-				List<String> listProcedure = hashProcedureTable.values().stream().collect(Collectors.toList());	
-				((ExperimentWithoutMetrics)experiment).setProcedureTable(listProcedure);;
-			}
 			break;
 
 
