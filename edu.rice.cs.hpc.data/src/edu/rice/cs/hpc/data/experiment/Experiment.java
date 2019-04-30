@@ -39,9 +39,10 @@ public class Experiment extends BaseExperimentWithMetrics
 {
 	static public enum ExperimentOpenFlag {TREE_CCT_ONLY, TREE_ALL};
 	
-	static final public String TITLE_TOP_DOWN_VIEW  = "Top-down view";
-	static final public String TITLE_BOTTOM_UP_VIEW = "Bottom-up view";
-	static final public String TITLE_FLAT_VIEW 		= "Flat view";
+	static final public String TITLE_TOP_DOWN_VIEW    = "Top-down view";
+	static final public String TITLE_BOTTOM_UP_VIEW   = "Bottom-up view";
+	static final public String TITLE_FLAT_VIEW 		  = "Flat view";
+	static final public String TITLE_DATACENTRIC_VIEW = "Datacentric view";
 	
 	// thread level database
 	private MetricRaw[] metrics_raw;
@@ -182,7 +183,28 @@ public class Experiment extends BaseExperimentWithMetrics
 		return flatViewRootScope;
 	}
 
+	/****
+	 * Prepare and create datacentric root (if exists)
+	 * <p>This method has to be called after computing the CCT's inclusive metrics  
+	 ****/
+	private void prepareDatacentricView()
+	{
+		if (datacentricRootScope != null) {
 
+			// include the datacentric root into a child of "invisible root"
+			beginScope(datacentricRootScope);
+
+			if (inclusiveNeeded()) {
+				// TODO: if the metric is a derived metric then DO NOT do this process !
+				InclusiveOnlyMetricPropagationFilter rootInclProp = new InclusiveOnlyMetricPropagationFilter(this);
+				addInclusiveMetrics(datacentricRootScope, rootInclProp);
+				computeExclusiveMetrics(datacentricRootScope);
+			}
+			// copy the aggregate of inclusive metric to the exclusive ones 
+			EmptyMetricValuePropagationFilter emptyFilter = new EmptyMetricValuePropagationFilter();
+			copyMetricsToPartner(datacentricRootScope, MetricType.INCLUSIVE, emptyFilter);
+		}
+	}
 
 	private void addInclusiveMetrics(Scope scope, MetricValuePropagationFilter filter)
 	{
@@ -227,7 +249,6 @@ public class Experiment extends BaseExperimentWithMetrics
 	}
 
 
-
 	/*****
 	 * return a tree root
 	 * @return
@@ -242,17 +263,6 @@ public class Experiment extends BaseExperimentWithMetrics
 		}
 
 		return null;
-	}
-	
-	private void hideEmptyColumn(RootScope root) {
-		if (root == null) return;
-			
-		for (BaseMetric metric: metrics) {
-			MetricValue value = root.getMetricValue(metric);
-			if (value == MetricValue.NONE) {
-				metric.setDisplayed(false);
-			}
-		}
 	}
 	
 
@@ -272,9 +282,11 @@ public class Experiment extends BaseExperimentWithMetrics
 	 */
 	private void postprocess(boolean callerView) {
 		if (this.rootScope.getSubscopeCount() <= 0) return;
+		
 		// Get first scope subtree: CCT or Flat
 		Scope firstSubTree = this.rootScope.getSubscope(0);
 		if (!(firstSubTree instanceof RootScope)) return;
+		
 		RootScopeType firstRootType = ((RootScope)firstSubTree).getType();
 
 		if (firstRootType.equals(RootScopeType.CallingContextTree)) {
@@ -293,11 +305,6 @@ public class Experiment extends BaseExperimentWithMetrics
 
 			EmptyMetricValuePropagationFilter emptyFilter = new EmptyMetricValuePropagationFilter();
 			copyMetricsToPartner(callingContextViewRootScope, MetricType.INCLUSIVE, emptyFilter);
-
-			//----------------------------------------------------------------------------------------------
-			// hide the metric if it's empty
-			//----------------------------------------------------------------------------------------------
-			hideEmptyColumn((RootScope)callingContextViewRootScope);
 			
 			//----------------------------------------------------------------------------------------------
 			// Callers View
@@ -311,6 +318,11 @@ public class Experiment extends BaseExperimentWithMetrics
 			// While creating the root of flat tree, we attribute the cost for procedure scopes
 			// One the tree has been created, we compute the inclusive cost for other scopes
 			prepareFlatView(callingContextViewRootScope);
+			
+			//----------------------------------------------------------------------------------------------
+			// Datacentric View
+			//----------------------------------------------------------------------------------------------
+			prepareDatacentricView();
 
 		} else if (firstRootType.equals(RootScopeType.Flat)) {
 			addPercents(firstSubTree, (RootScope) firstSubTree);
@@ -390,6 +402,11 @@ public class Experiment extends BaseExperimentWithMetrics
 		// While creating the flat tree, we attribute the cost for procedure scopes
 		// One the tree has been created, we compute the inclusive cost for other scopes
 		prepareFlatView(rootCCT);
+		
+		//----------------------------------------------------------------------------------------------
+		// Datacentric View
+		//----------------------------------------------------------------------------------------------
+		prepareDatacentricView();
 	}
 
 	@Override

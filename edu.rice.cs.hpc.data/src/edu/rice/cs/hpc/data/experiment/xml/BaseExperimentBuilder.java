@@ -7,7 +7,6 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.Experiment;
@@ -45,11 +44,13 @@ public class BaseExperimentBuilder extends Builder {
 
 	private final static boolean KEEP_OLD_DATABASE_COMPATIBILITY = false;
 	
-	protected final static String LINE_ATTRIBUTE		= "l";
-	protected final static String NAME_ATTRIBUTE 		= "n";
-	protected final static String FILENAME_ATTRIBUTE 	= "f";
-	protected final static String VALUE_ATTRIBUTE 		= "v";
-	protected final static String ID_ATTRIBUTE 			= "i";
+	protected final static String ATTRIBUTE_LINE		= "l";
+	protected final static String ATTRIBUTE_NAME 		= "n";
+	protected final static String ATTRIBUTE_FILENAME 	= "f";
+	protected final static String ATTRIBUTE_VALUE 		= "v";
+	protected final static String ATTRIBUTE_ID 			= "i";
+	protected final static String ATTRIBUTE_TYPE 		= "t";
+	protected final static String ATTRIBUTE_ALIEN 		= "a";
 	
 	private final static String PROCEDURE_UNKNOWN = "unknown procedure";
 
@@ -72,6 +73,8 @@ public class BaseExperimentBuilder extends Builder {
 
 	/** The current source file while parsing. */
 	protected Stack<SourceFile> srcFileStack;
+	
+	private Stack<RootScope> rootStack;
 
 	private boolean csviewer;
 	
@@ -85,7 +88,8 @@ public class BaseExperimentBuilder extends Builder {
 	private HashMap<Integer, LoadModuleScope> 	hashLoadModuleTable;
 	private HashMap<Integer, SourceFile> 		hashSourceFileTable;
 	private HashMap<Integer, Scope> 			hashCallSiteTable;
-	private HashMap<Integer, String>			hashFalseProcedure;
+	
+	private HashMap<Integer /*id*/, Integer /*status*/>			statusProcedureMap;
 
 	private int min_cctid = Integer.MAX_VALUE;
 	private int max_cctid = Integer.MIN_VALUE;
@@ -120,11 +124,13 @@ public class BaseExperimentBuilder extends Builder {
 		hashLoadModuleTable = new HashMap<Integer, LoadModuleScope>();
 		hashSourceFileTable = new HashMap<Integer, SourceFile>();
 		hashCallSiteTable   = new HashMap<Integer, Scope>();
-		hashFalseProcedure  = new HashMap<Integer, String>();
+		statusProcedureMap  = new HashMap<Integer, Integer>();
 
 		// parse action data structures
 		this.scopeStack   = new Stack<Scope>();
+		this.rootStack    = new Stack<RootScope>();
 		this.srcFileStack = new Stack<SourceFile>();
+		
 		this.srcFileStack.push(null); // mimic old behavior
 
 		// creation arguments
@@ -483,13 +489,13 @@ public class BaseExperimentBuilder extends Builder {
 	private void begin_LM(String[] attributes, String[] values)
 	{
 		// LM n="load module name"
-		String name = getAttributeByName(NAME_ATTRIBUTE, attributes, values);
-		String sIndex = getAttributeByName(ID_ATTRIBUTE, attributes, values);
+		String name = getAttributeByName(ATTRIBUTE_NAME, attributes, values);
+		String sIndex = getAttributeByName(ATTRIBUTE_ID, attributes, values);
 		
 		try {
 			Integer objIndex = Integer.parseInt(sIndex);
 			SourceFile sourceFile = this.getOrCreateSourceFile(name, objIndex.intValue());
-			Scope lmScope = new LoadModuleScope(this.viewRootScope, name, sourceFile, objIndex.intValue());
+			Scope lmScope = new LoadModuleScope(rootStack.peek(), name, sourceFile, objIndex.intValue());
 			// make a new load module scope object
 			this.beginScope(lmScope);
 		} catch (Exception e) {
@@ -507,15 +513,15 @@ public class BaseExperimentBuilder extends Builder {
 
 	{
 		// F n="filename"
-		String inode = getAttributeByName(ID_ATTRIBUTE, attributes, values);
+		String inode = getAttributeByName(ATTRIBUTE_ID, attributes, values);
 		try {
 			Integer objFileKey = Integer.parseInt(inode);
 			// make a new file scope object
-			SourceFile sourceFile  = this.getOrCreateSourceFile(getAttributeByName(NAME_ATTRIBUTE, attributes, values), 
+			SourceFile sourceFile  = this.getOrCreateSourceFile(getAttributeByName(ATTRIBUTE_NAME, attributes, values), 
 					objFileKey.intValue());
 
 			this.srcFileStack.push(sourceFile);
-			Scope fileScope = new FileScope(this.viewRootScope, sourceFile, objFileKey.intValue());
+			Scope fileScope = new FileScope(rootStack.peek(), sourceFile, objFileKey.intValue());
 
 			this.beginScope(fileScope);
 
@@ -540,15 +546,16 @@ public class BaseExperimentBuilder extends Builder {
 	 ************************************************************************/
 	private void begin_PF(String[] attributes, String[] values)
 	{
-			boolean istext = true; 
+			boolean istext  = true; 
 			boolean isalien = false; 
 			boolean new_cct_format = false;
-			int cct_id = 0, flat_id = 0;
-			int firstLn = 0, lastLn = 0;
-			SourceFile srcFile = null; // file location of this procedure
 			
-			LoadModuleScope objLoadModule    = null;
-			String procAttribute = null;
+			int cct_id  = 0, flat_id = 0;
+			int firstLn = 0, lastLn  = 0;
+			
+			SourceFile srcFile 			  = null; // file location of this procedure
+			LoadModuleScope objLoadModule = null;
+			String procAttribute 		  = null;
 
 			for(int i=0; i<attributes.length; i++) {
 				if (attributes[i].equals("s")) { 
@@ -559,12 +566,12 @@ public class BaseExperimentBuilder extends Builder {
 						// old format: cct ID = flat ID
 						cct_id = flat_id;
 					
-				} else if (attributes[i].equals(ID_ATTRIBUTE)) {
+				} else if (attributes[i].equals(ATTRIBUTE_ID)) {
 					// id of the proc frame. needs to cross ref
 					cct_id = Integer.parseInt(values[i]); 
 					new_cct_format = true;
 					
-				} else if(attributes[i].equals(FILENAME_ATTRIBUTE)) {
+				} else if(attributes[i].equals(ATTRIBUTE_FILENAME)) {
 					// file
 					istext = true;
 					try {
@@ -589,33 +596,37 @@ public class BaseExperimentBuilder extends Builder {
 						objLoadModule = this.hashLoadModuleTable.get(indexFile);
 						if (objLoadModule == null) {
 							// old database
-							objLoadModule = new LoadModuleScope(this.viewRootScope, values[i], null, indexFile.intValue());
+							objLoadModule = new LoadModuleScope(rootStack.peek(), values[i], null, indexFile.intValue());
 							this.hashLoadModuleTable.put(indexFile, objLoadModule);
 						}
 					} catch (java.lang.NumberFormatException e) {
 						// old database:
 						// this error means that the lm is not based on dictionary
-						objLoadModule = new LoadModuleScope(this.viewRootScope, values[i], null, values[i].hashCode());
+						objLoadModule = new LoadModuleScope(rootStack.peek(), values[i], null, values[i].hashCode());
 					}
 				} else if (attributes[i].equals("p") ) {
 					// obsolete format: p is the name of the procedure
 					procAttribute = values[i];
 					
-				} else if(attributes[i].equals(NAME_ATTRIBUTE)) {
+				} else if(attributes[i].equals(ATTRIBUTE_NAME)) {
 					// new database format: n is the flat ID of the procedure
 					procAttribute = this.getProcedureName(values[i]);
 					
-				} else if(attributes[i].equals(LINE_ATTRIBUTE)) {
+				} else if(attributes[i].equals(ATTRIBUTE_LINE)) {
 					// line number (or range)
 					StatementRange objRange = new StatementRange(values[i]);
 					firstLn = objRange.getFirstLine();
 					lastLn = objRange.getLastLine();
+				} else if(attributes[i].equals(ATTRIBUTE_TYPE)) {
+					// type of the procedure frame
+					// mainly used by datacentric
 					
-				} else if(attributes[i].equals("a")) { 
+					
+				} else if(attributes[i].equals(ATTRIBUTE_ALIEN)) { 
 					// alien
 					isalien = values[i].equals("1");
 					
-				} else if(attributes[i].equals(VALUE_ATTRIBUTE)) {
+				} else if(attributes[i].equals(ATTRIBUTE_VALUE)) {
 				}
 			}
 			
@@ -630,9 +641,9 @@ public class BaseExperimentBuilder extends Builder {
 					// this is a line scope
 					Scope scope;
 					if (firstLn == lastLn)
-						scope = new LineScope(this.viewRootScope, srcFile, firstLn-1, cct_id, flat_id);
+						scope = new LineScope(rootStack.peek(), srcFile, firstLn-1, cct_id, flat_id);
 					else
-						scope = new StatementRangeScope(this.viewRootScope, srcFile, 
+						scope = new StatementRangeScope(rootStack.peek(), srcFile, 
 								firstLn-1, lastLn-1, cct_id, flat_id);
 					scope.setCpid(0);
 					scopeStack.push(scope);
@@ -652,10 +663,30 @@ public class BaseExperimentBuilder extends Builder {
 			 
 			srcFile.setIsText(istext);
 			this.srcFileStack.add(srcFile);
-			boolean falseProcedure = hashFalseProcedure.containsKey(flat_id);
+
+			boolean falseProcedure = false;
+			
+			Integer statusProc = statusProcedureMap.get(flat_id);
+			if (statusProc != null) {
+				if (statusProc.intValue() == 1) {
+					falseProcedure = true;
+					
+				} else if (statusProc.intValue() == 2) {
+					RootScope datacentricRoot = new RootScope(experiment, procAttribute, RootScopeType.DatacentricTree);
+					// push the new scope to the stack
+					scopeStack.push(datacentricRoot);
+					rootStack.push(datacentricRoot);
+
+					experiment.setDatacentricRootScope(datacentricRoot);
+					return;
+					
+				} else {
+					throw new RuntimeException(cct_id + ": Procedure status invalid:" + statusProc);
+				}
+			}
 							
 			
-			ProcedureScope procScope  = new ProcedureScope(this.viewRootScope, objLoadModule, srcFile, 
+			ProcedureScope procScope  = new ProcedureScope(rootStack.peek(), objLoadModule, srcFile, 
 					firstLn-1, lastLn-1, 
 					procAttribute, isalien, cct_id, flat_id, userData, falseProcedure);
 
@@ -769,13 +800,13 @@ public class BaseExperimentBuilder extends Builder {
 		
 		// make a new alien scope object
 		for (int i=0; i<attributes.length; i++) {
-			if (attributes[i].equals(ID_ATTRIBUTE)) {
+			if (attributes[i].equals(ATTRIBUTE_ID)) {
 				sIndex = values[i];
-			} else if (attributes[i].equals(FILENAME_ATTRIBUTE)) {
+			} else if (attributes[i].equals(ATTRIBUTE_FILENAME)) {
 				filenm = values[i];
-			} else if (attributes[i].equals(NAME_ATTRIBUTE)) {
+			} else if (attributes[i].equals(ATTRIBUTE_NAME)) {
 				procnm = values[i];
-			} else if (attributes[i].equals(LINE_ATTRIBUTE)) {
+			} else if (attributes[i].equals(ATTRIBUTE_LINE)) {
 				sLine = values[i];
 			}
 		}
@@ -791,7 +822,7 @@ public class BaseExperimentBuilder extends Builder {
 			SourceFile sourceFile = this.getOrCreateSourceFile(filenm, objIndex.intValue());
 			this.srcFileStack.push(sourceFile);
 
-			Scope alienScope = new AlienScope(this.viewRootScope, sourceFile, filenm, procnm, firstLn-1, lastLn-1, objIndex.intValue());
+			Scope alienScope = new AlienScope(rootStack.peek(), sourceFile, filenm, procnm, firstLn-1, lastLn-1, objIndex.intValue());
 
 			this.beginScope(alienScope);
 
@@ -814,9 +845,10 @@ public class BaseExperimentBuilder extends Builder {
 		if(values.length < 2)
 			return;
 		
-		String sID = null;
+		String sID   = null;
 		String sData = null;
-		boolean isFalseProc = false;
+		
+		Integer statusProc = null;
 
 		for (int i=0; i<attributes.length; i++)
 		{
@@ -825,8 +857,7 @@ public class BaseExperimentBuilder extends Builder {
 			} else if (attributes[i].equals("n")) {
 				sData = values[i];
 			} else if (attributes[i].equals("f")) {
-				int val     = Integer.parseInt(values[i]);
-				isFalseProc = (val == 1);
+				statusProc  = Integer.parseInt(values[i]);
 			}
 			
 		}
@@ -834,8 +865,8 @@ public class BaseExperimentBuilder extends Builder {
 			Integer objID = Integer.parseInt(sID);
 			this.hashProcedureTable.put(objID, sData);
 			
-			if (isFalseProc)
-				this.hashFalseProcedure.put(objID, sData);
+			if (statusProc != null)
+				this.statusProcedureMap.put(objID, statusProc);
 			
 		} catch (java.lang.NumberFormatException e) {
 			e.printStackTrace();
@@ -868,15 +899,15 @@ public class BaseExperimentBuilder extends Builder {
 				if (cct_id == 0)
 					cct_id = flat_id;
 				
-			} else if(attributes[i].equals(LINE_ATTRIBUTE)) {
+			} else if(attributes[i].equals(ATTRIBUTE_LINE)) {
 				String sLine = values[i];
 				StatementRange objRange = new StatementRange( sLine );
 				firstLn = objRange.getFirstLine();
 				lastLn = objRange.getLastLine();
-			} else if (attributes[i].equals(FILENAME_ATTRIBUTE)) {
+			} else if (attributes[i].equals(ATTRIBUTE_FILENAME)) {
 				String fileIdString = values[i];
 				sourceFile = getSourceFile(fileIdString);
-			} else if(attributes[i].equals(ID_ATTRIBUTE)) {
+			} else if(attributes[i].equals(ATTRIBUTE_ID)) {
 				cct_id = Integer.parseInt(values[i]);
 			} 
 		}
@@ -896,7 +927,7 @@ public class BaseExperimentBuilder extends Builder {
 				sourceFile = frameScope.getSourceFile();
 			}
 		}
-		Scope loopScope = new LoopScope(this.viewRootScope, sourceFile, firstLn-1, lastLn-1, cct_id, flat_id);
+		Scope loopScope = new LoopScope(rootStack.peek(), sourceFile, firstLn-1, lastLn-1, cct_id, flat_id);
 
 		this.beginScope(loopScope);
 	}
@@ -932,7 +963,7 @@ public class BaseExperimentBuilder extends Builder {
 		int cpid = 0;
 
 		for(int i=0; i<attributes.length; i++) {
-			if(attributes[i].equals(LINE_ATTRIBUTE)) {
+			if(attributes[i].equals(ATTRIBUTE_LINE)) {
 				firstLn = Integer.parseInt(values[i]);
 				lastLn = firstLn;
 				
@@ -941,7 +972,7 @@ public class BaseExperimentBuilder extends Builder {
 				if (cct_id == 0)
 					cct_id = flat_id;
 				
-			} else if(attributes[i].equals(ID_ATTRIBUTE))  {
+			} else if(attributes[i].equals(ATTRIBUTE_ID))  {
 				cct_id = Integer.parseInt(values[i]);
 
 			} else if(attributes[i].equals("it")) { //the cpid
@@ -955,9 +986,9 @@ public class BaseExperimentBuilder extends Builder {
 
 		Scope scope;
 		if( firstLn == lastLn )
-			scope = new LineScope(this.viewRootScope, srcFile, firstLn-1, cct_id, flat_id);
+			scope = new LineScope(rootStack.peek(), srcFile, firstLn-1, cct_id, flat_id);
 		else
-			scope = new StatementRangeScope(this.viewRootScope, srcFile, 
+			scope = new StatementRangeScope(rootStack.peek(), srcFile, 
 					firstLn-1, lastLn-1, cct_id, flat_id);
 
 		scope.setCpid(cpid);
@@ -1168,6 +1199,10 @@ public class BaseExperimentBuilder extends Builder {
 		
 		min_cctid = Math.min(min_cctid, scope.getCCTIndex());
 		max_cctid = Math.max(max_cctid, scope.getCCTIndex());
+		
+		if (scope instanceof RootScope) {
+			rootStack.push((RootScope)scope);
+		}
 	}
 
 	
@@ -1177,7 +1212,11 @@ public class BaseExperimentBuilder extends Builder {
 	protected void endScope()
 	{
 		try {
-			this.scopeStack.pop();
+			Scope scope = this.scopeStack.pop();
+			if (scope instanceof RootScope) {
+				rootStack.pop();
+			}
+
 		} catch (java.util.EmptyStackException e) {
 			System.out.println("End of stack:"+this.parser.getLineNumber());
 		}

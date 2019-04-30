@@ -1,30 +1,83 @@
 package edu.rice.cs.hpc.viewer.scope;
 
+import java.util.Map;
+
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.ISourceProvider;
+import org.eclipse.ui.ISourceProviderListener;
+import org.eclipse.ui.services.ISourceProviderService;
 
+import edu.rice.cs.hpc.common.ui.Util;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.metric.BaseMetric;
+import edu.rice.cs.hpc.data.experiment.metric.DerivedMetric;
+import edu.rice.cs.hpc.data.experiment.metric.MetricValue;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
 import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.data.experiment.scope.visitors.FilterScopeVisitor;
+import edu.rice.cs.hpc.viewer.provider.TableMetricState;
 
 
 /**
  * 
  *
  */
-abstract public class BaseScopeView  extends AbstractBaseScopeView {
+abstract public class BaseScopeView  extends AbstractBaseScopeView 
+{
 	
     //======================================================
     // ................ ATTRIBUTES..........................
     //======================================================
 
+	final private ISourceProviderListener listener;
+
+	
     //======================================================
     // ................ METHODS  ..........................
     //======================================================
+	
+	public BaseScopeView() 
+	{
+		super();
+		final ISourceProviderService service = (ISourceProviderService)Util.getActiveWindow().
+				getService(ISourceProviderService.class);
+		final ISourceProvider yourProvider   = service.getSourceProvider(TableMetricState.METRIC_COLUMNS_VISIBLE); 
+		
+		listener = new ISourceProviderListener() {
+			
+			@Override
+			public void sourceChanged(int sourcePriority, String sourceName, Object sourceValue) {
+				
+				if (sourceName.equals(TableMetricState.METRIC_COLUMNS_VISIBLE) ||
+						sourceName.equals(TableMetricState.METRIC_COLUMN_ADD)) {
+					
+					if (!(sourceValue instanceof TableMetricState.TableMetricData)) 
+						return;
+					
+					TableMetricState.TableMetricData metricState = (TableMetricState.TableMetricData) sourceValue;
+					
+					// if hpcviewer opens multiple database, we need to make sure that
+					// this view only reacts when a message came from within this database
+					
+					if (getExperiment() != metricState.getExperiment()) 
+						return;
+					
+					if (sourceName.equals(TableMetricState.METRIC_COLUMNS_VISIBLE))
+						objViewActions.setColumnStatus((boolean[])metricState.getValue());
+					
+					else 
+						objViewActions.addMetricColumn(BaseScopeView.this, (DerivedMetric)metricState.getValue());
+				}
+			}
+			
+			@Override
+			public void sourceChanged(int sourcePriority, Map sourceValuesByName) {}
+		};
+		
+		yourProvider.addSourceProviderListener(listener);
+	}
 	
     /// ---------------------------------------------
     /// filter feature
@@ -78,7 +131,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         // ------------------------------------------------------------
         // Tell children to update the content with the new database
         // ------------------------------------------------------------
-        final Experiment myExperiment = database.getExperiment();        
+        final Experiment myExperiment = database.getExperiment();
         this.updateDatabase(myExperiment);
 
         // Update root scope
@@ -103,19 +156,30 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         }
    	}
 
+	@Override
+	public void dispose() {
+		super.dispose();
+		
+		final ISourceProviderService service = (ISourceProviderService) Util.getActiveWindow().getService(ISourceProviderService.class);
+		TableMetricState serviceProvider     = (TableMetricState) service.getSourceProvider(TableMetricState.METRIC_COLUMNS_VISIBLE);
+		serviceProvider.removeSourceProviderListener(listener);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView#initTableColumns()
 	 */
 	protected void initTableColumns(boolean keepColumnStatus) {
 		
-        if (treeViewer != null) {
-        	Tree tree = treeViewer.getTree();
-        	if (tree != null && !tree.isDisposed())
-        	{
-        		initTableColumns(tree, keepColumnStatus);
-        	}
-        }
+		if (treeViewer == null) return;
+		
+    	Tree tree = treeViewer.getTree();
+    	if (tree == null || tree.isDisposed()) return;
+    	
+		addMetricColumnsToTable(tree, keepColumnStatus);
+		
+        // update the root scope of the actions !
+        this.objViewActions.updateContent(database.getExperiment(), myRootScope);
 	}
 
 	/***
@@ -158,7 +222,7 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 	 * @param tree
 	 * @param keepColumnStatus
 	 */
-	private void initTableColumns(Tree tree, boolean keepColumnStatus) 
+	private void addMetricColumnsToTable(Tree tree, boolean keepColumnStatus) 
 	{
         final Experiment myExperiment = database.getExperiment();
         final int numMetric			  = myExperiment.getMetricCount();
@@ -168,7 +232,14 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
 
         tree.setRedraw(false);
         
-        if(iColCount>1) {
+        if (!keepColumnStatus) {
+        	int i=0;
+        	for(BaseMetric metric: myExperiment.getMetrics()) {
+        		status[i] = metric.getDisplayed();
+        		i++;
+        	}
+        }
+        else if(iColCount>1) {
         	TreeColumn []columns = tree.getColumns();
         	
         	// this is Eclipse Indigo bug: when a column is disposed, the next column will have
@@ -181,15 +252,17 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
         			status[i-1] = (width > 0);
         		}
         	}
-        	
-        	// remove the metric columns blindly
-        	// TODO we need to have a more elegant solution here
-        	for(int i=1;i<iColCount;i++) {
-        		TreeColumn column = columns[i]; //treeViewer.getTree().getColumn(1);
-        		column.dispose();
-        	}
         }
-        // prepare the data for the sorter class for tree
+    	TreeColumn []columns = tree.getColumns();
+    	
+    	// remove the metric columns blindly
+    	// TODO we need to have a more elegant solution here
+    	for(int i=1;i<iColCount;i++) {
+    		TreeColumn column = columns[i]; //treeViewer.getTree().getColumn(1);
+    		column.dispose();
+    	}
+
+    	// prepare the data for the sorter class for tree
         // ScopeComparator sorterTreeColumn = (ScopeComparator) treeViewer.getComparator();
         // sorterTreeColumn.setMetric(myExperiment.getMetric(0));
 
@@ -210,13 +283,15 @@ abstract public class BaseScopeView  extends AbstractBaseScopeView {
             		// bug fix: for view initialization, we need to reset the status of hide/view
             		if (!keepColumnStatus) {
                 		status[i] = metric.getDisplayed();
+                		
+                		if (status[i] && myRootScope != null) {
+                			status[i] = myRootScope.getMetricValue(metric) != MetricValue.NONE;
+                		}
             		}
         		}
         	}
             treeViewer.setColumnProperties(titles); // do we need this ??
         }
-        // update the root scope of the actions !
-        this.objViewActions.updateContent(myExperiment, this.myRootScope);
     	this.objViewActions.objActionsGUI.setColumnsStatus(status);
     	
         tree.setRedraw(true);

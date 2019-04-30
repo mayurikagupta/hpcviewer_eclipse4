@@ -10,10 +10,11 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+
+import edu.rice.cs.hpc.data.experiment.BaseExperiment;
 import edu.rice.cs.hpc.data.experiment.Experiment;
 import edu.rice.cs.hpc.data.experiment.extdata.IThreadDataCollection;
 import edu.rice.cs.hpc.data.experiment.scope.RootScope;
-import edu.rice.cs.hpc.data.experiment.scope.RootScopeType;
 import edu.rice.cs.hpc.viewer.experiment.ExperimentView;
 import edu.rice.cs.hpc.viewer.scope.AbstractBaseScopeView;
 import edu.rice.cs.hpc.viewer.window.Database;
@@ -46,9 +47,15 @@ class ThreadViewFactory
 	 * 
 	 * @return the thread view if successful, null otherwise
 	 */
-	static public IViewPart build(IWorkbenchWindow window, Experiment experiment) 
+	static public IViewPart build(IWorkbenchWindow window, RootScope rootScope) 
 	{
-		return build(window, experiment, null);
+		return build(window, rootScope, null);
+	}
+	
+	static public String getThreadViewKey(RootScope root) 
+	{
+		BaseExperiment experiment = root.getExperiment();
+		return experiment.getDefaultDirectory().getAbsolutePath() + "." + root.getType();
 	}
 	
 	/*****
@@ -62,11 +69,13 @@ class ThreadViewFactory
 	 * 
 	 * @return the thread view if successful, null otherwise
 	 */
-	static public IViewPart build(IWorkbenchWindow window, Experiment experiment, List<Integer> threads) 
+	static public IViewPart build(IWorkbenchWindow window, RootScope rootScope, List<Integer> threads) 
 	{
 		final IWorkbenchPage page = window.getActivePage();
 		if (page != null) {
-			final ViewerWindow vWin = ViewerWindowManager.getViewerWindow(window);
+			final ViewerWindow vWin     = ViewerWindowManager.getViewerWindow(window);
+			final Experiment experiment = (Experiment)rootScope.getExperiment();
+			
 			final Database db = vWin.getDb(experiment.getDefaultDirectory().getAbsolutePath());
 			try {
 				if (threads == null) {
@@ -76,18 +85,19 @@ class ThreadViewFactory
 					if (threads == null)
 						return null;
 				}
-				final String path = experiment.getDefaultDirectory().getAbsolutePath();
 				
 				// check if the view already exists
 				IViewPart view = null;
-				final IViewReference vref = page.findViewReference(ThreadView.ID, path);
+				final String key = getThreadViewKey(rootScope);
+				
+				final IViewReference vref = page.findViewReference(ThreadView.ID, key);
 				if (vref != null) {
 					// it's there. we need to activate it and set the new threads
 					view = vref.getView(true);
 					
 				} else {
 					// it doesn't exist. need to create it.
-					view = page.showView(ThreadView.ID, path, 
+					view = page.showView(ThreadView.ID, key, 
 							IWorkbenchPage.VIEW_ACTIVATE);
 					if (view != null && (view  instanceof ThreadView)) 
 					{
@@ -97,8 +107,7 @@ class ThreadViewFactory
 				}
 				if (view != null) {
 					if (threads != null) {
-						RootScope scope   = experiment.getRootScope(RootScopeType.CallingContextTree);
-						((ThreadView)view).setInput(db, scope);
+						((ThreadView)view).setInput(db, rootScope);
 						((ThreadView)view).addTableColumns(threads);
 						page.activate(view);
 						return view;

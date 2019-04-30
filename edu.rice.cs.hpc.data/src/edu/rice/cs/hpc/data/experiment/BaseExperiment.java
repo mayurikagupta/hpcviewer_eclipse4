@@ -33,6 +33,8 @@ public abstract class BaseExperiment implements IExperiment
 
 	protected RootScope rootScope;
 	
+	protected RootScope datacentricRootScope;
+	
 	/** version of the database **/
 	protected String version;
 
@@ -59,10 +61,23 @@ public abstract class BaseExperiment implements IExperiment
 	 * 
 	 * @return the root scope
 	 */
+	@Override
 	public Scope getRootScope() {
 		return rootScope;
 	}
 
+	
+	public void setDatacentricRootScope(RootScope rootScope) {
+		this.datacentricRootScope = rootScope;
+	}
+	
+	
+	public RootScope getDatacentricRootScope() {
+		return datacentricRootScope;
+	}
+	
+	
+	
 	/******
 	 * set a database filename
 	 * 
@@ -110,14 +125,7 @@ public abstract class BaseExperiment implements IExperiment
 	{
 		return getDefaultDatabaseName(Db_File_Type.DB_TRACE);
 	}
-	/****
-	 * retrieve the root scope of caller tree (bottom-up view)
-	 * 
-	 * @return root scope
-	 */
-	public RootScope getCallerTreeRoot() {
-		return getRootScope(RootScopeType.CallerTree);
-	}
+
 
 	public Object[] getRootScopeChildren() {
 		RootScope root = (RootScope) getRootScope();
@@ -327,3 +335,4 @@ public abstract class BaseExperiment implements IExperiment
 	abstract protected void open_finalize();
 
 }
+ 
