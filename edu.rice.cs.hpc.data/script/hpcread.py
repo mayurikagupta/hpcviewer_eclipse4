@@ -1,6 +1,8 @@
 #
 #  Parsing HPCToolkit experiment.xml file
 # 
+#  Code modified and taken from Hatchet tool:
+#  https://github.com/LLNL/hatchet/blob/master/hatchet/hpctoolkit_reader.py
 
 import sys
 
